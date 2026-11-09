@@ -22,6 +22,8 @@ pluginDevKit {
 
     versionHierarchy {
         splitDev(2, 5)
+        split("2.4.0-dev-4697", "HasWarningsForWError")
+        splitDev(2, 4)
 
         val pathKlibVersion = KotlinToolingVersion("2.4.20-Beta2")
         pre(pathKlibVersion, "legacyKlib")

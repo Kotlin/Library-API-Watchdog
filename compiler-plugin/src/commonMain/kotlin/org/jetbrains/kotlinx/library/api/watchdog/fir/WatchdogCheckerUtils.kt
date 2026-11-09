@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.fir.FirAnnotationContainer
+import org.jetbrains.kotlin.fir.SessionHolder
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.declarations.FirCallableDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirConstructor
@@ -21,7 +22,6 @@ import org.jetbrains.kotlin.fir.declarations.FirValueParameter
 import org.jetbrains.kotlin.fir.declarations.extractEnumValueArgumentInfo
 import org.jetbrains.kotlin.fir.declarations.findArgumentByName
 import org.jetbrains.kotlin.fir.declarations.getSingleMatchedExpectForActualOrNull
-import org.jetbrains.kotlin.fir.declarations.getStringArgument
 import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
 import org.jetbrains.kotlin.fir.declarations.toAnnotationClassIdSafe
@@ -568,6 +568,7 @@ private val selfExplanatoryReasons = setOf(
  * The reason that doesn't explain this exemption, [otherReason] when the argument is absent, or
  * null when a reason or a description explains the exemption.
  */
+context(_: SessionHolder)
 internal fun FirAnnotation.unexplainedExemptionReason(): Name? {
     val reasonArgument = findArgumentByName(reasonParameter, returnFirstWhenNotFound = false)
     val reason = if (reasonArgument == null) {
@@ -580,7 +581,7 @@ internal fun FirAnnotation.unexplainedExemptionReason(): Name? {
         return null
     }
 
-    if (getStringArgument(descriptionParameter)?.isNotBlank() == true) {
+    if (getStringArgumentCompat(descriptionParameter)?.isNotBlank() == true) {
         return null
     }
 

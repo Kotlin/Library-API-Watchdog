@@ -180,7 +180,7 @@ FILE: statefulToString.kt
             super<R|kotlin/Any|>()
         }
 
-        public final val value: R|kotlin/String|by R|kotlin/lazy|<R|kotlin/String|>(<L> = lazy@fun <anonymous>(): R|kotlin/String| <inline=NoInline>  {
+        public final val value: R|kotlin/String| by R|kotlin/lazy|<R|kotlin/String|>(<L> = lazy@fun <anonymous>(): R|kotlin/String| <inline=NoInline>  {
             ^ String(value)
         }
         )

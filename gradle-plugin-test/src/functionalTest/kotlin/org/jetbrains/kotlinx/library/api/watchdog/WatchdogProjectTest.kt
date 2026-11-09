@@ -1658,9 +1658,6 @@ class WatchdogProjectTest {
 
     private fun ideaGenerateShortcut(): String =
         if (System.getProperty("os.name").startsWith("Mac", ignoreCase = true)) "⌘N" else "Alt+Insert"
-
-    private val legacyAbiValidationDsl: Boolean
-        get() = TEST_COMPILER_VERSION.major <= 2 && TEST_COMPILER_VERSION.minor < 4
 }
 
 private const val EXPLICIT_API_FLAG = """kotlin { compilerOptions { freeCompilerArgs.add("-Xexplicit-api=warning") } }"""
