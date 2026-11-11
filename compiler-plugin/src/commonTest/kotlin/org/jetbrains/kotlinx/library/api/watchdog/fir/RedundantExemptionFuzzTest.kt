@@ -5,6 +5,7 @@ import java.nio.file.Path
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.fail
+import org.jetbrains.kotlin.compiler.plugin.devkit.mainFirFilesByTestFileCompat
 import org.jetbrains.kotlin.compiler.plugin.devkit.runners.DevKitJvmDiagnosticTest
 import org.jetbrains.kotlin.diagnostics.Severity
 import org.jetbrains.kotlin.test.builders.configureFirHandlersStep
@@ -262,7 +263,7 @@ internal class CollectingDiagnosticsHandler(testServices: TestServices) : FirAna
         val diagnosticsPerFile = testServices.firDiagnosticCollectorService.getFrontendDiagnosticsForModule(info)
         for (part in info.partsForDependsOnModules) {
             for (file in part.module.files) {
-                val firFile = info.mainFirFilesByTestFile[file] ?: continue
+                val firFile = info.mainFirFilesByTestFileCompat[file] ?: continue
                 FuzzDiagnosticsSink.fileText(file.name, testServices.sourceFileProvider.getOrCreateRealFileForSourceFile(file).readText())
                 for (reported in diagnosticsPerFile[firFile]) {
                     val diagnostic = reported.diagnostic

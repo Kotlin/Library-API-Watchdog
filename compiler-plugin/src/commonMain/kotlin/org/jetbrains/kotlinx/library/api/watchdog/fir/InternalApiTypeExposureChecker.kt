@@ -34,14 +34,14 @@ internal class InternalApiTypeExposureChecker(
 
     context(context: CheckerContext)
     override fun ConeKotlinType.violatingClassifier(): InternalApiExposure? {
-        val symbol = (this as? ConeClassLikeType)?.lookupTag?.toSymbol(context.session)
+        val symbol = (this as? ConeClassLikeType)?.lookupTag?.toSymbol()
         return symbol?.internalApiExposure()
     }
 
     /** An unmarked alias can expand to an internal API type. */
     context(context: CheckerContext)
     override fun ConeKotlinType.typeAfterClassifier(): ConeKotlinType? {
-        val symbol = (this as? ConeClassLikeType)?.lookupTag?.toSymbol(context.session)
+        val symbol = (this as? ConeClassLikeType)?.lookupTag?.toSymbol()
         return if (symbol is FirTypeAliasSymbol) fullyExpandedType() else null
     }
 

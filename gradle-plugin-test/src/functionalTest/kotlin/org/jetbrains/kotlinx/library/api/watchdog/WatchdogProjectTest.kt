@@ -17,7 +17,7 @@ import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.KotlinPlugins
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.TEST_COMPILER_VERSION
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.pluginUnderTestVersion
-import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
+import org.jetbrains.kotlin.tooling.core.toKotlinVersion
 import org.jetbrains.kotlinx.library.api.watchdog.AgpVersion.AGP8
 import org.jetbrains.kotlinx.library.api.watchdog.AgpVersion.AGP9
 import org.jetbrains.kotlinx.library.api.watchdog.Diagnostic.BOOLEAN_PARAMETER_PUBLIC_API
@@ -152,7 +152,7 @@ class WatchdogProjectTest {
 
     @Test
     fun `Poko-generated members satisfy the stateful class checks`() {
-        val pokoVersion = pokoVersionFor(TEST_COMPILER_VERSION)
+        val pokoVersion = pokoVersionFor(TEST_COMPILER_VERSION.toKotlinVersion())
         assumeTrue("No Poko release supports Kotlin $TEST_COMPILER_VERSION", pokoVersion != null)
         val project = jvmProject {
             plugins(
@@ -1649,10 +1649,11 @@ class WatchdogProjectTest {
     }
 
     /** The Poko release for a Kotlin version, from the compatibility table of the Poko README. */
-    private fun pokoVersionFor(kotlin: KotlinToolingVersion): String? = when {
-        kotlin.major != 2 -> null
-        kotlin.minor == 3 && kotlin.patch >= 20 -> "0.22.1"
-        kotlin.minor == 4 -> "0.23.2"
+    private fun pokoVersionFor(kotlin: KotlinVersion): String? = when {
+        kotlin >= KotlinVersion(2, 5) -> null
+        kotlin >= KotlinVersion(2, 4) -> "0.23.2"
+        kotlin >= KotlinVersion(2, 3, 20) -> "0.22.1"
+        kotlin >= KotlinVersion(2, 3) -> "0.21.3"
         else -> null
     }
 

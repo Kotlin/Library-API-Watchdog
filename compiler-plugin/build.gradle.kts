@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
+import org.jetbrains.kotlin.tooling.core.toKotlinVersion
 
 plugins {
     id("devkit.compiler")
@@ -22,12 +23,16 @@ pluginDevKit {
 
     versionHierarchy {
         splitDev(2, 5)
-        split("2.4.0-dev-4697", "HasWarningsForWError")
+        val hasWarningsForWErrorVersion = KotlinToolingVersion("2.4.0-dev-4697")
+        val hasErrorsVersion = KotlinVersion(2, 3, 20)
+        post(hasWarningsForWErrorVersion, "postHasWarningsForWError")
+        groupVersions("preHasWarningsForWError") { it < hasWarningsForWErrorVersion && it.toKotlinVersion() >= hasErrorsVersion }
         splitDev(2, 4)
 
         val pathKlibVersion = KotlinToolingVersion("2.4.20-Beta2")
         pre(pathKlibVersion, "legacyKlib")
         post(pathKlibVersion, "pathKlib")
+        splitDev(2, 3, 20)
     }
 }
 

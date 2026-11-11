@@ -143,6 +143,7 @@ abstract class ApiFiltersTestBase {
      * names of Kotlin 2.3.20 and later. Before Kotlin 2.4.0, [enabled] sets the `enabled` flag.
      */
     protected fun kotlinAbiValidation(filters: String, enabled: Boolean = true): String {
+        val versionFilters = if (legacyAbiFilterNames) filters.replace(filterBlockName, "$1d") else filters
         val enabledFlag = if (legacyAbiValidationDsl && enabled) "enabled.set(true)" else ""
         return """
             kotlin {
@@ -150,7 +151,7 @@ abstract class ApiFiltersTestBase {
                 abiValidation {
                     $enabledFlag
                     filters {
-                        ${filters.trimIndent().prependIndent("                        ").trimStart()}
+                        ${versionFilters.trimIndent().prependIndent("                        ").trimStart()}
                     }
                 }
             }
@@ -179,6 +180,8 @@ abstract class ApiFiltersTestBase {
     companion object {
         const val COMPILE: String = "compileKotlin"
 
+        private val filterBlockName = Regex("""\b(exclude|include)(?=\s*\{)""")
+
         val excludedNames: List<String> =
             listOf("InternalByPackage", "InternalInSubpackage", "HiddenByAnnotation", "HiddenByName", "HiddenNested")
 
@@ -204,3 +207,7 @@ abstract class ApiFiltersTestBase {
  */
 internal val legacyAbiValidationDsl: Boolean
     get() = TEST_COMPILER_VERSION.toKotlinVersion() < KotlinVersion(2, 4)
+
+/** The filter blocks have the names `excluded` and `included` before Kotlin 2.3.20. */
+internal val legacyAbiFilterNames: Boolean
+    get() = TEST_COMPILER_VERSION.toKotlinVersion() < KotlinVersion(2, 3, 20)
