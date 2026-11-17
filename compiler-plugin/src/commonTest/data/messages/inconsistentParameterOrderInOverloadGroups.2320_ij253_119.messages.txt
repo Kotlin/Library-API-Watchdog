@@ -364,3 +364,40 @@
     If this is intended, apply `@IntentionallyInconsistentParameterOrder` to the function.
 
     See more: https://kotlin.github.io/Library-API-Watchdog/checks/inconsistent-parameter-order-in-overloads
+
+/inconsistentParameterOrderInOverloadGroups.kt:55:12: error: INCONSISTENT_PARAMETER_ORDER_IN_OVERLOADS
+    Shared parameters have different positions in these overloads:
+
+        This overload:  transformGroup(name: String, onEach: SuspendFunction1<Int, Unit>, configure: Function2<StringBuilder, Int, Unit>, fallback: Function0<Unit>?)
+        Other overload: transformGroup(onEach: SuspendFunction1<Int, Unit>, name: String, steps: List<Function1<String, Int>>, wrap: Function1<Function1<Int, Int>, Function1<Int, Int>>, decorate: Function1<Function0<Unit>, Unit>)
+
+    Shared parameters with different positions:
+
+        Parameter | This overload | Other overload
+        name      | 1st           | 2nd
+        onEach    | 2nd           | 1st
+
+    Use the same positions for shared parameters, and put extra parameters after them. A trailing lambda parameter can stay last.
+
+    If this is intended, apply `@IntentionallyInconsistentParameterOrder` to the function.
+
+    See more: https://kotlin.github.io/Library-API-Watchdog/checks/inconsistent-parameter-order-in-overloads
+
+/inconsistentParameterOrderInOverloadGroups.kt:62:12: error: INCONSISTENT_PARAMETER_ORDER_IN_OVERLOADS
+    Shared parameters have different positions in these overloads:
+
+        This overload:  transformGroup(onEach: SuspendFunction1<Int, Unit>, name: String, steps: List<Function1<String, Int>>, wrap: Function1<Function1<Int, Int>, Function1<Int, Int>>, decorate: Function1<Function0<Unit>, Unit>)
+        Other overload: transformGroup(name: String, onEach: SuspendFunction1<Int, Unit>, configure: Function2<StringBuilder, Int, Unit>, fallback: Function0<Unit>?)
+
+    Shared parameters with different positions:
+
+        Parameter | This overload | Other overload
+        onEach    | 1st           | 2nd
+        name      | 2nd           | 1st
+
+    Use the same positions for shared parameters, and put extra parameters after them. A trailing lambda parameter can stay last.
+
+    If this is intended, apply `@IntentionallyInconsistentParameterOrder` to the function.
+
+    See more: https://kotlin.github.io/Library-API-Watchdog/checks/inconsistent-parameter-order-in-overloads
+
