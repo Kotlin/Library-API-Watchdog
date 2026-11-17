@@ -127,7 +127,7 @@ private class DependencyExposureIndex(
         }
 
     private fun FirClassSymbol<*>.dependencyPath(): Path? = when (val source = sourceElement) {
-        is KotlinJvmBinarySourceElement -> source.binaryClass.containingLibraryPath?.path?.toString()?.let(::normalizedPath)
+        is KotlinJvmBinarySourceElement -> source.binaryClass.containingLibraryPathCompat?.let(::normalizedPath)
         else -> source?.klibPathCompat()
     }
 

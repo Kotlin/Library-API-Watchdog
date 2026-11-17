@@ -20,6 +20,8 @@ import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.contextParameterTypes
 import org.jetbrains.kotlin.fir.types.receiverType
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.StandardClassIds
 
 /** Checks every visibility, because a marker on a private type doesn't have any effect either. */
@@ -78,8 +80,10 @@ internal class DslMarkerTypePositionChecker(
 
     private fun FirAnnotation.isDslMarker(session: FirSession): Boolean =
         annotationClassSymbol(session)
-            ?.hasAnnotation(StandardClassIds.Annotations.DslMarker, session) == true
+            ?.hasAnnotation(DslMarker, session) == true
 
     private fun FirAnnotation.annotationClassSymbol(session: FirSession): FirClassSymbol<*>? =
         annotationTypeRef.coneType.fullyExpandedType(session).toClassSymbol(session)
 }
+
+internal val DslMarker = ClassId(StandardClassIds.BASE_KOTLIN_PACKAGE, Name.identifier("DslMarker"))

@@ -1654,6 +1654,7 @@ class WatchdogProjectTest {
         kotlin >= KotlinVersion(2, 4) -> "0.23.2"
         kotlin >= KotlinVersion(2, 3, 20) -> "0.22.1"
         kotlin >= KotlinVersion(2, 3) -> "0.21.3"
+        kotlin >= KotlinVersion(2, 2, 20) -> "0.20.2"
         else -> null
     }
 

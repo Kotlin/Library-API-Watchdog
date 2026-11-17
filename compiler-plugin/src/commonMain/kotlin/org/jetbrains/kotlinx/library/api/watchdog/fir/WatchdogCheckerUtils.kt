@@ -266,7 +266,7 @@ internal fun FirMemberDeclaration.isWatchedPublicApi(): Boolean {
         return false
     }
 
-    if (visibility == Visibilities.Local || this is FirRegularClass && isLocal) {
+    if (visibility == Visibilities.Local || this is FirRegularClass && isLocalCompat) {
         return false
     }
 

@@ -33,6 +33,16 @@ pluginDevKit {
         pre(pathKlibVersion, "legacyKlib")
         post(pathKlibVersion, "pathKlib")
         splitDev(2, 3, 20)
+        splitDev(2, 3, 0)
+        split("2.2.20-Beta2")
+        split("FirPropertyIsLocalMember") {
+            it.toKotlinVersion() < KotlinVersion(2, 3, 20) &&
+                    it >= KotlinToolingVersion("2.2.20-dev-8619") &&
+                    it != KotlinToolingVersion("2.2.20-Beta1")
+        }
+        split("SourcelessDiagnostics") {
+            it < KotlinToolingVersion("2.2.20-dev-6624") || it == KotlinToolingVersion("2.2.20-Beta1")
+        }
     }
 }
 

@@ -3,10 +3,12 @@ package org.jetbrains.kotlinx.library.api.watchdog.fir
 import java.nio.file.Path
 import org.jetbrains.kotlin.descriptors.SourceElement
 import org.jetbrains.kotlin.fir.SessionHolder
+import org.jetbrains.kotlin.fir.declarations.FirClassLikeDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirProperty
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.symbols.impl.FirTypeParameterSymbol
 import org.jetbrains.kotlin.fir.types.ConeTypeParameterType
+import org.jetbrains.kotlin.load.kotlin.KotlinJvmBinaryClass
 import org.jetbrains.kotlin.name.Name
 
 internal expect val ConeTypeParameterType.typeParameterSymbol: FirTypeParameterSymbol
@@ -17,3 +19,7 @@ context(c: SessionHolder)
 internal expect fun FirAnnotation.getStringArgumentCompat(name: Name): String?
 
 internal expect val FirProperty.isLocalCompat: Boolean
+
+internal expect val FirClassLikeDeclaration.isLocalCompat: Boolean
+
+internal expect val KotlinJvmBinaryClass.containingLibraryPathCompat: String?

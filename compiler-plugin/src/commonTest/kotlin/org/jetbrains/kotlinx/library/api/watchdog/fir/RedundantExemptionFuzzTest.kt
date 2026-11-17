@@ -5,11 +5,12 @@ import java.nio.file.Path
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.fail
+import org.jetbrains.kotlin.compiler.plugin.devkit.DISABLE_FIR_DUMP_HANDLER
 import org.jetbrains.kotlin.compiler.plugin.devkit.mainFirFilesByTestFileCompat
 import org.jetbrains.kotlin.compiler.plugin.devkit.runners.DevKitJvmDiagnosticTest
 import org.jetbrains.kotlin.diagnostics.Severity
 import org.jetbrains.kotlin.test.builders.configureFirHandlersStep
-import org.jetbrains.kotlin.test.directives.FirDiagnosticsDirectives.DISABLE_FIR_DUMP_HANDLER
+import org.jetbrains.kotlin.test.directives.CodegenTestDirectives.IGNORE_FIR_DIAGNOSTICS
 import org.jetbrains.kotlin.test.frontend.fir.FirOutputArtifact
 import org.jetbrains.kotlin.test.frontend.fir.handlers.FirAnalysisHandler
 import org.jetbrains.kotlin.test.frontend.fir.handlers.firDiagnosticCollectorService
@@ -17,6 +18,7 @@ import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.KotlinTestInfo
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.sourceFileProvider
+import org.jetbrains.kotlinx.library.api.watchdog.handlers.firstRangeCompat
 import org.jetbrains.kotlinx.library.api.watchdog.runners.configureWatchdogDiagnosticTest
 import org.opentest4j.AssertionFailedError
 import org.opentest4j.MultipleFailuresError
@@ -272,8 +274,8 @@ internal class CollectingDiagnosticsHandler(testServices: TestServices) : FirAna
                             module = module.name,
                             file = file.name,
                             name = diagnostic.factory.name,
-                            start = diagnostic.firstRange.startOffset,
-                            end = diagnostic.firstRange.endOffset,
+                            start = diagnostic.firstRangeCompat.startOffset,
+                            end = diagnostic.firstRangeCompat.endOffset,
                             severity = diagnostic.severity,
                         )
                     )
@@ -291,6 +293,8 @@ internal class FuzzDiagnosticRunner : DevKitJvmDiagnosticTest({
     configureWatchdogDiagnosticTest()
     defaultDirectives {
         +DISABLE_FIR_DUMP_HANDLER
+        // Pre 2.3.0, FIR errors terminate the entire FIR pipeline, so CollectingDiagnosticsHandler never runs
+        +IGNORE_FIR_DIAGNOSTICS
     }
     configureFirHandlersStep {
         useHandlers(::CollectingDiagnosticsHandler)

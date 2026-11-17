@@ -1,5 +1,6 @@
 package org.jetbrains.kotlinx.library.api.watchdog.handlers
 
+import com.intellij.openapi.util.TextRange
 import org.jetbrains.kotlin.compiler.plugin.devkit.assertEqualsToDump
 import org.jetbrains.kotlin.compiler.plugin.devkit.mainFirFilesByTestFileCompat
 import org.jetbrains.kotlin.diagnostics.KtDiagnostic
@@ -51,7 +52,7 @@ class WatchdogDiagnosticMessagesHandler(testServices: TestServices) : FirAnalysi
     }
 
     private class RenderedDiagnostic(diagnostic: KtDiagnostic, content: String) {
-        val offset: Int = diagnostic.firstRange.startOffset
+        val offset: Int = diagnostic.firstRangeCompat.startOffset
         val name: String = diagnostic.factory.name
         val severity: String = diagnostic.severity.name.lowercase()
         val message: String = diagnostic.renderMessage()
@@ -83,3 +84,5 @@ class WatchdogDiagnosticMessagesHandler(testServices: TestServices) : FirAnalysi
         }
     }
 }
+
+expect val KtDiagnostic.firstRangeCompat: TextRange
