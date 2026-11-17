@@ -24,7 +24,6 @@ import org.jetbrains.kotlin.fir.symbols.impl.FirConstructorSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirValueParameterSymbol
 import org.jetbrains.kotlin.fir.types.coneType
-import org.jetbrains.kotlin.fir.types.renderReadable
 import org.jetbrains.kotlin.fir.unwrapFakeOverrides
 import org.jetbrains.kotlin.lexer.KtToken
 import org.jetbrains.kotlin.lexer.KtTokens
@@ -250,7 +249,7 @@ internal class OverloadParameterOrderChecker(
 
     private fun List<FirValueParameterSymbol>.signature(callableName: Name): String =
         joinToString(prefix = "$callableName(", postfix = ")") {
-            "${it.name}: ${it.resolvedReturnType.renderReadable()}"
+            "${it.name}: ${it.resolvedReturnType.renderReadableCompat()}"
         }
 
     context(context: CheckerContext)
