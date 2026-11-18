@@ -152,7 +152,20 @@ class ApiWatchdogHtmlReportTest {
         )
         val expected = render(reports).outerHtml()
         assertEquals(expected, render(reports.reversed().map { it.copy(notApplied = it.notApplied.reversed()) }).outerHtml())
-        assertEquals(listOf("A.kt:3", "Z.kt:1", "A.kt:1", "Z.kt:2"), Jsoup.parse(expected).select(".location code").map { it.text() })
+        assertEquals(listOf("A.kt:1", "A.kt:3", "Z.kt:1", "Z.kt:2"), Jsoup.parse(expected).select(".location code").map { it.text() })
+    }
+
+    @Test
+    fun `findings of a group are in the order of path then line then column`() {
+        fun ranged(line: Int, column: Int) = entry("src/B.kt:$line", range = ApiWatchdogSourceRange(line, column, line, column + 1))
+        val library = report(entries = listOf(ranged(9, 7), entry("src/B.kt:100"), ranged(9, 3), entry("src/B.kt:12"), entry("src/A.kt:200")))
+        val core = report(entries = listOf(entry("src/Z.kt:1")), project = ":z", directory = "modules/core")
+        fun positions(reports: List<ApiWatchdogProjectReport>, aggregate: Boolean) =
+            render(reports, aggregate, ideLinks()).select(".finding a.open-in-ide")
+                .map { listOf(it.attr("data-ide-path"), it.attr("data-ide-line"), it.attr("data-ide-column")).joinToString(":") }
+        val inLibrary = listOf("src/A.kt:200:0", "src/B.kt:9:3", "src/B.kt:9:7", "src/B.kt:12:0", "src/B.kt:100:0").map { "modules/library/$it" }
+        assertEquals(inLibrary, positions(listOf(library), aggregate = false))
+        assertEquals(listOf("modules/core/src/Z.kt:1:0") + inLibrary, positions(listOf(library, core), aggregate = true))
     }
 
     @Test
@@ -184,8 +197,8 @@ class ApiWatchdogHtmlReportTest {
             report(entries = listOf(entry("src\\Api.kt:1")), project = ":", directory = ""),
             report(entries = listOf(entry("src\\Api.kt:1")), directory = "modules\\library"),
         ))
-        assertEquals(listOf("src/Api.kt", "modules/library/src/Api.kt"), document.select(".finding").map { it.attr("data-path") })
-        assertEquals(listOf("Project :", "Project :library"), document.select(".project").map { it.text() })
+        assertEquals(listOf("modules/library/src/Api.kt", "src/Api.kt"), document.select(".finding").map { it.attr("data-path") })
+        assertEquals(listOf("Project :library", "Project :"), document.select(".project").map { it.text() })
     }
 
     @Test
@@ -236,6 +249,22 @@ class ApiWatchdogHtmlReportTest {
             assertEquals(expected.first, controls.attr("data-ide-target").ifEmpty { null }, links.toString())
             assertEquals(expected.second, document.select("#ide-target option").map { it.text() }, links.toString())
         }
+    }
+
+    @Test
+    fun `the report shows the setup step of the IDE links next to the controls`() {
+        val reports = listOf(report(entries = listOf(entry())))
+        fun setupText(setup: ApiWatchdogIdeLinkSetup?) =
+            render(reports, ideLinks = ideLinks().copy(setup = setup)).select(".report-controls .ide-setup").map { it.text() }
+        assertEquals(emptyList(), setupText(null))
+        assertEquals(listOf("The Open in IDE buttons need JetBrains Toolbox."), setupText(ApiWatchdogIdeLinkSetup.INSTALL_TOOLBOX))
+        assertEquals(
+            listOf(
+                "The Open in IDE buttons open jetbrains:// links. To open the links with JetBrains Toolbox, run " +
+                    "xdg-mime default jetbrains-toolbox.desktop x-scheme-handler/jetbrains.",
+            ),
+            setupText(ApiWatchdogIdeLinkSetup.REGISTER_TOOLBOX),
+        )
     }
 
     @Test

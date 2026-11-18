@@ -55,6 +55,40 @@ class RunningIdesTest {
     }
 
     @Test
+    fun `Linux needs a setup step only without a handler of jetbrains links`() {
+        val commands = mutableListOf<List<String>>()
+        fun setup(handler: String?, dataDirectories: String? = null) = JetBrainsLinkHandler.setup(
+            RunningIdes.Os.LINUX,
+            home,
+            run = { command -> commands += command; handler?.let { JetBrainsLinkHandler.Result(0, it) } },
+            environment = { name -> dataDirectories.takeIf { name == "XDG_DATA_DIRS" } },
+        )
+        assertNull(setup("jetbrains-toolbox.desktop\n"))
+        assertNull(setup(handler = null))
+        assertEquals(ApiWatchdogIdeLinkSetup.INSTALL_TOOLBOX, setup("\n"))
+        assertEquals(listOf("xdg-mime", "query", "default", "x-scheme-handler/jetbrains"), commands.distinct().single())
+
+        val shared = File(home, "shared")
+        File(shared, "applications").mkdirs()
+        File(shared, "applications/jetbrains-toolbox.desktop").writeText("[Desktop Entry]")
+        assertEquals(ApiWatchdogIdeLinkSetup.INSTALL_TOOLBOX, setup(""))
+        assertEquals(ApiWatchdogIdeLinkSetup.REGISTER_TOOLBOX, setup("", dataDirectories = "/missing:${shared.path}"))
+        File(home, ".local/share/applications").mkdirs()
+        File(home, ".local/share/applications/jetbrains-toolbox.desktop").writeText("[Desktop Entry]")
+        assertEquals(ApiWatchdogIdeLinkSetup.REGISTER_TOOLBOX, setup(""))
+    }
+
+    @Test
+    fun `Windows needs JetBrains Toolbox without the registry key of jetbrains links and macOS needs no step`() {
+        fun setup(os: RunningIdes.Os, exitCode: Int?) =
+            JetBrainsLinkHandler.setup(os, home, run = { exitCode?.let { JetBrainsLinkHandler.Result(it, "") } }, environment = { null })
+        assertNull(setup(RunningIdes.Os.WINDOWS, 0))
+        assertEquals(ApiWatchdogIdeLinkSetup.INSTALL_TOOLBOX, setup(RunningIdes.Os.WINDOWS, 1))
+        assertNull(setup(RunningIdes.Os.WINDOWS, null))
+        assertNull(setup(RunningIdes.Os.MAC, 1))
+    }
+
+    @Test
     fun `the JSON reader reads product-info values`() {
         val value = Json.parse("""{"a": [1, -2.5e1, true, false, null], "b": "q\"\\\/é\n", "c": {}, "d": []}""")
         assertEquals(

@@ -2,6 +2,7 @@ package kotlinx.library.watchdog
 
 import java.io.File
 import java.io.Serializable
+import java.util.concurrent.TimeUnit
 
 /**
  * The IDE project that the **Open in IDE** buttons of the HTML report open.
@@ -12,18 +13,30 @@ import java.io.Serializable
 @InternalWatchdogApi
 public data class ApiWatchdogIdeProject(public val name: String, public val rootDirectory: String) : Serializable
 
+/** What the reader does before the OS opens the `jetbrains://` links of the **Open in IDE** buttons. */
+@InternalWatchdogApi
+public enum class ApiWatchdogIdeLinkSetup {
+    INSTALL_TOOLBOX,
+
+    /** JetBrains Toolbox is installed on Linux, and no application handles the links. */
+    REGISTER_TOOLBOX,
+}
+
 /**
  * How the **Open in IDE** buttons open a source file.
  *
  * @property toolbox whether the buttons open `jetbrains://` links through JetBrains Toolbox. Otherwise they open
  *   `idea://open` links. Every IntelliJ IDEA and Android Studio on macOS opens them.
  * @property tags the Toolbox tags of the IDEs that the button can open. With two or more, the report shows a selector.
+ * @property setup the step that the report shows next to the buttons. Null when the OS has a handler for the links,
+ *   or when the handler is unknown.
  */
 @InternalWatchdogApi
 public data class ApiWatchdogIdeLinks(
     public val project: ApiWatchdogIdeProject,
     public val toolbox: Boolean,
     public val tags: List<String>,
+    public val setup: ApiWatchdogIdeLinkSetup? = null,
 ) {
     @InternalWatchdogApi
     public companion object {
@@ -40,7 +53,7 @@ public data class ApiWatchdogIdeLinks(
             if (os == RunningIdes.Os.MAC && !RunningIdes.toolboxInstalled(userHome)) {
                 return ApiWatchdogIdeLinks(project, toolbox = false, tags = emptyList())
             }
-            return of(project, RunningIdes.find(os, userHome))
+            return of(project, RunningIdes.find(os, userHome)).copy(setup = JetBrainsLinkHandler.setup(os, userHome))
         }
 
         internal fun of(project: ApiWatchdogIdeProject, running: List<RunningIdes.Ide>): ApiWatchdogIdeLinks {
@@ -50,6 +63,60 @@ public data class ApiWatchdogIdeLinks(
             return ApiWatchdogIdeLinks(project, toolbox = true, tags = tags.singleOrNull()?.let(::listOf) ?: SUPPORTED_TAGS.keys.toList())
         }
     }
+}
+
+/**
+ * Finds whether the OS has a handler for `jetbrains://` links. Only JetBrains Toolbox registers one. An IDE registers
+ * a URL scheme on macOS only.
+ */
+internal object JetBrainsLinkHandler {
+    const val MIME_TYPE = "x-scheme-handler/jetbrains"
+    const val TOOLBOX_DESKTOP_ENTRY = "jetbrains-toolbox.desktop"
+    private const val TIMEOUT_SECONDS = 5L
+
+    class Result(val exitCode: Int, val output: String)
+
+    /** @param run the result of a command, or null when the command can't start or doesn't end in time */
+    fun setup(
+        os: RunningIdes.Os,
+        userHome: File,
+        run: (List<String>) -> Result? = ::run,
+        environment: (String) -> String? = System::getenv,
+    ): ApiWatchdogIdeLinkSetup? = when (os) {
+        // `detect` writes `idea://open` links without JetBrains Toolbox.
+        RunningIdes.Os.MAC -> null
+        RunningIdes.Os.LINUX -> {
+            val handler = run(listOf("xdg-mime", "query", "default", MIME_TYPE))
+            when {
+                handler == null || handler.output.isNotBlank() -> null
+                toolboxDesktopEntryExists(userHome, environment) -> ApiWatchdogIdeLinkSetup.REGISTER_TOOLBOX
+                else -> ApiWatchdogIdeLinkSetup.INSTALL_TOOLBOX
+            }
+        }
+        // `reg query` exits with 1 when the key is missing.
+        RunningIdes.Os.WINDOWS -> when (run(listOf("reg", "query", "HKCR\\jetbrains"))?.exitCode) {
+            1 -> ApiWatchdogIdeLinkSetup.INSTALL_TOOLBOX
+            else -> null
+        }
+    }
+
+    /** The directories of the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/latest/). */
+    private fun toolboxDesktopEntryExists(userHome: File, environment: (String) -> String?): Boolean {
+        fun variable(name: String) = environment(name)?.takeIf { it.isNotEmpty() }
+        val dataHome = variable("XDG_DATA_HOME")?.let(::File) ?: File(userHome, ".local/share")
+        val dataDirectories = (variable("XDG_DATA_DIRS") ?: "/usr/local/share:/usr/share").split(':').filter { it.isNotEmpty() }.map(::File)
+        return (listOf(dataHome) + dataDirectories).any { File(it, "applications/$TOOLBOX_DESKTOP_ENTRY").isFile }
+    }
+
+    private fun run(command: List<String>): Result? = runCatching {
+        val process = ProcessBuilder(command).redirectError(ProcessBuilder.Redirect.DISCARD).start()
+        process.outputStream.close()
+        if (!process.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            process.destroyForcibly()
+            return null
+        }
+        Result(process.exitValue(), process.inputStream.bufferedReader().use { it.readText() })
+    }.getOrNull()
 }
 
 /**

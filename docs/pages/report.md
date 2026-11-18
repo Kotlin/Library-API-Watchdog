@@ -55,6 +55,29 @@ It holds the **Not applied** diagnostics only:
 Upload the file to GitHub code scanning with the `github/codeql-action/upload-sarif` action, or to any
 service that accepts SARIF.
 
+## Open in IDE buttons
+
+In the HTML report, each entry with a source file has an **Open in IDE** button. The button opens the
+file at the reported position in IntelliJ IDEA or Android Studio. Use the report on the machine that
+has the project. When the task can't select one IDE, the report has an **Open in** list.
+
+The buttons need a different setup on each OS:
+
+| OS      | Setup                                                                                 |
+|---------|---------------------------------------------------------------------------------------|
+| macOS   | IntelliJ IDEA or Android Studio.                                                      |
+| Windows | [JetBrains Toolbox](https://www.jetbrains.com/toolbox-app/).                          |
+| Linux   | JetBrains Toolbox, and JetBrains Toolbox as the application for `jetbrains://` links. |
+
+On Linux, this command makes JetBrains Toolbox the application for the links:
+
+```bash
+xdg-mime default jetbrains-toolbox.desktop x-scheme-handler/jetbrains
+```
+
+When the task finds that Windows or Linux has no application for the links, the report shows the
+missing step above the entries.
+
 ## Selecting the formats
 
 The `reports` block of the `apiWatchdog` extension turns each format on or off and sets its file:

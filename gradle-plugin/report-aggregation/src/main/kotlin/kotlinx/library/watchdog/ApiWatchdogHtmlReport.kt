@@ -92,12 +92,15 @@ public object ApiWatchdogHtmlReport {
         val title = diagnostics.joinToString(", ") { diagnosticTitle(it) }
         val line = location.lineNumber()
         val sourcePath = if (line == null) location else location.substringBeforeLast(':')
+
+        /** The source path with `/` separators. In an aggregate report, it starts with the project directory. */
+        fun path(aggregate: Boolean): String =
+            listOf(if (aggregate) report.projectDirectory else "", sourcePath).filter(String::isNotEmpty).joinToString("/").replace('\\', '/')
     }
 
     private fun diagnosticTitle(name: String): String =
         WatchdogCheckDescriptions.checks[name]?.title ?: if (name == "unknown" || name.isBlank()) "Unknown diagnostic" else name
 
-    /** @param projects the project paths of an aggregate report. The project filter needs two or more. */
     /** @param projects the project paths of an aggregate report. The project filter needs two or more. */
     private fun StringBuilder.appendControls(findings: List<Finding>, projects: List<String>, ideLinks: ApiWatchdogIdeLinks?) {
         append("<div class=\"report-controls\"")
@@ -128,7 +131,17 @@ public object ApiWatchdogHtmlReport {
             }
             appendLine("</select></label>")
         }
+        ideLinks?.setup?.let { setup -> appendLine("<p class=\"ide-setup\">${ideSetupText(setup)}</p>") }
         appendLine("</div>")
+    }
+
+    private fun ideSetupText(setup: ApiWatchdogIdeLinkSetup): String = when (setup) {
+        ApiWatchdogIdeLinkSetup.INSTALL_TOOLBOX ->
+            "The <strong>Open in IDE</strong> buttons need <a href=\"$TOOLBOX_URL\">JetBrains Toolbox</a>."
+        ApiWatchdogIdeLinkSetup.REGISTER_TOOLBOX ->
+            "The <strong>Open in IDE</strong> buttons open <code>jetbrains://</code> links. " +
+                "To open the links with JetBrains Toolbox, run " +
+                "<code>xdg-mime default ${JetBrainsLinkHandler.TOOLBOX_DESKTOP_ENTRY} ${JetBrainsLinkHandler.MIME_TYPE}</code>."
     }
 
     private fun StringBuilder.appendSection(
@@ -153,9 +166,14 @@ public object ApiWatchdogHtmlReport {
                 appendFindingHeading(first)
                 appendLine("<span class=\"group-count\">(${entries.size})</span></summary>")
                 appendLine("<ul class=\"findings\">")
-                entries.sortedWith(compareBy({ it.report.projectPath }, { it.location })).forEach { finding ->
-                    val path = listOf(if (aggregate) finding.report.projectDirectory else "", finding.sourcePath)
-                        .filter(String::isNotEmpty).joinToString("/").replace('\\', '/')
+                val byPosition = compareBy<Finding>(
+                    { it.path(aggregate) },
+                    { it.line ?: 0 },
+                    { it.diagnostic?.sourceRange?.startColumn ?: 0 },
+                    { it.report.projectPath },
+                )
+                entries.sortedWith(byPosition).forEach { finding ->
+                    val path = finding.path(aggregate)
                     val line = finding.line ?: 0
                     val project = if (aggregate) " data-project=\"${finding.report.projectPath.escapeHtml()}\"" else ""
                     appendLine("<li class=\"finding\" data-diagnostics=\"${finding.diagnostics.joinToString(" ") { it.filterKey() }.escapeHtml()}\" data-path=\"${path.escapeHtml()}\" data-line=\"$line\"$project>")
@@ -298,6 +316,7 @@ public object ApiWatchdogHtmlReport {
     }
 
     private const val REDUNDANT_EXEMPTION = "REDUNDANT_EXEMPTION"
+    private const val TOOLBOX_URL = "https://www.jetbrains.com/toolbox-app/"
 
     private fun countLabel(count: Int, singular: String): String =
         "$count $singular${if (count == 1) "" else "s"}"
