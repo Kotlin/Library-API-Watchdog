@@ -211,10 +211,7 @@ public open class WatchdogGradleExtension @Inject internal constructor(
 
     /**
      * Whether the public API checks skip every `@Deprecated` declaration and the declarations nested
-     * in it. Default is `false`. A public declaration can still use a deprecated class in its
-     * signature.
-     *
-     * See [Deprecated API](https://kotlin.github.io/Library-API-Watchdog/exemptions#deprecated-api) for more details.
+     * in it. Default is `false`.
      */
     public val ignoreDeprecatedApi: Property<Boolean> =
         objectFactory.property(Boolean::class.java).convention(false)

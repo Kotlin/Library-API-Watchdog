@@ -195,35 +195,13 @@ See [Without Gradle](./configuration.md#without-gradle) for more details about t
 ## Deprecated API
 
 With `ignoreDeprecatedApi`, the public API checks skip every `@Deprecated` declaration and every
-declaration nested in it. Use it when the library doesn't change deprecated API before it removes
-the API. Default is `false`.
+declaration nested in it. Default is `false`.
 
 ```kotlin build.gradle.kts
 apiWatchdog {
     ignoreDeprecatedApi = true
 }
 ```
-
-The option has these effects:
-
-- Every deprecation level counts: `WARNING`, `ERROR`, and `HIDDEN`.
-- [Inconsistent parameter order in overloads](./checks/inconsistent-parameter-order-in-overloads.md)
-  doesn't compare an overload with a deprecated overload.
-- A public declaration can use a deprecated class in its signature, because a deprecated class isn't
-  an internal API type.
-- [Redundant exemptions](./checks/special/redundant-exemption.md) reports an `@Intentionally*`
-  annotation on a deprecated declaration.
-- The four checks that run on every visibility still run. See
-  [Internal API annotations](#internal-api-annotations) for more details about these checks.
-
-Don't list `kotlin.Deprecated` in `internalApiAnnotations` instead.
-[Internal API types in public API](./checks/special/public-type-with-internal-api.md) then reports
-every public declaration that uses a deprecated class.
-
-Without the option, exempt a deprecated declaration with the `@Intentionally*` annotation of the
-check and `ExemptionReason.FOR_DEPRECATION`.
-
-See [Without Gradle](./configuration.md#without-gradle) for more details about the compiler option.
 
 ## API filters
 

@@ -243,8 +243,6 @@ apiWatchdog {
 }
 ```
 
-See [Deprecated API](./exemptions.md#deprecated-api) for more details.
-
 ## API filters
 
 `useAbiValidationFilters` controls the API filters. Default is `true`: the watchdog copies the
