@@ -210,7 +210,9 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         val exemptTaskPath = taskPath(EXEMPT_EXISTING_API_TASK_NAME)
         val exemptsTaskPaths = listOf(exemptTaskPath, taskPath(GENERATE_REPORT_TASK_NAME))
         this@WatchdogSupportPlugin.exemptsTaskPaths = exemptsTaskPaths
+        val exemptInGraph = objects.property(Boolean::class.java).convention(false)
         gradle.taskGraph.whenReady { graph ->
+            exemptInGraph.set(graph.hasTask(exemptTaskPath))
             val collecting = exemptsTaskPaths.any(graph::hasTask)
             collectDiagnostics.set(collecting)
             if (!collecting) return@whenReady
@@ -221,13 +223,12 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 .filter { graph.hasTask(taskPath(it.compileKotlinTaskName)) && runsCompileTask(it) }
                 .mapTo(hashSetOf()) { taskPath(it.compileKotlinTaskName) }
         }
-        // Both tasks write the report data file. When the build requests `exemptExistingApi`, the report
-        // artifact comes from that run, not from a second compilation in `generateApiWatchdogReport`.
-        // The artifact's producer is set before the task graph exists, so the requested task names decide.
-        val exemptRequested = gradle.startParameter.taskNames.any {
-            it == EXEMPT_EXISTING_API_TASK_NAME || it == exemptTaskPath
+        // Both tasks write the same report files. The diagnostics of the compilation don't match the sources
+        // that `exemptExistingApi` rewrote, so the report of that task stays.
+        reportTask.configure { task ->
+            task.mustRunAfter(exemptTask)
+            task.onlyIf("exemptExistingApi isn't in the task graph") { !exemptInGraph.get() }
         }
-        val reportDataTask: TaskProvider<out ApiWatchdogReportTask> = if (exemptRequested) exemptTask else reportTask
         configurations.register(API_WATCHDOG_REPORT_ELEMENTS_CONFIGURATION) { configuration ->
             configuration.isCanBeConsumed = true
             configuration.isCanBeResolved = false
@@ -250,8 +251,8 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         afterEvaluate {
             if (!enabled.get()) return@afterEvaluate
             configurations.named(API_WATCHDOG_REPORT_ELEMENTS_CONFIGURATION).configure { configuration ->
-                configuration.outgoing.artifact(reportDataTask.flatMap { it.reportDataFile }) { artifact ->
-                    artifact.builtBy(reportDataTask)
+                configuration.outgoing.artifact(reportTask.flatMap { it.reportDataFile }) { artifact ->
+                    artifact.builtBy(reportTask)
                 }
             }
         }
@@ -295,11 +296,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 dependsOn(kotlinCompilation.compileTaskProvider)
             }
             exemptTask.configure { task -> task.addCompilation() }
-            reportTask.configure { task ->
-                // Both tasks write the same report files.
-                task.mustRunAfter(exemptTask)
-                task.addCompilation()
-            }
+            reportTask.configure { task -> task.addCompilation() }
 
             kotlinCompilation.compileTaskProvider.configure { task ->
                 task.inputs.property("apiWatchdog.collectDiagnosticsForExempts", collect)

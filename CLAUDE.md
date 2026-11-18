@@ -105,9 +105,10 @@ npm run build                       # the site build, fails on a broken link or 
 - `:library-api-watchdog-report-aggregation` is a separate artifact, so a root project that applies it
   doesn't put the KGP-dependent support plugin on every project's plugin classpath.
 - `exemptExistingApi` writes the aggregate report through two project-local hooks, because project isolation
-  forbids a finalizer on another project's task. The support plugin picks the producer of the report artifact
-  from `gradle.startParameter.taskNames`. The aggregation plugin finalizes the root's `exemptExistingApi` (its own
-  lifecycle task when the root has no Watchdog) with `aggregateApiWatchdogReports`.
+  forbids a finalizer on another project's task. `generateApiWatchdogReport` builds the report artifact. When the
+  task graph has the `exemptExistingApi` of the project, `generateApiWatchdogReport` skips itself, and the report of
+  `exemptExistingApi` stays. The aggregation plugin finalizes the root's `exemptExistingApi` (its own lifecycle task
+  when the root has no Watchdog) with `aggregateApiWatchdogReports`.
 - The benchmark baseline (`compiler-plugin/src/benchmark/baseline/`) is valid for one machine profile. Record it
   with the `Benchmark baseline` workflow (`record` input), never on a developer machine. The check compares `bytes`
   only.

@@ -14,7 +14,10 @@ pluginDevKit {
     // The IntelliJ 2027.1 nightly (271.1622) bundles a compiler from the window between Kotlin
     // commit 5a87800b73, which moved `getChild` and `unsubstitutedScope` to other files, and its
     // revert 642f8df9f6. Public dev builds 2285 to 2331 share that layout. The dev kit's IDE
-    // mapping table doesn't know this build yet. Remove the line when it does.
+    // mapping table doesn't have the 271 builds yet. Remove the line when it has them:
+    // https://github.com/Kotlin/compiler-plugin-dev-kit/issues/111
+    // A nightly with a compiler after the revert loads this build too and fails:
+    // https://github.com/Kotlin/Library-API-Watchdog/issues/58
     if (!ciSingleVersion) {
         testAgainst("2.5.20-dev-2285", forIde = true)
     }
