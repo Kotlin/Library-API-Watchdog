@@ -10,7 +10,6 @@ import org.jetbrains.kotlin.compiler.plugin.devkit.mainFirFilesByTestFileCompat
 import org.jetbrains.kotlin.compiler.plugin.devkit.runners.DevKitJvmDiagnosticTest
 import org.jetbrains.kotlin.diagnostics.Severity
 import org.jetbrains.kotlin.test.builders.configureFirHandlersStep
-import org.jetbrains.kotlin.test.directives.CodegenTestDirectives.IGNORE_FIR_DIAGNOSTICS
 import org.jetbrains.kotlin.test.frontend.fir.FirOutputArtifact
 import org.jetbrains.kotlin.test.frontend.fir.handlers.FirAnalysisHandler
 import org.jetbrains.kotlin.test.frontend.fir.handlers.firDiagnosticCollectorService
@@ -293,10 +292,9 @@ internal class FuzzDiagnosticRunner : DevKitJvmDiagnosticTest({
     configureWatchdogDiagnosticTest()
     defaultDirectives {
         +DISABLE_FIR_DUMP_HANDLER
-        // Pre 2.3.0, FIR errors terminate the entire FIR pipeline, so CollectingDiagnosticsHandler never runs
-        +IGNORE_FIR_DIAGNOSTICS
     }
     configureFirHandlersStep {
-        useHandlers(::CollectingDiagnosticsHandler)
+        // `AbstractJvmDiagnosticMessagesTest` has the reason for `useHandlersAtFirst`.
+        useHandlersAtFirst(::CollectingDiagnosticsHandler)
     }
 })

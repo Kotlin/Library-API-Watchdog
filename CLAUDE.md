@@ -92,8 +92,8 @@ npm run build                       # the site build, fails on a broken link or 
   condition puts the versions that match into the `pre` source set. Compile every target to find the side that an API
   needs.
 - A test handler goes into the step with `useHandlersAtFirst`. Before Kotlin 2.3.0, the test framework doesn't run
-  the handlers that follow `NoFirCompilationErrorsHandler` when the module has an error. The test then passes without
-  a check. The fuzz runner sets `IGNORE_FIR_DIAGNOSTICS` instead.
+  the handlers that follow `NoFirCompilationErrorsHandler` when the module has an error. `RUN_PIPELINE_TILL: FRONTEND`
+  suppresses that failure, so the test then passes without a check.
 - The fixer uses K2 PSI entry points only, with unrelocated `com.intellij` imports, and compile-only dependencies.
   The Gradle task runs it in a separate JVM with the `kotlin-compiler` artifact of the project's Kotlin version.
 - The Gradle plugin checks the task graph in `gradle.taskGraph.whenReady`, never on task realization, because IDE
