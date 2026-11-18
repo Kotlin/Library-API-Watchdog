@@ -3,6 +3,8 @@ package kotlinx.library.watchdog
 import java.io.File
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
+import org.gradle.api.provider.ValueSource
+import org.gradle.api.provider.ValueSourceParameters
 
 /**
  * The IDE project that the **Open in IDE** buttons of the HTML report open.
@@ -22,14 +24,20 @@ public enum class ApiWatchdogIdeLinkSetup {
     REGISTER_TOOLBOX,
 }
 
+/** The [ApiWatchdogIdeLinkSetup] of this machine, or no value when the OS has a handler or the handler is unknown. */
+@InternalWatchdogApi
+public abstract class ApiWatchdogIdeLinkSetupSource : ValueSource<ApiWatchdogIdeLinkSetup, ValueSourceParameters.None> {
+    override fun obtain(): ApiWatchdogIdeLinkSetup? =
+        JetBrainsLinkHandler.setup(RunningIdes.Os.current, File(System.getProperty("user.home")))
+}
+
 /**
  * How the **Open in IDE** buttons open a source file.
  *
  * @property toolbox whether the buttons open `jetbrains://` links through JetBrains Toolbox. Otherwise they open
  *   `idea://open` links. Every IntelliJ IDEA and Android Studio on macOS opens them.
  * @property tags the Toolbox tags of the IDEs that the button can open. With two or more, the report shows a selector.
- * @property setup the step that the report shows next to the buttons. Null when the OS has a handler for the links,
- *   or when the handler is unknown.
+ * @property setup the step that the report shows above the entries, or null
  */
 @InternalWatchdogApi
 public data class ApiWatchdogIdeLinks(
@@ -47,13 +55,13 @@ public data class ApiWatchdogIdeLinks(
          * The links for the IDEs that run on this machine now. The IDEs with [project] open come first, then all
          * running IDEs. Without exactly one IDE tag, the reader selects the IDE in the report.
          */
-        public fun detect(project: ApiWatchdogIdeProject): ApiWatchdogIdeLinks {
+        public fun detect(project: ApiWatchdogIdeProject, setup: ApiWatchdogIdeLinkSetup?): ApiWatchdogIdeLinks {
             val os = RunningIdes.Os.current
             val userHome = File(System.getProperty("user.home"))
             if (os == RunningIdes.Os.MAC && !RunningIdes.toolboxInstalled(userHome)) {
                 return ApiWatchdogIdeLinks(project, toolbox = false, tags = emptyList())
             }
-            return of(project, RunningIdes.find(os, userHome)).copy(setup = JetBrainsLinkHandler.setup(os, userHome))
+            return of(project, RunningIdes.find(os, userHome)).copy(setup = setup)
         }
 
         internal fun of(project: ApiWatchdogIdeProject, running: List<RunningIdes.Ide>): ApiWatchdogIdeLinks {

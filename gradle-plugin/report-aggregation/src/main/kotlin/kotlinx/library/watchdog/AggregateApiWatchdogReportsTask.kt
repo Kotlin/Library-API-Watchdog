@@ -39,6 +39,10 @@ public abstract class AggregateApiWatchdogReportsTask internal constructor() : D
     @get:Optional
     internal val ideProject: Property<ApiWatchdogIdeProject> = project.objects.property(ApiWatchdogIdeProject::class.java)
 
+    @get:Input
+    @get:Optional
+    internal val ideLinkSetup: Property<ApiWatchdogIdeLinkSetup> = project.objects.property(ApiWatchdogIdeLinkSetup::class.java)
+
     /** The report formats. Default files are `build/reports/api-watchdog/aggregate-report.html` and `.sarif`. */
     @get:Nested
     public val reports: WatchdogReports = project.objects.newInstance(WatchdogReports::class.java)
@@ -62,7 +66,7 @@ public abstract class AggregateApiWatchdogReportsTask internal constructor() : D
                 )
             }
         this.reports.htmlOutput.orNull?.asFile?.let { file ->
-            ApiWatchdogHtmlReport.write(reports, file, aggregate = true, ideLinks = ideProject.orNull?.let(ApiWatchdogIdeLinks::detect))
+            ApiWatchdogHtmlReport.write(reports, file, aggregate = true, ideLinks = ideProject.orNull?.let { ApiWatchdogIdeLinks.detect(it, ideLinkSetup.orNull) })
             logger.lifecycle("Aggregate API Watchdog report: ${file.toPath().toUri()}")
         }
         this.reports.sarifOutput.orNull?.asFile?.let { file ->

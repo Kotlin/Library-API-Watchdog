@@ -78,6 +78,7 @@ public class WatchdogReportAggregationPlugin : Plugin<Project> {
                 }.toMap()
             })
             task.reports.html.convention(true)
+            task.ideLinkSetup.set(ApiWatchdogHtmlReport.ideLinkSetup(target.providers, task.reports.html))
             task.reports.htmlFile.convention(target.layout.buildDirectory.file(AGGREGATE_HTML_REPORT))
             task.reports.sarif.convention(true)
             task.reports.sarifFile.convention(target.layout.buildDirectory.file(AGGREGATE_SARIF_REPORT))

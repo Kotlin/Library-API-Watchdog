@@ -93,7 +93,6 @@ public object ApiWatchdogHtmlReport {
         val line = location.lineNumber()
         val sourcePath = if (line == null) location else location.substringBeforeLast(':')
 
-        /** The source path with `/` separators. In an aggregate report, it starts with the project directory. */
         fun path(aggregate: Boolean): String =
             listOf(if (aggregate) report.projectDirectory else "", sourcePath).filter(String::isNotEmpty).joinToString("/").replace('\\', '/')
     }
@@ -271,6 +270,16 @@ public object ApiWatchdogHtmlReport {
             .map { text -> text.trim().ifEmpty { null } }
             .orElse(rootDirectory.asFile.name)
             .map { name -> ApiWatchdogIdeProject(name, rootDirectory.asFile.absoluteFile.invariantSeparatorsPath) }
+
+    /**
+     * The setup step of the **Open in IDE** buttons of a task that writes the HTML report when [html] is true. Gradle
+     * finds the step on every build, so the task isn't up to date after the step changes.
+     */
+    public fun ideLinkSetup(providers: ProviderFactory, html: Provider<Boolean>): Provider<ApiWatchdogIdeLinkSetup> {
+        val setup = providers.of(ApiWatchdogIdeLinkSetupSource::class.java) {}
+        val none = providers.provider<ApiWatchdogIdeLinkSetup> { null }
+        return html.flatMap { if (it) setup else none }
+    }
 
     private fun StringBuilder.appendSource(
         report: ApiWatchdogProjectReport,

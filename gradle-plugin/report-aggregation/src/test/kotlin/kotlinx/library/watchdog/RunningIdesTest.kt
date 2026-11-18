@@ -57,7 +57,7 @@ class RunningIdesTest {
     @Test
     fun `Linux needs a setup step only without a handler of jetbrains links`() {
         val commands = mutableListOf<List<String>>()
-        fun setup(handler: String?, dataDirectories: String? = null) = JetBrainsLinkHandler.setup(
+        fun setup(handler: String?, dataDirectories: String = File(home, "missing").path) = JetBrainsLinkHandler.setup(
             RunningIdes.Os.LINUX,
             home,
             run = { command -> commands += command; handler?.let { JetBrainsLinkHandler.Result(0, it) } },
@@ -72,7 +72,7 @@ class RunningIdesTest {
         File(shared, "applications").mkdirs()
         File(shared, "applications/jetbrains-toolbox.desktop").writeText("[Desktop Entry]")
         assertEquals(ApiWatchdogIdeLinkSetup.INSTALL_TOOLBOX, setup(""))
-        assertEquals(ApiWatchdogIdeLinkSetup.REGISTER_TOOLBOX, setup("", dataDirectories = "/missing:${shared.path}"))
+        assertEquals(ApiWatchdogIdeLinkSetup.REGISTER_TOOLBOX, setup("", dataDirectories = "${File(home, "missing").path}:${shared.path}"))
         File(home, ".local/share/applications").mkdirs()
         File(home, ".local/share/applications/jetbrains-toolbox.desktop").writeText("[Desktop Entry]")
         assertEquals(ApiWatchdogIdeLinkSetup.REGISTER_TOOLBOX, setup(""))

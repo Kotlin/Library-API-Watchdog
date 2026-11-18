@@ -74,6 +74,10 @@ public abstract class ApiWatchdogReportTask internal constructor() : DefaultTask
     @get:Optional
     internal abstract val ideProject: Property<ApiWatchdogIdeProject>
 
+    @get:Input
+    @get:Optional
+    internal abstract val ideLinkSetup: Property<ApiWatchdogIdeLinkSetup>
+
     /** The report formats. Default: the `reports` block of the `apiWatchdog` extension. */
     @get:Nested
     public val reports: WatchdogReports = project.objects.newInstance(WatchdogReports::class.java)
@@ -124,7 +128,7 @@ public abstract class ApiWatchdogReportTask internal constructor() : DefaultTask
             projectPath = projectIdentityPath.get(),
             projectDirectory = projectDirectory.get().asFile,
             projectDirectoryFromRoot = projectDirectoryFromRoot.get(),
-            ideLinks = ideProject.orNull?.let(ApiWatchdogIdeLinks::detect),
+            ideLinks = ideProject.orNull?.takeIf { reports.html.get() }?.let { ApiWatchdogIdeLinks.detect(it, ideLinkSetup.orNull) },
             htmlFile = if (reports.html.get()) reports.htmlFile.get().asFile else null,
             sarifFile = if (reports.sarif.get()) reports.sarifFile.get().asFile else null,
             reportDataFile = reportDataFile.get().asFile,
