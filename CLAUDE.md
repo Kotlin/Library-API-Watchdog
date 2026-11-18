@@ -30,11 +30,12 @@ inline markers plus a `.messages.txt` dump of the full messages (`JvmDiagnosticM
 run generates a missing dump. The dump replaces the macOS shortcut `⌘N` with `Alt+Insert`. Hand-written tests in
 `compiler-plugin/src/commonTest/kotlin` run in every `k*Test` task.
 
-Docs checks run in `docs/` after `npm ci`. The `docs.yml` workflow runs all three:
+Docs checks run in `docs/` after `npm ci`. The `docs.yml` workflow runs all four:
 
 ```bash
 npm test                            # the remark plugins: diagnostic annotations in code samples, check-page links, README order
 npm run check:diagnostic-exemptions # the exemption wording in the check pages matches diagnostics.json
+npm run check:changelog             # the website changelog matches CHANGELOG.md, `npm run sync:changelog` updates it
 npm run build                       # the site build, fails on a broken link or anchor
 ```
 
