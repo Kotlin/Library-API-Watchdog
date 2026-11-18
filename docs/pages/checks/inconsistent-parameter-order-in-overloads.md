@@ -154,7 +154,7 @@ The comparisons have these limits:
   remove it from the comparisons.
 - `@PublishedApi internal` overloads aren't used in comparisons.
 - A last parameter accepts a trailing lambda when its type is a function type, a `fun interface`, or a Java SAM
-  interface.
+  interface. A type parameter also counts when every upper bound is a function type or `kotlin.Function`.
 
 ## Exemption
 

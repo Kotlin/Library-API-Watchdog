@@ -52,6 +52,7 @@ import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirTypeParameterSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirValueParameterSymbol
 import org.jetbrains.kotlin.fir.types.ConeClassLikeType
+import org.jetbrains.kotlin.fir.types.ConeDefinitelyNotNullType
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.fir.types.ConeTypeParameterType
 import org.jetbrains.kotlin.fir.types.coneType
@@ -423,8 +424,8 @@ internal fun ConeKotlinType.erasedClassSymbol(): FirClassSymbol<*>? {
 
 /**
  * True when a call can pass a trailing lambda to this parameter: a function type, a `fun interface`, or a
- * Java SAM interface. No lambda literal satisfies a `KFunction` type. A call can't pass a trailing lambda to
- * a `vararg` parameter.
+ * Java SAM interface. A type parameter counts when every bound is a function type or `kotlin.Function`.
+ * No lambda literal satisfies a `KFunction` type. A call can't pass a trailing lambda to a `vararg` parameter.
  */
 context(context: CheckerContext)
 internal fun FirValueParameterSymbol.acceptsTrailingLambda(): Boolean {
@@ -436,12 +437,47 @@ internal fun FirValueParameterSymbol.acceptsTrailingLambda(): Boolean {
         if (it is ConeClassLikeType) it.fullyExpandedType() else it
     }
 
+    val typeParameter = type.typeParameterSymbolOrNull()
+    if (typeParameter != null) {
+        return typeParameter.hasFunctionBounds(mutableSetOf())
+    }
+
     val functionTypeKind = type.functionTypeKind(context.session)
     if (functionTypeKind != null) {
         return !functionTypeKind.isReflectType
     }
 
     return FirSamResolver(context.session, context.scopeSession).isSamType(type)
+}
+
+private fun ConeKotlinType.typeParameterSymbolOrNull(): FirTypeParameterSymbol? = when (this) {
+    is ConeTypeParameterType -> typeParameterSymbol
+    is ConeDefinitelyNotNullType -> (original as? ConeTypeParameterType)?.typeParameterSymbol
+    else -> null
+}
+
+// A type parameter without a function bound accepts every value.
+context(context: CheckerContext)
+private fun FirTypeParameterSymbol.hasFunctionBounds(visited: MutableSet<FirTypeParameterSymbol>): Boolean {
+    if (!visited.add(this)) {
+        return false
+    }
+
+    return resolvedBounds.all { bound ->
+        val type = bound.coneType
+        val typeParameter = type.typeParameterSymbolOrNull()
+        if (typeParameter != null) {
+            return@all typeParameter.hasFunctionBounds(visited)
+        }
+
+        val expanded = (type as? ConeClassLikeType)?.fullyExpandedType() ?: return@all false
+        val functionTypeKind = expanded.functionTypeKind(context.session)
+        if (functionTypeKind != null) {
+            !functionTypeKind.isReflectType
+        } else {
+            expanded.lookupTag.classId == StandardClassIds.Function
+        }
+    }
 }
 
 /**

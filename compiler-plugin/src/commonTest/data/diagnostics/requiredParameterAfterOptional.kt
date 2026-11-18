@@ -55,6 +55,26 @@ public fun listen(bufferSize: Int = 16, listener: Listener) {}
 
 public fun listenMaybe(bufferSize: Int = 16, listener: Listener?) {}
 
+// A type parameter with a function type or `kotlin.Function` as its bound takes a trailing lambda.
+
+public class FixtureScope<Action : Function<Unit>> {
+    public fun test(name: String, timeout: Long = 0L, action: Action) {}
+}
+
+public fun <Block : () -> Unit> runBounded(delay: Long = 0L, block: Block) {}
+
+public fun <Block : Function<Unit>> runMaybe(delay: Long = 0L, block: Block?) {}
+
+public fun <Outer : suspend () -> Unit, Inner : Outer> runNested(delay: Long = 0L, block: Inner) {}
+
+// A type parameter with another bound isn't a lambda parameter.
+
+public fun <Value> store(key: String = "", <!REQUIRED_PARAMETER_AFTER_OPTIONAL!>value<!>: Value) {}
+
+public fun <Handler : KFunction1<Int, Unit>> bindBounded(priority: Int = 0, <!REQUIRED_PARAMETER_AFTER_OPTIONAL!>handler<!>: Handler) {}
+
+public fun <Action> runMarked(delay: Long = 0L, <!REQUIRED_PARAMETER_AFTER_OPTIONAL!>action<!>: Action) where Action : Function<Unit>, Action : Comparable<Action> {}
+
 public fun wellOrdered(host: String, port: Int = 80, timeout: Long = 30L) {}
 
 public fun allRequired(host: String, port: Int) {}

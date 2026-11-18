@@ -56,6 +56,12 @@ public class Container(name: String, configure: () -> Unit) {
     public constructor(name: String, type: KClass<*>, configure: () -> Unit) : this(name, configure)
 }
 
+public class Fixture<Action : Function<Unit>> {
+    public fun test(name: String, action: Action) {}
+
+    public fun test(name: String, type: KClass<*>, action: Action) {}
+}
+
 // An extra parameter in front of the shared parameters still moves them.
 
 public fun <!INCONSISTENT_PARAMETER_ORDER_IN_OVERLOADS!>registerTyped<!>(type: KClass<*>, name: String, configure: () -> Unit) {}
@@ -77,6 +83,10 @@ public fun <!INCONSISTENT_PARAMETER_ORDER_IN_OVERLOADS!>place<!>(x: Int, scale: 
 public fun <!INCONSISTENT_PARAMETER_ORDER_IN_OVERLOADS!>bind<!>(name: String, handler: KFunction0<Unit>) {}
 
 public fun <!INCONSISTENT_PARAMETER_ORDER_IN_OVERLOADS!>bind<!>(name: String, priority: Int, handler: KFunction0<Unit>) {}
+
+public fun <Value> <!INCONSISTENT_PARAMETER_ORDER_IN_OVERLOADS!>store<!>(name: String, value: Value) {}
+
+public fun <Value> <!INCONSISTENT_PARAMETER_ORDER_IN_OVERLOADS!>store<!>(name: String, priority: Int, value: Value) {}
 
 public interface Listener {
     public fun onEvent(task: Task)
