@@ -387,6 +387,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                         lazy { extension.reportUndocumentedClassProperties.get().toString() },
                     ),
                 )
+                add(SubpluginOption("ignoreDeprecatedApi", lazy { extension.ignoreDeprecatedApi.get().toString() }))
                 add(
                     SubpluginOption(
                         "compileDependencyPaths",

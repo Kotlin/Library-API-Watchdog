@@ -100,6 +100,8 @@ apiWatchdog {
     reportUndocumentedClassProperties = false
     // !link[/internalApiAnnotations/] /configuration#internal-api-annotations
     internalApiAnnotations.add("com.example.dependency.InternalDependencyApi")
+    // !link[/ignoreDeprecatedApi/] /configuration#deprecated-api
+    ignoreDeprecatedApi = false
     // !link[/useAbiValidationFilters/] /configuration#api-filters
     useAbiValidationFilters = true
     // !link[/ignore/] /configuration#annotation-ignore-rules
@@ -229,6 +231,19 @@ apiWatchdog {
 ```
 
 See [Internal API annotations](./exemptions.md#internal-api-annotations) for more details.
+
+## Deprecated API
+
+With `ignoreDeprecatedApi`, the public API checks skip every `@Deprecated` declaration and every
+declaration nested in it. Default is `false`:
+
+```kotlin build.gradle.kts
+apiWatchdog {
+    ignoreDeprecatedApi = true
+}
+```
+
+See [Deprecated API](./exemptions.md#deprecated-api) for more details.
 
 ## API filters
 
@@ -384,6 +399,7 @@ A direct compiler call configures the plugin with `-P` options of this form:
 | `publicTypeWithInternalApi` | `true` or `false`.                                     | `publicTypeWithInternalApi`   |
 | `reportUndocumentedClassProperties` | `true` or `false`.                             | `reportUndocumentedClassProperties` |
 | `requireExplicitApi`        | `true` or `false`. `false` runs the checks without explicit API mode. | `explicitApiRequirement` |
+| `ignoreDeprecatedApi`       | `true` or `false`.                                     | `ignoreDeprecatedApi`         |
 
 `<NAME>` is a diagnostic name from the [Property reference](#property-reference), except the two
 checks that a Boolean property turns off: the option rejects them. `<severity>` is
@@ -400,6 +416,7 @@ pattern has the [format of the ABI validation filters](https://kotlinlang.org/do
 -P plugin:kotlinx.library.watchdog:publicTypeWithInternalApi=false
 -P plugin:kotlinx.library.watchdog:reportUndocumentedClassProperties=true
 -P plugin:kotlinx.library.watchdog:requireExplicitApi=false
+-P plugin:kotlinx.library.watchdog:ignoreDeprecatedApi=true
 ```
 
 [`PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY`](./checks/special/public-type-from-non-transitive-dependency.md)

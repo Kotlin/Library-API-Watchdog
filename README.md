@@ -85,12 +85,15 @@ and the compiler flags for a build without Gradle.
 
 ## Exemptions
 
-Five ways to exempt API from the checks:
+Six ways to exempt API from the checks:
 
 - **[Internal API](https://kotlin.github.io/Library-API-Watchdog/exemptions)**: every check
   skips the declarations under an internal-API annotation. Mark the library's own annotation with
   `@InternalAnnotationMarker`. For an annotation from a dependency, use
   `apiWatchdog { internalApiAnnotations.add("com.example.InternalApi") }`.
+- **[Deprecated API](https://kotlin.github.io/Library-API-Watchdog/exemptions#deprecated-api)**: with
+  `apiWatchdog { ignoreDeprecatedApi = true }`, every check skips the `@Deprecated` declarations and
+  the declarations nested in them.
 - **[API filters](https://kotlin.github.io/Library-API-Watchdog/exemptions#api-filters)**: every
   check skips the declarations that the filters of the ABI validation of the Kotlin Gradle plugin
   or of the Binary Compatibility Validator plugin remove from the ABI dump. The watchdog copies the

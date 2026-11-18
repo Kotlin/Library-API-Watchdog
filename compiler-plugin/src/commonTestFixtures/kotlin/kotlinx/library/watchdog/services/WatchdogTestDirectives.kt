@@ -61,6 +61,11 @@ object WatchdogTestDirectives : SimpleDirectivesContainer() {
         description = "The checks run without explicit API mode (requireExplicitApi=false)",
     )
 
+    /** `// IGNORE_DEPRECATED_API` */
+    val IGNORE_DEPRECATED_API by directive(
+        description = "The public API checks skip `@Deprecated` declarations (ignoreDeprecatedApi=true)",
+    )
+
     /** One `<NAME>:<severity>` pair for each override. */
     val DIAGNOSTIC_SEVERITIES by stringDirective(
         description = "Severity overrides in the form of the diagnosticSeverity option",
@@ -126,6 +131,10 @@ class WatchdogOptionsConfigurator(testServices: TestServices) : EnvironmentConfi
 
         if (WatchdogTestDirectives.REQUIRE_EXPLICIT_API_OFF in module.directives) {
             configuration.put(WatchdogConfigurationKeys.REQUIRE_EXPLICIT_API, false)
+        }
+
+        if (WatchdogTestDirectives.IGNORE_DEPRECATED_API in module.directives) {
+            configuration.put(WatchdogConfigurationKeys.IGNORE_DEPRECATED_API, true)
         }
 
         val severities = module.directives[WatchdogTestDirectives.DIAGNOSTIC_SEVERITIES]

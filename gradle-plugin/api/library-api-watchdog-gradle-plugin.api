@@ -63,6 +63,7 @@ public class kotlinx/library/watchdog/WatchdogGradleExtension {
 	public final fun getExhaustivePublicApi ()Lorg/gradle/api/provider/Property;
 	public final fun getExplicitApiRequirement ()Lorg/gradle/api/provider/Property;
 	public final fun getFunctionTypeAliasPublicApi ()Lorg/gradle/api/provider/Property;
+	public final fun getIgnoreDeprecatedApi ()Lorg/gradle/api/provider/Property;
 	public final fun getInconsistentParameterOrderInOverloads ()Lorg/gradle/api/provider/Property;
 	public final fun getInlineFunctionWithLogic ()Lorg/gradle/api/provider/Property;
 	public final fun getInternalApiAnnotations ()Lorg/gradle/api/provider/SetProperty;

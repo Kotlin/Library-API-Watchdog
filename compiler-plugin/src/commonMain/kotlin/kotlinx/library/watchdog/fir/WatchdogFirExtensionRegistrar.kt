@@ -13,6 +13,7 @@ class WatchdogFirExtensionRegistrar internal constructor(
     private val exemptingExistingApi: Boolean = false,
     private val reportUndocumentedClassProperties: Boolean = false,
     private val requireExplicitApi: Boolean = true,
+    private val ignoreDeprecatedApi: Boolean = false,
     private val excludedNames: Set<String> = emptySet(),
     private val includedNames: Set<String> = emptySet(),
     private val includedAnnotations: Set<String> = emptySet(),
@@ -21,6 +22,9 @@ class WatchdogFirExtensionRegistrar internal constructor(
     override fun ExtensionRegistrarContext.configurePlugin() {
         if (internalApiAnnotations.isNotEmpty()) {
             +{ session: FirSession -> ConfiguredInternalApiAnnotations(session, internalApiAnnotations) }
+        }
+        if (ignoreDeprecatedApi) {
+            +{ session: FirSession -> IgnoredDeprecatedApi(session) }
         }
         if (excludedNames.isNotEmpty() || includedNames.isNotEmpty() || includedAnnotations.isNotEmpty()) {
             +{ session: FirSession ->

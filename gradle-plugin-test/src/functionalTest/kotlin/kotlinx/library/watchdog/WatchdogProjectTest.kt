@@ -369,6 +369,35 @@ class WatchdogProjectTest {
         result.assertOutputHas("The public property `value` doesn't have `KDoc`")
     }
 
+    @Test
+    fun `deprecated API is checked by default`() {
+        val result = deprecatedProject(ignoreDeprecatedApi = null).buildAndFail("build")
+
+        result.assertErrors(BOOLEAN_PARAMETER_PUBLIC_API)
+    }
+
+    @Test
+    fun `deprecated API can be ignored`() {
+        val result = deprecatedProject(ignoreDeprecatedApi = true).build("build")
+
+        result.assertNoWatchdogDiagnostics()
+    }
+
+    private fun deprecatedProject(ignoreDeprecatedApi: Boolean?) = jvmProject {
+        apiWatchdog {
+            this.ignoreDeprecatedApi = ignoreDeprecatedApi
+            severity(NONE, TOP_LEVEL_API_WITHOUT_JVM_NAME)
+        }
+        source(
+            """
+            /** Deprecated. */
+            @Deprecated("Use enable.")
+            public fun toggle(on: Boolean) {}
+            """,
+            "deprecated",
+        )
+    }
+
     private fun holderProject(reportUndocumentedClassProperties: Boolean?) = jvmProject {
         apiWatchdog {
             this.reportUndocumentedClassProperties = reportUndocumentedClassProperties

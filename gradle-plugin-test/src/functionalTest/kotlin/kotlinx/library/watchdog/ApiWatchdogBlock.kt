@@ -18,6 +18,8 @@ class ApiWatchdogBlock internal constructor() {
 
     var reportUndocumentedClassProperties: Boolean? = null
 
+    var ignoreDeprecatedApi: Boolean? = null
+
     fun severity(severity: Severity, vararg diagnostics: Diagnostic) {
         for (diagnostic in diagnostics) {
             require(diagnostic in configurableDiagnostics) { "$diagnostic doesn't have a severity property" }
@@ -85,6 +87,7 @@ class ApiWatchdogBlock internal constructor() {
             appendLine("    publicTypesMustBeTransitiveDependencies = $it")
         }
         reportUndocumentedClassProperties?.let { appendLine("    reportUndocumentedClassProperties = $it") }
+        ignoreDeprecatedApi?.let { appendLine("    ignoreDeprecatedApi = $it") }
         lines.forEach { appendLine("    $it") }
         if (javaInterop.isNotEmpty) {
             appendLine("    javaInterop {")
