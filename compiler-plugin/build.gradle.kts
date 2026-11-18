@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
+import org.jetbrains.kotlin.tooling.core.toKotlinVersion
+import org.jetbrains.kotlinx.library.api.watchdog.conventions.ciSingleVersion
 
 plugins {
     id("devkit.compiler")
@@ -13,7 +15,9 @@ pluginDevKit {
     // commit 5a87800b73, which moved `getChild` and `unsubstitutedScope` to other files, and its
     // revert 642f8df9f6. Public dev builds 2285 to 2331 share that layout. The dev kit's IDE
     // mapping table doesn't know this build yet. Remove the line when it does.
-    testAgainst("2.5.20-dev-2285", forIde = true)
+    if (!ciSingleVersion) {
+        testAgainst("2.5.20-dev-2285", forIde = true)
+    }
 
     pluginPackage = "org.jetbrains.kotlinx.library.api.watchdog"
     componentRegistrar = "org.jetbrains.kotlinx.library.api.watchdog.WatchdogComponentRegistrar"
@@ -22,10 +26,29 @@ pluginDevKit {
 
     versionHierarchy {
         splitDev(2, 5)
+        val hasWarningsForWErrorVersion = KotlinToolingVersion("2.4.0-dev-4697")
+        val hasErrorsVersion = KotlinVersion(2, 3, 20)
+        post(hasWarningsForWErrorVersion, "postHasWarningsForWError")
+        groupVersions("preHasWarningsForWError") { it < hasWarningsForWErrorVersion && it.toKotlinVersion() >= hasErrorsVersion }
+        splitDev(2, 4)
 
         val pathKlibVersion = KotlinToolingVersion("2.4.20-Beta2")
         pre(pathKlibVersion, "legacyKlib")
         post(pathKlibVersion, "pathKlib")
+        splitDev(2, 3, 20)
+        splitDev(2, 3, 0)
+        split("2.2.20-Beta2")
+        // `split` puts the versions that match the condition into the `pre` source set.
+        // `pre`: `FirProperty.isLocal` is an extension. `post`: it's a member.
+        split("FirPropertyIsLocalMember") {
+            it.toKotlinVersion() < KotlinVersion(2, 3, 20) &&
+                    it >= KotlinToolingVersion("2.2.20-dev-8619") &&
+                    it != KotlinToolingVersion("2.2.20-Beta1")
+        }
+        // `pre`: `KtDiagnostic` has no `firstRange`. `post`: it has one.
+        split("SourcelessDiagnostics") {
+            it < KotlinToolingVersion("2.2.20-dev-6624") || it == KotlinToolingVersion("2.2.20-Beta1")
+        }
     }
 }
 

@@ -524,7 +524,6 @@ internal class ExpectExemptionRedundancyChecker(
         val outerClassId = when (this) {
             is FirClassLikeDeclaration -> symbol.classId.outerClassId
             is FirCallableDeclaration -> getContainingClassSymbol()?.classId
-            else -> null
         }
         // The members of the class that an `actual typealias` expands to don't inherit the exemptions.
         if (generateSequence(outerClassId) { it.outerClassId }.any { outer ->

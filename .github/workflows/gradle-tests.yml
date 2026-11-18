@@ -63,7 +63,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.actor != vars.WATCHDOG_BOT_LOGIN
     runs-on: ubuntu-latest
     outputs:
-      tasks: ${{ steps.matrix.outputs.tasks }}
+      versions: ${{ steps.matrix.outputs.versions }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -83,11 +83,11 @@ jobs:
           # The matrix jobs wait for this job. A cache save at its end only delays them.
           cache-read-only: true
 
-      - name: Discover functional test tasks
+      - name: Discover Kotlin versions
         id: matrix
         run: |
-          tasks="$(./gradlew -q :gradle-plugin-test:printCiFunctionalTestMatrix)"
-          echo "tasks=$tasks" >> "$GITHUB_OUTPUT"
+          versions="$(./gradlew -q :gradle-plugin-test:printCiFunctionalTestMatrix)"
+          echo "versions=$versions" >> "$GITHUB_OUTPUT"
 
   library-checks:
     name: Unit tests and ABI checks
@@ -122,7 +122,7 @@ jobs:
           ./gradlew \
             :gradle-plugin:checkKotlinAbi \
             :gradle-plugin:kotlin-library-api-watchdog-report-aggregation:checkKotlinAbi \
-            :plugin-annotations:checkKotlinAbi
+            :plugin-annotations:checkLegacyAbi
 
       - name: Save test reports
         if: failure()
@@ -174,13 +174,18 @@ jobs:
           retention-days: 7
 
   gradle-plugin-tests:
-    name: Gradle plugin tests (${{ matrix.task }})
+    name: Gradle plugin tests (${{ matrix.kotlin-version }})
     needs: functional-test-matrix
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        task: ${{ fromJSON(needs.functional-test-matrix.outputs.tasks) }}
+        kotlin-version: ${{ fromJSON(needs.functional-test-matrix.outputs.versions) }}
+    env:
+      # With this variable set, the dev kit registers only the Kotlin version that
+      # `kotlin.compiler.plugin.devkit.defaultTestVersion` requests. See `config()` in
+      # build-logic/src/main/kotlin/org/jetbrains/kotlinx/library/api/watchdog/conventions/devkit.kt.
+      WATCHDOG_CI_SINGLE_VERSION: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -209,18 +214,20 @@ jobs:
 
       - name: Run Gradle plugin tests
         env:
-          FUNCTIONAL_TEST_TASK: ${{ matrix.task }}
+          KOTLIN_VERSION: ${{ matrix.kotlin-version }}
         run: |
-          ./gradlew ":gradle-plugin-test:$FUNCTIONAL_TEST_TASK" || {
+          ./gradlew :gradle-plugin-test:defaultFunctionalTest \
+            "-Pkotlin.compiler.plugin.devkit.defaultTestVersion=$KOTLIN_VERSION" || {
             echo "Tests failed; retrying once."
-            ./gradlew ":gradle-plugin-test:$FUNCTIONAL_TEST_TASK"
+            ./gradlew :gradle-plugin-test:defaultFunctionalTest \
+              "-Pkotlin.compiler.plugin.devkit.defaultTestVersion=$KOTLIN_VERSION"
           }
 
       - name: Save test reports
         if: failure()
         uses: actions/upload-artifact@v6
         with:
-          name: test-reports-${{ github.job }}-${{ matrix.task }}
+          name: test-reports-${{ github.job }}-${{ matrix.kotlin-version }}
           path: |
             **/build/reports/tests/
             **/build/test-results/

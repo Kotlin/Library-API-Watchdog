@@ -35,10 +35,10 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
             val pluginDevKit = extensions.getByType(GradlePluginConfigExtension::class.java)
             tasks.register("printCiFunctionalTestMatrix") {
                 group = "help"
-                description = "Prints the versioned functional-test task names as a JSON array for CI."
+                description = "Prints the Kotlin versions of the functional tests as a JSON array for CI."
 
-                val taskNames = pluginDevKit.testAgainst.map { it.testTask.name }.sorted()
-                val json = taskNames.joinToString(prefix = "[\"", separator = "\",\"", postfix = "\"]")
+                val versions = pluginDevKit.testAgainst.map { it.version.toString() }.sorted()
+                val json = versions.joinToString(prefix = "[\"", separator = "\",\"", postfix = "\"]")
 
                 doLast {
                     logger.quiet(json)
@@ -55,6 +55,11 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
                 systemProperty("watchdog.test.bcvVersion", bcvVersion)
                 androidSdk?.let { sdk ->
                     systemProperty("watchdog.test.androidHome", sdk.absolutePath)
+                }
+                // Each test fork runs TestKit builds with their own daemons, so the 16 GB CI runners cannot fit
+                // one fork per CPU. See `ciSingleVersion` in devkit.kt.
+                if (ciSingleVersion) {
+                    maxParallelForks = 2
                 }
             }
         }
