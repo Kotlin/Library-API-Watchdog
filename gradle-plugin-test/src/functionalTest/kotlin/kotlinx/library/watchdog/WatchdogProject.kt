@@ -514,9 +514,9 @@ private val KOTLIN_PLUGIN_IDS = setOf(KOTLIN_JVM_PLUGIN_ID, KOTLIN_MULTIPLATFORM
 private val PROXY_REPOSITORIES: List<Repository> = listOf("build-deps", "build-deps-eap", "build-deps-ide").map { proxy ->
     Repository.ofMaven("https://packages.jetbrains.team/maven/p/kt-lib/$proxy").withConfigureAction(
         """
-        val spaceUsername = providers.gradleProperty("space.username.watchdog").orNull
-        val spacePassword = providers.gradleProperty("space.password.watchdog").orNull
-        if (spaceUsername != null && spacePassword != null) {
+        val spaceUsername = providers.environmentVariable("WATCHDOG_PROXY_USERNAME").orNull
+        val spacePassword = providers.environmentVariable("WATCHDOG_PROXY_PASSWORD").orNull
+        if (!spaceUsername.isNullOrEmpty() && !spacePassword.isNullOrEmpty()) {
             credentials { username = spaceUsername; password = spacePassword }
             authentication { create<BasicAuthentication>("basic") }
         } else {

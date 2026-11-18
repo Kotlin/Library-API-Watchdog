@@ -1,7 +1,11 @@
 // CONTRIBUTING.md ("Build") describes the proxies and the token.
 val useProxies = providers.gradleProperty("watchdog.proxies").orNull != "false"
-val spaceUsername = providers.gradleProperty("space.username.watchdog").orNull
-val spacePassword = providers.gradleProperty("space.password.watchdog").orNull
+fun tokenPart(property: String, variable: String): String? =
+    listOf(providers.gradleProperty(property), providers.environmentVariable(variable))
+        .firstNotNullOfOrNull { it.orNull?.takeIf(String::isNotEmpty) }
+
+val spaceUsername = tokenPart("space.username.watchdog", "WATCHDOG_PROXY_USERNAME")
+val spacePassword = tokenPart("space.password.watchdog", "WATCHDOG_PROXY_PASSWORD")
 val hasToken = spaceUsername != null && spacePassword != null
 
 // Space can challenge a public read on a GitHub runner. With an empty username, Gradle retries the challenge as an

@@ -14,14 +14,17 @@ The build and the functional-test builds get every plugin and every Maven depend
 A proxy takes a package from one upstream repository only. So a new upstream repository goes into the proxy where no
 other upstream repository has its packages.
 
-A proxy gives a version that it already has to every request. The first request of a new version needs a token. CI has
-no token. So after a change of a dependency version, run the build and the tests that use the dependency with the token
-before you push. Put the token into the `gradle.properties` file of the Gradle user home:
+A proxy gives a version that it already has to every request. The first request of a new version needs a token. Put
+the token into the `gradle.properties` file of the Gradle user home:
 
 ```properties
 space.username.watchdog=<username>
 space.password.watchdog=<token>
 ```
+
+The workflows get the token from the `WATCHDOG_PROXY_USERNAME` and `WATCHDOG_PROXY_PASSWORD` secrets. A pull request
+from a fork has no secrets. So before such a pull request can pass, run the build and the tests that use its new
+dependency versions with the token.
 
 `-Pwatchdog.proxies=false` replaces the proxies with the original repositories for one run.
 

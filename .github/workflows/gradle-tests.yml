@@ -37,6 +37,8 @@ permissions:
   contents: read
 
 env:
+  WATCHDOG_PROXY_USERNAME: ${{ secrets.WATCHDOG_PROXY_USERNAME }}
+  WATCHDOG_PROXY_PASSWORD: ${{ secrets.WATCHDOG_PROXY_PASSWORD }}
   DEVELOCITY_CACHE_PUSH: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
 
 jobs:
