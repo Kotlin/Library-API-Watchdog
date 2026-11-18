@@ -74,9 +74,9 @@ The upload takes every file of `build/repo`, the `Build` repository:
 
 3. Upload `build/repo` to Maven Central.
 
-The signing properties are Gradle properties:
+The build reads each signing property from the extra properties of the project, then from the Gradle properties:
 
-| Gradle property | Value |
+| Property | Value |
 |---|---|
 | `libs.sign.key.id` | The ID of the PGP key |
 | `libs.sign.key.private` | ASCII-armored private PGP key |

@@ -21,15 +21,15 @@ class MavenCentralPublishingConventionPlugin : Plugin<Project> {
 
             // The `signing` plugin is applied only with a key. With that plugin applied,
             // `com.gradle.plugin-publish` signs in every build, and a build that has no key fails.
-            providers.gradleProperty(SIGNING_KEY_PROPERTY).orNull?.let { key ->
+            signingProperty(SIGNING_KEY_PROPERTY)?.let { key ->
                 extensions.configure(MavenPublishBaseExtension::class.java) {
                     signAllPublications()
                 }
                 extensions.configure(SigningExtension::class.java) {
                     useInMemoryPgpKeys(
-                        providers.gradleProperty(SIGNING_KEY_ID_PROPERTY).orNull,
+                        signingProperty(SIGNING_KEY_ID_PROPERTY),
                         key,
-                        providers.gradleProperty(SIGNING_PASSPHRASE_PROPERTY).orNull,
+                        signingProperty(SIGNING_PASSPHRASE_PROPERTY),
                     )
                 }
             }
@@ -82,6 +82,11 @@ class MavenCentralPublishingConventionPlugin : Plugin<Project> {
                 }
             }
         }
+    }
+
+    private fun Project.signingProperty(name: String): String? {
+        val extra = extensions.extraProperties
+        return if (extra.has(name)) extra.get(name) as String? else providers.gradleProperty(name).orNull
     }
 
     private companion object {
