@@ -17,20 +17,6 @@ on:
       - 'gradle/**'
       - 'gradlew'
       - '.github/workflows/compiler-plugin-tests.yml'
-  pull_request:
-    paths:
-      - 'compiler-plugin/**'
-      - 'plugin-annotations/**'
-      - 'build-logic/**'
-      - 'build-logic-settings/**'
-      - 'diagnostics.json'
-      - 'build.gradle.kts'
-      - 'settings.gradle.kts'
-      - 'gradle.properties'
-      - 'library.properties'
-      - 'gradle/**'
-      - 'gradlew'
-      - '.github/workflows/compiler-plugin-tests.yml'
   schedule:
     - cron: '0 9 * * *'
       timezone: 'Europe/Berlin'

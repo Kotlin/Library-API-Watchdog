@@ -30,7 +30,7 @@ inline markers plus a `.messages.txt` dump of the full messages (`JvmDiagnosticM
 run generates a missing dump. The dump replaces the macOS shortcut `⌘N` with `Alt+Insert`. Hand-written tests in
 `compiler-plugin/src/commonTest/kotlin` run in every `k*Test` task.
 
-Docs checks run in `docs/` after `npm ci`. The `docs.yml` workflow runs all four:
+Docs checks run in `docs/` after `npm ci`. The `docs-checks.yml` workflow runs all four:
 
 ```bash
 npm test                            # the remark plugins: diagnostic annotations in code samples, check-page links, README order
@@ -67,6 +67,10 @@ npm run build                       # the site build, fails on a broken link or 
   GitHub App (CONTRIBUTING.md, "Watchdog bot"). A pull request of `GITHUB_TOKEN` starts `pull_request` runs that wait
   for an approval. The test workflows skip the `pull_request` runs of `WATCHDOG_BOT_LOGIN`. The merges use
   `GITHUB_TOKEN`, so a merge of a bot pull request starts no workflow on `main`.
+- The ruleset of `main` requires one check, `all_green` of `pull-request-checks.yml` (CONTRIBUTING.md, "Pull request
+  checks"). A check workflow has no `pull_request` trigger, because `pull-request-checks.yml` calls it. A called
+  workflow can't have a job with a write permission, because a pull request from a fork then fails at the start. So
+  `docs.yml` has the deploy job, and `docs-checks.yml` has the checks.
 - A project of an included build depends on the root build's projects, and the reverse, by coordinates
   (`"$group:<name>:$version"`), never with `project(...)`. Composite substitution resolves them.
 - `diagnostics.json` is the single source of truth for diagnostic texts. The build generates

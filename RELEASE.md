@@ -26,7 +26,7 @@ The workflow does these steps:
    the next development version: the next minor version from `main`, the next patch version from a maintenance branch.
 3. Runs every check workflow on the commit of the pull request and waits for all of them:
    [compiler plugin tests](.github/workflows/compiler-plugin-tests.yml),
-   [Gradle tests](.github/workflows/gradle-tests.yml), [docs checks](.github/workflows/docs.yml),
+   [Gradle tests](.github/workflows/gradle-tests.yml), [docs checks](.github/workflows/docs-checks.yml),
    [version alignment](.github/workflows/version-alignment.yml),
    [artifact lists](.github/workflows/artifact-lists.yml), and the
    [benchmark baseline](.github/workflows/benchmark-baseline.yml).

@@ -4,24 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    paths:
-      - 'docs/**'
-      - 'diagnostics.json'
-      - 'CHANGELOG.md'
-      - 'gradle.properties'
-      - 'library.properties'
-      - 'scripts/lib/project-version.sh'
-      - 'scripts/update-version.sh'
-      - 'scripts/bump-after-release.sh'
-      - 'scripts/changelog-section.sh'
-      - 'scripts/insert-changelog-section.sh'
-      - 'scripts/prepare-release.sh'
-      - 'scripts/release-plan.sh'
-      - 'scripts/release-notes.sh'
-      - 'scripts/push-signed-commit.sh'
-      - 'scripts/release-tooling.test.mjs'
-      - '.github/workflows/docs.yml'
   # Only a manual run on main deploys the website. The Post-publish workflow starts one after each release.
   workflow_dispatch:
     inputs:
@@ -29,143 +11,28 @@ on:
         description: 'The release version that the website shows, MAJOR.MINOR.PATCH. Its tag must exist.'
         required: true
         type: string
-  # A called run builds the website and doesn't deploy it.
-  workflow_call:
-    inputs:
-      ref:
-        description: 'The commit to check. Empty checks the commit of the caller.'
-        type: string
-        default: ''
 
-# Runs of one event, branch, and checked commit don't overlap. A newer push cancels the run of a pull request. Other
-# runs aren't cancelled, so a deploy to GitHub Pages never stops half way. In a called workflow, `github` is the
-# context of the caller, so the group starts with the name of this file and has the `ref` input.
+# Runs of one event and branch don't overlap and aren't cancelled, so a deploy to GitHub Pages never stops half way.
 concurrency:
-  group: docs-${{ github.event_name }}-${{ github.ref }}-${{ inputs.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: docs-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 env:
-  DEVELOCITY_CACHE_PUSH: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
-  DOCS_OUTPUT: 'docs/build'
-  DOKKA_OUTPUT: 'build/dokka/html'
-  ASSEMBLE_DIR: '__docs_assembled'
+  # The name of the file in the artifact of the Docs checks workflow.
   ASSEMBLE_ARTIFACT: 'assembled.zip'
-  WEBSITE_VERSION: ${{ inputs.version }}
-  # In a called workflow, `github.event_name` and `github.workflow` are those of the caller. So a manual run of this
-  # file has the version input, and a call from the Pre-release workflow doesn't.
-  MANUAL_RUN: ${{ github.event_name == 'workflow_dispatch' && github.workflow == 'Build docs website' }}
 
 jobs:
-  # A `pull_request` run of the Watchdog bot skips the checks. The Pre-release workflow calls this workflow on the
-  # commit of its pull request.
   build:
-    if: github.event_name != 'pull_request' || github.actor != vars.WATCHDOG_BOT_LOGIN
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ inputs.ref }}
-          fetch-depth: 0
-
-      - name: Set up Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: docs/package-lock.json
-
-      - name: Check the website version
-        if: env.MANUAL_RUN == 'true'
-        run: |
-          if [[ ! "$WEBSITE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
-            || ! git rev-parse --quiet --verify "refs/tags/v$WEBSITE_VERSION" > /dev/null; then
-            echo "The website version must be a release with a tag, for example 0.2.0. Got '$WEBSITE_VERSION'." >&2
-            exit 1
-          fi
-
-      - name: Install docs dependencies
-        working-directory: docs
-        run: npm ci
-
-      - name: Test docs tooling
-        working-directory: docs
-        run: |
-          npm test || {
-            echo "Tests failed; retrying once."
-            npm test
-          }
-
-      - name: Check diagnostic exemption wording
-        working-directory: docs
-        run: npm run check:diagnostic-exemptions
-
-      - name: Check changelog synchronization
-        working-directory: docs
-        run: npm run check:changelog
-
-      # Docusaurus fails on a broken link or anchor, so this is the docs check as well.
-      # The code samples show LIBRARY_VERSION, or the version in library.properties without it.
-      - name: Build the docs website
-        working-directory: docs
-        run: |
-          if [[ -n "$WEBSITE_VERSION" ]]; then
-            export LIBRARY_VERSION="$WEBSITE_VERSION"
-          fi
-          npm run build
-
-      - name: Set up JDK
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v5
-        with:
-          develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-
-      - name: Cross-check documentation examples
-        run: |
-          ./gradlew :gradle-plugin-test:k240FunctionalTest \
-            --tests kotlinx.library.watchdog.DocsExamplesTest || {
-              echo "Tests failed; retrying once."
-              ./gradlew :gradle-plugin-test:k240FunctionalTest \
-                --tests kotlinx.library.watchdog.DocsExamplesTest
-            }
-
-      - name: Build Dokka API reference
-        run: |
-          if [[ -n "$WEBSITE_VERSION" ]]; then
-            export LIBRARY_VERSION="$WEBSITE_VERSION"
-          fi
-          ./gradlew :dokkaGenerate
-
-      - name: Add Dokka to the assembled website
-        run: |
-          mkdir -p ${{ env.ASSEMBLE_DIR }}/api
-          cp -r ${{ env.DOCS_OUTPUT }}/. ${{ env.ASSEMBLE_DIR }}/
-          cp -r ${{ env.DOKKA_OUTPUT }}/. ${{ env.ASSEMBLE_DIR }}/api/
-
-      - name: Update sitemap.xml
-        run: chmod +x scripts/update_sitemap.sh && ./scripts/update_sitemap.sh ${{ env.ASSEMBLE_DIR }}/sitemap.xml ${{ env.ASSEMBLE_DIR }}/api
-
-      - name: Assemble file
-        run: cd ${{ env.ASSEMBLE_DIR }} && zip -r ../${{ env.ASSEMBLE_ARTIFACT }} .
-
-      - name: Save assembled artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: library-api-watchdog-docs-assembled
-          path: ${{ env.ASSEMBLE_ARTIFACT }}
-          retention-days: 7
+    uses: ./.github/workflows/docs-checks.yml
+    with:
+      version: ${{ inputs.version }}
+    secrets: inherit
 
   deploy:
-    # A job condition can't read `env`, so this is the condition of MANUAL_RUN.
-    if: github.event_name == 'workflow_dispatch' && github.workflow == 'Build docs website' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

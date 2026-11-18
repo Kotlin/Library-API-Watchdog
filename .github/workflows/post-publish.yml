@@ -239,6 +239,8 @@ jobs:
           fi
           echo "pr=$pr" >> "$GITHUB_OUTPUT"
 
+      # The ruleset of main requires the `all_green` check of the Pull request checks workflow. The check of a new pull
+      # request takes about a minute, so the step tries the merge again until the check passes.
       - name: Squash-merge the pull request
         if: steps.pr.outputs.pr != ''
         env:
@@ -246,7 +248,17 @@ jobs:
           PR: ${{ steps.pr.outputs.pr }}
         run: |
           if [[ "$(gh pr view "$PR" --json state --jq .state)" != MERGED ]]; then
-            gh pr merge "$PR" --squash --subject "Add the $LIBRARY_VERSION changelog section (#$PR)" --body ''
+            for attempt in {1..30}; do
+              if gh pr merge "$PR" --squash --subject "Add the $LIBRARY_VERSION changelog section (#$PR)" --body ''; then
+                break
+              fi
+              if (( attempt == 30 )); then
+                echo "Pull request #$PR didn't merge in 10 minutes. Look at its all_green check." >&2
+                echo 'Then run the failed jobs of this run again.' >&2
+                exit 1
+              fi
+              sleep 20
+            done
           fi
           gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$CHANGELOG_BRANCH" 2> /dev/null \
             || echo "$CHANGELOG_BRANCH is deleted."

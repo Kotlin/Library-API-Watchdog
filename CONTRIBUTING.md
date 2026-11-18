@@ -80,7 +80,7 @@ them separately.
 ## Documentation site
 
 The site is a [Docusaurus](https://docusaurus.io/) project in [docs](docs), built by
-[docs.yml](.github/workflows/docs.yml). Run its checks in `docs/` after `npm ci`:
+[docs-checks.yml](.github/workflows/docs-checks.yml). Run its checks in `docs/` after `npm ci`:
 
 ```bash
 npm test                            # the remark plugins
@@ -140,6 +140,23 @@ LIBRARY_VERSION=0.2.0-dev-1 ./gradlew assemble
 
 The override doesn't change any source file. The build ignores `-Pversion`.
 An empty or invalid value fails the build.
+
+## Pull request checks
+
+The ruleset of `main` requires one check, `all_green` of the
+[Pull request checks](.github/workflows/pull-request-checks.yml) workflow. The workflow runs on every pull request. Its
+`changes` job has a list of paths for each check workflow. The workflow calls a check workflow when the pull request
+changes a path of its list. `all_green` fails when a called workflow fails.
+
+A check workflow has no `pull_request` trigger of its own. To add a check workflow to the pull request checks:
+
+1. Add the `workflow_call` trigger to the check workflow.
+2. Add its list of paths and an output to the `changes` job.
+3. Add a job that calls the workflow when the output is `true`.
+4. Add the job to the `needs` of `all_green`.
+
+**Enable auto-merge** on a pull request merges it when `all_green` passes. The button needs the repository setting
+**Settings > General > Allow auto-merge**.
 
 ## Watchdog bot
 
