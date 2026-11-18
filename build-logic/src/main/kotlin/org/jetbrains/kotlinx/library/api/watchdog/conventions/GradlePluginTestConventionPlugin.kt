@@ -56,6 +56,11 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
                 androidSdk?.let { sdk ->
                     systemProperty("watchdog.test.androidHome", sdk.absolutePath)
                 }
+                // Each test fork runs TestKit builds with their own daemons, so the 16 GB CI runners cannot fit
+                // one fork per CPU. See `ciSingleVersion` in devkit.kt.
+                if (ciSingleVersion) {
+                    maxParallelForks = 2
+                }
             }
         }
     }
