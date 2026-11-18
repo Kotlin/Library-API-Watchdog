@@ -40,7 +40,7 @@ publication tasks of the included builds. The root `publishAllPublicationsToBuil
 ```
 
 CI runs one functional test task for each supported Kotlin version.
-`:gradle-plugin-test:printCiFunctionalTestMatrix` lists those tasks.
+`:gradle-plugin-test:printCiFunctionalTestMatrix` lists those versions.
 The compiler plugin tests also run every day at 9:00 Berlin time, against the newest Kotlin dev build only
 (`latestKotlinTest`).
 

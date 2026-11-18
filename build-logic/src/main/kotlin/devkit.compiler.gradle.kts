@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.plugin.KotlinTargetWithTests
 import org.jetbrains.kotlinx.library.api.watchdog.conventions.catalogVersion
+import org.jetbrains.kotlinx.library.api.watchdog.conventions.ciSingleVersion
 import org.jetbrains.kotlinx.library.api.watchdog.conventions.config
 
 plugins {
@@ -8,8 +9,10 @@ plugins {
 
 pluginDevKit {
     config()
-    ideaVersions(catalogVersion("kotlinIdeMin"), includeRc = true, includeEap = true)
-    useLatestDev()
+    if (!ciSingleVersion) {
+        ideaVersions(catalogVersion("kotlinIdeMin"), includeRc = true, includeEap = true)
+        useLatestDev()
+    }
 }
 
 // The daily CI run uses this task. `useLatestDev` adds the newest Kotlin dev build as a CLI target, so the highest CLI

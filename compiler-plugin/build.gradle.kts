@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 import org.jetbrains.kotlin.tooling.core.toKotlinVersion
+import org.jetbrains.kotlinx.library.api.watchdog.conventions.ciSingleVersion
 
 plugins {
     id("devkit.compiler")
@@ -14,7 +15,9 @@ pluginDevKit {
     // commit 5a87800b73, which moved `getChild` and `unsubstitutedScope` to other files, and its
     // revert 642f8df9f6. Public dev builds 2285 to 2331 share that layout. The dev kit's IDE
     // mapping table doesn't know this build yet. Remove the line when it does.
-    testAgainst("2.5.20-dev-2285", forIde = true)
+    if (!ciSingleVersion) {
+        testAgainst("2.5.20-dev-2285", forIde = true)
+    }
 
     pluginPackage = "org.jetbrains.kotlinx.library.api.watchdog"
     componentRegistrar = "org.jetbrains.kotlinx.library.api.watchdog.WatchdogComponentRegistrar"

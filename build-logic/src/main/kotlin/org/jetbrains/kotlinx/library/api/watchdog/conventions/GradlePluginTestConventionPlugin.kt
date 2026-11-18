@@ -35,10 +35,10 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
             val pluginDevKit = extensions.getByType(GradlePluginConfigExtension::class.java)
             tasks.register("printCiFunctionalTestMatrix") {
                 group = "help"
-                description = "Prints the versioned functional-test task names as a JSON array for CI."
+                description = "Prints the Kotlin versions of the functional tests as a JSON array for CI."
 
-                val taskNames = pluginDevKit.testAgainst.map { it.testTask.name }.sorted()
-                val json = taskNames.joinToString(prefix = "[\"", separator = "\",\"", postfix = "\"]")
+                val versions = pluginDevKit.testAgainst.map { it.version.toString() }.sorted()
+                val json = versions.joinToString(prefix = "[\"", separator = "\",\"", postfix = "\"]")
 
                 doLast {
                     logger.quiet(json)

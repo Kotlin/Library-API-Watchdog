@@ -4,9 +4,17 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.jetbrains.kotlin.compiler.plugin.devkit.DevKitPropertiesDsl
 
+// The "Gradle tests" workflow sets WATCHDOG_CI_SINGLE_VERSION in lanes that test one Kotlin version. The dev kit
+// then registers only the versions that the `kotlin.compiler.plugin.devkit.*` Gradle properties request, or the
+// build's own Kotlin version when they request none.
+val DevKitPropertiesDsl<*>.ciSingleVersion: Boolean
+    get() = project.providers.environmentVariable("WATCHDOG_CI_SINGLE_VERSION").getOrElse("").toBoolean()
+
 /** The Kotlin versions that every dev kit project builds or tests against. */
 fun DevKitPropertiesDsl<*>.config() {
-    cliVersions(project.catalogVersion("kotlinCliMin"))
+    if (!ciSingleVersion) {
+        cliVersions(project.catalogVersion("kotlinCliMin"))
+    }
 }
 
 fun Project.catalogVersion(name: String): String =
