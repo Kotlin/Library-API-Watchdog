@@ -38,7 +38,7 @@ internal class DslMarkerTargetsChecker(
         }
 
         val session = context.session
-        if (!declaration.hasAnnotation(DslMarker, session)) {
+        if (!declaration.hasAnnotation(dslMarkerClassId, session)) {
             return
         }
 

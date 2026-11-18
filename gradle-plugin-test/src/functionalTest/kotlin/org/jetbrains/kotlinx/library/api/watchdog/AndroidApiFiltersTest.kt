@@ -14,7 +14,8 @@ import org.junit.Test
  * The validation tools in an Android project:
  *
  * - `kotlin-android` of AGP 8 and the built-in Kotlin of AGP 9 have the `abiValidation` block, and
- *   the Kotlin Gradle plugin registers `checkKotlinAbi` for both.
+ *   the Kotlin Gradle plugin registers `checkKotlinAbi` for both. Before Kotlin 2.4.0, the built-in
+ *   Kotlin doesn't have the block.
  * - The Binary Compatibility Validator plugin registers `apiCheck` for `kotlin-android` and for a
  *   multiplatform project, but not for the built-in Kotlin of AGP 9.
  */

@@ -80,10 +80,10 @@ internal class DslMarkerTypePositionChecker(
 
     private fun FirAnnotation.isDslMarker(session: FirSession): Boolean =
         annotationClassSymbol(session)
-            ?.hasAnnotation(DslMarker, session) == true
+            ?.hasAnnotation(dslMarkerClassId, session) == true
 
     private fun FirAnnotation.annotationClassSymbol(session: FirSession): FirClassSymbol<*>? =
         annotationTypeRef.coneType.fullyExpandedType(session).toClassSymbol(session)
 }
 
-internal val DslMarker = ClassId(StandardClassIds.BASE_KOTLIN_PACKAGE, Name.identifier("DslMarker"))
+internal val dslMarkerClassId = ClassId(StandardClassIds.BASE_KOTLIN_PACKAGE, Name.identifier("DslMarker"))

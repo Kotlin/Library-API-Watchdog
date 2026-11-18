@@ -38,11 +38,14 @@ pluginDevKit {
         splitDev(2, 3, 20)
         splitDev(2, 3, 0)
         split("2.2.20-Beta2")
+        // `split` puts the versions that match the condition into the `pre` source set.
+        // `pre`: `FirProperty.isLocal` is an extension. `post`: it's a member.
         split("FirPropertyIsLocalMember") {
             it.toKotlinVersion() < KotlinVersion(2, 3, 20) &&
                     it >= KotlinToolingVersion("2.2.20-dev-8619") &&
                     it != KotlinToolingVersion("2.2.20-Beta1")
         }
+        // `pre`: `KtDiagnostic` has no `firstRange`. `post`: it has one.
         split("SourcelessDiagnostics") {
             it < KotlinToolingVersion("2.2.20-dev-6624") || it == KotlinToolingVersion("2.2.20-Beta1")
         }
