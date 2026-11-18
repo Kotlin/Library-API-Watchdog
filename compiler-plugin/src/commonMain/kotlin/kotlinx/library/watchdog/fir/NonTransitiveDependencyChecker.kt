@@ -98,8 +98,7 @@ private class DependencyExposureIndex(
             return null
         }
 
-        // Older Kotlin Gradle plugins don't always expose the standard library through the API
-        // elements of the target.
+        // The standard library can be a `compileOnly` dependency, and every Kotlin consumer has it.
         val packageName = symbol.classId.packageFqName.asString()
         if (packageName == "kotlin" || packageName.startsWith("kotlin.")) {
             return null

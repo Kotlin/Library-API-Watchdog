@@ -6,6 +6,7 @@ import com.autonomousapps.kit.gradle.Plugin
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import org.gradle.testkit.runner.TaskOutcome.SKIPPED
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
 import org.gradle.testkit.runner.TaskOutcome.UP_TO_DATE
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.KotlinPlugins
@@ -31,8 +32,8 @@ class ExemptExistingApiAggregationTest {
         result.assertTaskOutcome(":exemptExistingApi", SUCCESS)
         result.assertTaskOutcome(":library:exemptExistingApi", SUCCESS)
         result.assertTaskOutcome(":aggregateApiWatchdogReports", SUCCESS)
-        result.assertTaskOutcome(":generateApiWatchdogReport", null)
-        result.assertTaskOutcome(":library:generateApiWatchdogReport", null)
+        result.assertTaskOutcome(":generateApiWatchdogReport", SKIPPED)
+        result.assertTaskOutcome(":library:generateApiWatchdogReport", SKIPPED)
         assertContains(project.file("src/main/kotlin/test/Api.kt").readText(), "@IntentionallyOpen")
         assertContains(project.file("library/src/main/kotlin/test/Api.kt").readText(), "@IntentionallyDataClass")
         val html = project.file("build/reports/api-watchdog/aggregate-report.html").readText()
@@ -48,9 +49,31 @@ class ExemptExistingApiAggregationTest {
 
         second.assertOutputHas("Configuration cache entry reused.")
         second.assertTaskOutcome(":library:exemptExistingApi", SUCCESS)
-        second.assertTaskOutcome(":library:generateApiWatchdogReport", null)
+        second.assertTaskOutcome(":library:generateApiWatchdogReport", SKIPPED)
         second.assertOutputHas("No watchdog errors to exempt.")
         second.assertOutputHas("Aggregate API Watchdog report:")
+    }
+
+    @Test
+    fun `abbreviated and relative exempt task names write the aggregate report from the exempt data`() {
+        for (taskNames in listOf(listOf("eEA"), listOf(":exemptExistingApi", "library:exemptExistingApi"))) {
+            val project = aggregateProject(watchdogInRoot = true) {
+                source("/** A root API. */\npublic open class RootApi", "Api")
+                subproject("library") {
+                    source("/** A library API. */\npublic data class LibraryApi(public val value: Int)", "Api")
+                }
+            }
+
+            val result = project.build(*taskNames.toTypedArray(), *PROJECT_ISOLATION)
+
+            result.assertTaskOutcome(":library:exemptExistingApi", SUCCESS)
+            result.assertTaskOutcome(":aggregateApiWatchdogReports", SUCCESS)
+            assertContains(project.file("library/src/main/kotlin/test/Api.kt").readText(), "@IntentionallyDataClass")
+            val html = project.file("build/reports/api-watchdog/aggregate-report.html").readText()
+            assertContains(html, "No diagnostics without an exemption.")
+            assertReportGroup(html, "IntentionallyOpen", 1)
+            assertReportGroup(html, "IntentionallyDataClass", 1)
+        }
     }
 
     @Test
@@ -68,7 +91,7 @@ class ExemptExistingApiAggregationTest {
         result.assertTaskOutcome(":exemptExistingApi", UP_TO_DATE)
         result.assertTaskOutcome(":library:exemptExistingApi", SUCCESS)
         result.assertTaskOutcome(":aggregateApiWatchdogReports", SUCCESS)
-        result.assertTaskOutcome(":library:generateApiWatchdogReport", null)
+        result.assertTaskOutcome(":library:generateApiWatchdogReport", SKIPPED)
         assertContains(project.file("library/src/main/kotlin/test/Api.kt").readText(), "@IntentionallyOpen")
         val html = project.file("build/reports/api-watchdog/aggregate-report.html").readText()
         assertContains(html, "Aggregate report for 1 project")

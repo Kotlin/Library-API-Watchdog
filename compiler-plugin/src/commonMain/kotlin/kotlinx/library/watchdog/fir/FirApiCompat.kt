@@ -16,6 +16,7 @@ internal expect val ConeTypeParameterType.typeParameterSymbol: FirTypeParameterS
 
 internal expect fun SourceElement.klibPathCompat(): Path?
 
+// Remove it when the dev kit has this method: https://github.com/Kotlin/compiler-plugin-dev-kit/issues/120
 context(c: SessionHolder)
 internal expect fun FirAnnotation.getStringArgumentCompat(name: Name): String?
 

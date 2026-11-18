@@ -1369,6 +1369,24 @@ class WatchdogProjectTest {
     }
 
     @Test
+    fun `standard library type is accepted when the standard library is a compile-only dependency`() {
+        val project = jvmProject {
+            buildScript("dependencies { compileOnly(kotlin(\"stdlib\")) }")
+            source(
+                """
+                    /** A source of lazy values. */
+                    public class LazyValues {
+                        /** A lazy value. */
+                        public fun value(): Lazy<Int> = lazy { 1 }
+                    }
+                """
+            )
+        }
+
+        project.build("build", "-Pkotlin.stdlib.default.dependency=false").assertNoNonTransitiveExposureReported()
+    }
+
+    @Test
     fun `public type from exempt non-transitive project dependency is accepted`() {
         val project = jvmProject {
             buildScript(exemptScript("project(\":model\")"))
@@ -1650,7 +1668,6 @@ class WatchdogProjectTest {
 
     /** The Poko release for a Kotlin version, from the compatibility table of the Poko README. */
     private fun pokoVersionFor(kotlin: KotlinVersion): String? = when {
-        kotlin >= KotlinVersion(2, 5) -> null
         kotlin >= KotlinVersion(2, 4) -> "0.23.2"
         kotlin >= KotlinVersion(2, 3, 20) -> "0.22.1"
         kotlin >= KotlinVersion(2, 3) -> "0.21.3"
