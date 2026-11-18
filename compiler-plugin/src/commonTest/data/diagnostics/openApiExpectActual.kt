@@ -13,8 +13,8 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyOpen
 
 @RequiresOptIn
 public annotation class Marker
@@ -74,8 +74,8 @@ public expect class AliasToOwnJavaPackagePrivate
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyOpen
 
 public actual abstract class <!OPEN_API_WITHOUT_SUBCLASS_OPT_IN!>ImplicitConstructor<!>
 

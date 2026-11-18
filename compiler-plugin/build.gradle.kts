@@ -1,6 +1,6 @@
+import kotlinx.library.watchdog.conventions.ciSingleVersion
 import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 import org.jetbrains.kotlin.tooling.core.toKotlinVersion
-import org.jetbrains.kotlinx.library.api.watchdog.conventions.ciSingleVersion
 
 plugins {
     id("devkit.compiler")
@@ -19,10 +19,10 @@ pluginDevKit {
         testAgainst("2.5.20-dev-2285", forIde = true)
     }
 
-    pluginPackage = "org.jetbrains.kotlinx.library.api.watchdog"
-    componentRegistrar = "org.jetbrains.kotlinx.library.api.watchdog.WatchdogComponentRegistrar"
-    commandLineProcessor = "org.jetbrains.kotlinx.library.api.watchdog.WatchdogCommandLineProcessor"
-    companionLibrary("kotlin-library-api-watchdog-plugin-annotations")
+    pluginPackage = "kotlinx.library.watchdog"
+    componentRegistrar = "kotlinx.library.watchdog.WatchdogComponentRegistrar"
+    commandLineProcessor = "kotlinx.library.watchdog.WatchdogCommandLineProcessor"
+    companionLibrary("library-api-watchdog-plugin-annotations")
 
     versionHierarchy {
         splitDev(2, 5)

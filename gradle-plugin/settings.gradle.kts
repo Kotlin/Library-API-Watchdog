@@ -33,7 +33,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "kotlin-library-api-watchdog-gradle-plugin"
+rootProject.name = "library-api-watchdog-gradle-plugin"
 
-include("kotlin-library-api-watchdog-report-aggregation")
-project(":kotlin-library-api-watchdog-report-aggregation").projectDir = file("report-aggregation")
+include("library-api-watchdog-report-aggregation")
+project(":library-api-watchdog-report-aggregation").projectDir = file("report-aggregation")

@@ -12,16 +12,16 @@ The compiler plugin and the fixer have no plain `test` task, only one task for e
 (`k240Test`, `k2410Test`, ...). `./gradlew :<module>:tasks --all` lists them.
 
 ```bash
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:k2410Test          # diagnostics tests against Kotlin 2.4.10
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:latestKotlinTest   # the daily CI run: tests against the newest Kotlin dev build only
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:generateTests      # regenerate JUnit classes from test data
-./gradlew :kotlin-library-api-watchdog-exempts-fixer:k2410Test            # fixer tests plus the compiler-plugin integration test
+./gradlew :library-api-watchdog-compiler-plugin:k2410Test          # diagnostics tests against Kotlin 2.4.10
+./gradlew :library-api-watchdog-compiler-plugin:latestKotlinTest   # the daily CI run: tests against the newest Kotlin dev build only
+./gradlew :library-api-watchdog-compiler-plugin:generateTests      # regenerate JUnit classes from test data
+./gradlew :library-api-watchdog-exempts-fixer:k2410Test            # fixer tests plus the compiler-plugin integration test
 ./gradlew :gradle-plugin-test:allVersionedFunctionalTests                 # Gradle TestKit tests against every supported Kotlin version
 ./gradlew :gradle-plugin-test:k2410FunctionalTest                         # the same against one Kotlin version
-./gradlew :gradle-plugin:test :gradle-plugin:kotlin-library-api-watchdog-report-aggregation:test  # unit tests of the included gradle-plugin build
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:k2410Test --tests "*JvmDiagnosticTestGenerated*"   # filter generated tests
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmarkCorpusAudit   # check that the corpus triggers every benchmark-eligible checker
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmarkBaseline -Pbenchmark.baseline.allowMissing=true  # the CI benchmark check, report only on a machine without a baseline
+./gradlew :gradle-plugin:test :gradle-plugin:library-api-watchdog-report-aggregation:test  # unit tests of the included gradle-plugin build
+./gradlew :library-api-watchdog-compiler-plugin:k2410Test --tests "*JvmDiagnosticTestGenerated*"   # filter generated tests
+./gradlew :library-api-watchdog-compiler-plugin:benchmarkCorpusAudit   # check that the corpus triggers every benchmark-eligible checker
+./gradlew :library-api-watchdog-compiler-plugin:benchmarkBaseline -Pbenchmark.baseline.allowMissing=true  # the CI benchmark check, report only on a machine without a baseline
 ```
 
 Each file in `compiler-plugin/src/commonTest/data/diagnostics/` and `messages/` is one generated test method. Run
@@ -101,7 +101,7 @@ npm run build                       # the site build, fails on a broken link or 
 - Android compilations resolve dependencies through an `android-classes-jar` artifact view, because a project AAR
   has no artifact without it. The plugin recognizes them by the `android` JVM environment of the compile classpath,
   because the `com.android.kotlin.multiplatform.library` target of AGP 8 reports platform type `jvm`.
-- `:kotlin-library-api-watchdog-report-aggregation` is a separate artifact, so a root project that applies it
+- `:library-api-watchdog-report-aggregation` is a separate artifact, so a root project that applies it
   doesn't put the KGP-dependent support plugin on every project's plugin classpath.
 - `exemptExistingApi` writes the aggregate report through two project-local hooks, because project isolation
   forbids a finalizer on another project's task. The support plugin picks the producer of the report artifact

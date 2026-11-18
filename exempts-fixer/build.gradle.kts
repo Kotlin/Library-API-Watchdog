@@ -6,7 +6,7 @@ plugins {
 }
 
 pluginDevKit {
-    pluginPackage = "org.jetbrains.kotlinx.library.api.watchdog.fixer"
+    pluginPackage = "kotlinx.library.watchdog.fixer"
 }
 
 kotlin {
@@ -22,8 +22,8 @@ kotlin {
         resources.srcDir(isolated.rootProject.projectDirectory.dir("compiler-plugin/src/commonTest/data"))
         dependencies {
             implementation(pluginDevKit("compiler-plugin-runtime"))
-            implementation(project(":kotlin-library-api-watchdog-compiler-plugin"))
-            implementation("$group:kotlin-library-api-watchdog-plugin-annotations:$version")
+            implementation(project(":library-api-watchdog-compiler-plugin"))
+            implementation("$group:library-api-watchdog-plugin-annotations:$version")
         }
     }
 

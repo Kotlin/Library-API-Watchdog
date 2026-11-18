@@ -11,16 +11,16 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyBooleanParameter
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDataClass
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyInlinedLogic
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyKotlinOnlyApi
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyNullableBoolean
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyPairOrTriple
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutEqualsHashCodeOrToString
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutJvmOverloads
-import org.jetbrains.kotlinx.library.api.watchdog.InternalAnnotationMarker
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyBooleanParameter
+import kotlinx.library.watchdog.IntentionallyDataClass
+import kotlinx.library.watchdog.IntentionallyInlinedLogic
+import kotlinx.library.watchdog.IntentionallyKotlinOnlyApi
+import kotlinx.library.watchdog.IntentionallyNullableBoolean
+import kotlinx.library.watchdog.IntentionallyPairOrTriple
+import kotlinx.library.watchdog.IntentionallyWithoutEqualsHashCodeOrToString
+import kotlinx.library.watchdog.IntentionallyWithoutJvmOverloads
+import kotlinx.library.watchdog.InternalAnnotationMarker
 
 @InternalAnnotationMarker
 @Target(AnnotationTarget.CLASS)

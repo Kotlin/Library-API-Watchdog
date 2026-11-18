@@ -5,15 +5,15 @@
 // FILE: declarations.kt
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDataClass
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyFunctionTypeAlias
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyKotlinOnlyApi
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyMangledJvmName
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyNonStaticCompanionApi
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyUndocumented
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDataClass
+import kotlinx.library.watchdog.IntentionallyFunctionTypeAlias
+import kotlinx.library.watchdog.IntentionallyKotlinOnlyApi
+import kotlinx.library.watchdog.IntentionallyMangledJvmName
+import kotlinx.library.watchdog.IntentionallyNonStaticCompanionApi
+import kotlinx.library.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.IntentionallyUndocumented
+import kotlinx.library.watchdog.IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility
 
 public interface Loader {
     <!REDUNDANT_EXEMPTION!>@IntentionallyKotlinOnlyApi(reason = ExemptionReason.API_DESIGN)<!>
@@ -116,8 +116,8 @@ public fun compute(): Int {
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public class OnlyClass
 
@@ -126,8 +126,8 @@ public class OnlyClass
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 @JvmSynthetic
 public fun hidden(): Int = 1

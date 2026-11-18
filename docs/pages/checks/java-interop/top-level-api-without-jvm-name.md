@@ -63,8 +63,8 @@ Use the exemption when the declaration is part of the API design or must stay fo
     reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY,
 )
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 // !hide-focused
 /** Connects to the network. */
@@ -85,7 +85,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=TOP_LEVEL_API_WITHOUT_JVM_NAME:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=TOP_LEVEL_API_WITHOUT_JVM_NAME:error
 ```
 
 ## See also

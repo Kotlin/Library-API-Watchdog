@@ -117,5 +117,5 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=COMPANION_PROPERTY_WITHOUT_STATIC_ACCESS:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=COMPANION_PROPERTY_WITHOUT_STATIC_ACCESS:error
 ```

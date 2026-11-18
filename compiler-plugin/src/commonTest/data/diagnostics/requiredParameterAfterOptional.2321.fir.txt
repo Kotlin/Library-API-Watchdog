@@ -71,10 +71,10 @@ FILE: requiredParameterAfterOptional.kt
         }
 
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyRequiredParameterAfterOptional|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.FOR_BACKWARDS_COMPATIBILITY|) public final fun legacyConnect(retries: R|kotlin/Int| = Int(3), host: R|kotlin/String|): R|kotlin/Unit| {
+    @R|kotlinx/library/watchdog/IntentionallyRequiredParameterAfterOptional|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.FOR_BACKWARDS_COMPATIBILITY|) public final fun legacyConnect(retries: R|kotlin/Int| = Int(3), host: R|kotlin/String|): R|kotlin/Unit| {
     }
     public final class LegacyServer : R|kotlin/Any| {
-        @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyRequiredParameterAfterOptional|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.FOR_BACKWARDS_COMPATIBILITY|) public constructor(port: R|kotlin/Int| = Int(80), host: R|kotlin/String|): R|foo/bar/LegacyServer| {
+        @R|kotlinx/library/watchdog/IntentionallyRequiredParameterAfterOptional|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.FOR_BACKWARDS_COMPATIBILITY|) public constructor(port: R|kotlin/Int| = Int(80), host: R|kotlin/String|): R|foo/bar/LegacyServer| {
             super<R|kotlin/Any|>()
         }
 

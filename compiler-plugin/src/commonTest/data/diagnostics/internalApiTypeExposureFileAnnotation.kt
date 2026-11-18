@@ -11,7 +11,7 @@
 // FILE: markers.kt
 package test.markers
 
-import org.jetbrains.kotlinx.library.api.watchdog.InternalAnnotationMarker
+import kotlinx.library.watchdog.InternalAnnotationMarker
 
 /** Marks internal API. */
 @InternalAnnotationMarker

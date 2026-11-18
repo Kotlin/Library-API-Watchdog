@@ -5,8 +5,8 @@
 package foo.bar
 
 import kotlin.reflect.KFunction1
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyRequiredParameterAfterOptional
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyRequiredParameterAfterOptional
 
 public fun connect(retries: Int = 3, <!REQUIRED_PARAMETER_AFTER_OPTIONAL!>host<!>: String) {}
 

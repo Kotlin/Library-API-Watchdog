@@ -6,7 +6,7 @@
 // FILE: internalTypes.kt
 package lib.api
 
-import org.jetbrains.kotlinx.library.api.watchdog.InternalAnnotationMarker
+import kotlinx.library.watchdog.InternalAnnotationMarker
 
 /** Marks declarations that are public only for technical reasons. */
 @InternalAnnotationMarker

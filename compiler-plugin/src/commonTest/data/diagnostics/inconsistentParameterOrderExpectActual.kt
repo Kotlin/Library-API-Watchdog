@@ -11,8 +11,8 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyInconsistentParameterOrder
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyInconsistentParameterOrder
 
 public expect fun pair(first: Int, second: String)
 

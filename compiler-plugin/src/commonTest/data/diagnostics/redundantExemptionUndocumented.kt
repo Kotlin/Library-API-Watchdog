@@ -9,8 +9,8 @@
 // FILE: declarations.kt
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyUndocumented
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyUndocumented
 
 @IntentionallyUndocumented(reason = ExemptionReason.API_DESIGN)
 public typealias Count = Int

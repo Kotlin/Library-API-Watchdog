@@ -1,0 +1,128 @@
+public abstract class kotlinx/library/watchdog/ApiWatchdogReportTask : org/gradle/api/DefaultTask {
+	public final fun getReports ()Lkotlinx/library/watchdog/WatchdogReports;
+	public final fun reports (Lorg/gradle/api/Action;)V
+}
+
+public abstract class kotlinx/library/watchdog/ExemptExistingApiTask : kotlinx/library/watchdog/ApiWatchdogReportTask {
+}
+
+public final class kotlinx/library/watchdog/ExplicitApiRequirement : java/lang/Enum {
+	public static final field FAIL Lkotlinx/library/watchdog/ExplicitApiRequirement;
+	public static final field SKIP Lkotlinx/library/watchdog/ExplicitApiRequirement;
+	public static final field WARN Lkotlinx/library/watchdog/ExplicitApiRequirement;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lkotlinx/library/watchdog/ExplicitApiRequirement;
+	public static fun values ()[Lkotlinx/library/watchdog/ExplicitApiRequirement;
+}
+
+public abstract class kotlinx/library/watchdog/GenerateApiWatchdogReportTask : kotlinx/library/watchdog/ApiWatchdogReportTask {
+}
+
+public final class kotlinx/library/watchdog/WatchdogChecks : java/lang/Enum {
+	public static final field BOOLEAN_PARAMETER_PUBLIC_API Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field COMPANION_API_WITHOUT_JVM_STATIC Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field COMPANION_PROPERTY_WITHOUT_STATIC_ACCESS Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field DATA_CLASS_PUBLIC_API Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field DEFAULT_PARAMETERS_WITHOUT_JVM_OVERLOADS Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field DSL_MARKER_NOOP_TARGET Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field DSL_MARKER_NOOP_TYPE_POSITION Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field DSL_MARKER_WITHOUT_EXPLICIT_TARGETS Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field EXEMPTION_WITHOUT_EXPLANATION Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field EXHAUSTIVE_PUBLIC_API Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field FUNCTION_TYPE_ALIAS_PUBLIC_API Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field INCONSISTENT_PARAMETER_ORDER_IN_OVERLOADS Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field INLINE_FUNCTION_WITH_LOGIC Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field KOTLIN_ONLY_API_WITHOUT_JVM_SYNTHETIC Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field MANGLED_JVM_NAME_PUBLIC_API Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field MUTABLE_COLLECTION_PUBLIC_API Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field NULLABLE_BOOLEAN_PUBLIC_API Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field OPEN_API_WITHOUT_SUBCLASS_OPT_IN Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field PAIR_OR_TRIPLE_PUBLIC_API Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field PUBLIC_TYPE_WITH_INTERNAL_API Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field REDUNDANT_EXEMPTION Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field REQUIRED_PARAMETER_AFTER_OPTIONAL Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field STATEFUL_CLASS_WITHOUT_EQUALS Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field STATEFUL_CLASS_WITHOUT_HASH_CODE Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field STATEFUL_CLASS_WITHOUT_TO_STRING Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field SUBCLASS_OPT_IN_WITHOUT_MARKERS Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field TOP_LEVEL_API_WITHOUT_JVM_NAME Lkotlinx/library/watchdog/WatchdogChecks;
+	public static final field UNDOCUMENTED_PUBLIC_API Lkotlinx/library/watchdog/WatchdogChecks;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lkotlinx/library/watchdog/WatchdogChecks;
+	public static fun values ()[Lkotlinx/library/watchdog/WatchdogChecks;
+}
+
+public class kotlinx/library/watchdog/WatchdogGradleExtension {
+	public final fun getBooleanParameterPublicApi ()Lorg/gradle/api/provider/Property;
+	public final fun getDataClassPublicApi ()Lorg/gradle/api/provider/Property;
+	public final fun getDslMarkerNoopTarget ()Lorg/gradle/api/provider/Property;
+	public final fun getDslMarkerNoopTypePosition ()Lorg/gradle/api/provider/Property;
+	public final fun getDslMarkerWithoutExplicitTargets ()Lorg/gradle/api/provider/Property;
+	public final fun getEnabled ()Lorg/gradle/api/provider/Property;
+	public final fun getExhaustivePublicApi ()Lorg/gradle/api/provider/Property;
+	public final fun getExplicitApiRequirement ()Lorg/gradle/api/provider/Property;
+	public final fun getFunctionTypeAliasPublicApi ()Lorg/gradle/api/provider/Property;
+	public final fun getInconsistentParameterOrderInOverloads ()Lorg/gradle/api/provider/Property;
+	public final fun getInlineFunctionWithLogic ()Lorg/gradle/api/provider/Property;
+	public final fun getInternalApiAnnotations ()Lorg/gradle/api/provider/SetProperty;
+	public final fun getJavaInterop ()Lkotlinx/library/watchdog/WatchdogJavaInteropExtension;
+	public final fun getMutableCollectionPublicApi ()Lorg/gradle/api/provider/Property;
+	public final fun getNullableBooleanPublicApi ()Lorg/gradle/api/provider/Property;
+	public final fun getOpenApiWithoutSubclassOptIn ()Lorg/gradle/api/provider/Property;
+	public final fun getPairOrTriplePublicApi ()Lorg/gradle/api/provider/Property;
+	public final fun getPublicTypeWithInternalApi ()Lorg/gradle/api/provider/Property;
+	public final fun getPublicTypesMustBeTransitiveDependencies ()Lorg/gradle/api/provider/Property;
+	public final fun getReportUndocumentedClassProperties ()Lorg/gradle/api/provider/Property;
+	public final fun getReports ()Lkotlinx/library/watchdog/WatchdogReports;
+	public final fun getRequiredParameterAfterOptional ()Lorg/gradle/api/provider/Property;
+	public final fun getStatefulClassWithoutEquals ()Lorg/gradle/api/provider/Property;
+	public final fun getStatefulClassWithoutHashCode ()Lorg/gradle/api/provider/Property;
+	public final fun getStatefulClassWithoutToString ()Lorg/gradle/api/provider/Property;
+	public final fun getSubclassOptInWithoutMarkers ()Lorg/gradle/api/provider/Property;
+	public final fun getSuggestAbiValidation ()Lorg/gradle/api/provider/Property;
+	public final fun getUndocumentedPublicApi ()Lorg/gradle/api/provider/Property;
+	public final fun getUseAbiValidationFilters ()Lorg/gradle/api/provider/Property;
+	public final fun ignore (Ljava/util/List;Ljava/lang/String;)V
+	public final fun ignore (Ljava/util/List;Ljava/lang/String;Z)V
+	public final fun ignore (Ljava/util/List;Ljava/util/List;)V
+	public final fun ignore (Ljava/util/List;Ljava/util/List;Z)V
+	public final fun ignore (Lkotlinx/library/watchdog/WatchdogChecks;Ljava/lang/String;)V
+	public final fun ignore (Lkotlinx/library/watchdog/WatchdogChecks;Ljava/lang/String;Z)V
+	public final fun ignore (Lkotlinx/library/watchdog/WatchdogChecks;Ljava/util/List;)V
+	public final fun ignore (Lkotlinx/library/watchdog/WatchdogChecks;Ljava/util/List;Z)V
+	public static synthetic fun ignore$default (Lkotlinx/library/watchdog/WatchdogGradleExtension;Ljava/util/List;Ljava/lang/String;ZILjava/lang/Object;)V
+	public static synthetic fun ignore$default (Lkotlinx/library/watchdog/WatchdogGradleExtension;Ljava/util/List;Ljava/util/List;ZILjava/lang/Object;)V
+	public static synthetic fun ignore$default (Lkotlinx/library/watchdog/WatchdogGradleExtension;Lkotlinx/library/watchdog/WatchdogChecks;Ljava/lang/String;ZILjava/lang/Object;)V
+	public static synthetic fun ignore$default (Lkotlinx/library/watchdog/WatchdogGradleExtension;Lkotlinx/library/watchdog/WatchdogChecks;Ljava/util/List;ZILjava/lang/Object;)V
+	public final fun javaInterop (Lorg/gradle/api/Action;)V
+	public final fun reports (Lorg/gradle/api/Action;)V
+}
+
+public class kotlinx/library/watchdog/WatchdogJavaInteropExtension {
+	public final fun getCompanionApiWithoutJvmStatic ()Lorg/gradle/api/provider/Property;
+	public final fun getCompanionPropertyWithoutStaticAccess ()Lorg/gradle/api/provider/Property;
+	public final fun getDefaultParametersWithoutJvmOverloads ()Lorg/gradle/api/provider/Property;
+	public final fun getEnabled ()Lorg/gradle/api/provider/Property;
+	public final fun getKotlinOnlyApiWithoutJvmSynthetic ()Lorg/gradle/api/provider/Property;
+	public final fun getMangledJvmNamePublicApi ()Lorg/gradle/api/provider/Property;
+	public final fun getTopLevelApiWithoutJvmName ()Lorg/gradle/api/provider/Property;
+}
+
+public final class kotlinx/library/watchdog/WatchdogSeverity : java/lang/Enum {
+	public static final field ERROR Lkotlinx/library/watchdog/WatchdogSeverity;
+	public static final field NONE Lkotlinx/library/watchdog/WatchdogSeverity;
+	public static final field WARNING Lkotlinx/library/watchdog/WatchdogSeverity;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lkotlinx/library/watchdog/WatchdogSeverity;
+	public static fun values ()[Lkotlinx/library/watchdog/WatchdogSeverity;
+}
+
+public final class kotlinx/library/watchdog/WatchdogSupportPlugin : org/jetbrains/kotlin/compiler/plugin/devkit/DevKitSupportPlugin {
+	public fun <init> ()V
+	public synthetic fun apply (Ljava/lang/Object;)V
+	public fun apply (Lorg/gradle/api/Project;)V
+	public fun applyToCompilation (Lorg/gradle/api/Project;Lorg/jetbrains/kotlin/gradle/plugin/KotlinCompilation;)Lorg/gradle/api/provider/Provider;
+	public fun isApplicable (Lorg/jetbrains/kotlin/gradle/plugin/KotlinCompilation;)Z
+}
+

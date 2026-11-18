@@ -1,0 +1,135 @@
+public final class kotlinx/library/watchdog/ExemptionReason : java/lang/Enum {
+	public static final field API_DESIGN Lkotlinx/library/watchdog/ExemptionReason;
+	public static final field EXTERNAL_CONTRACT Lkotlinx/library/watchdog/ExemptionReason;
+	public static final field FOR_BACKWARDS_COMPATIBILITY Lkotlinx/library/watchdog/ExemptionReason;
+	public static final field FOR_DEPRECATION Lkotlinx/library/watchdog/ExemptionReason;
+	public static final field IGNORE_JAVA_INTEROP Lkotlinx/library/watchdog/ExemptionReason;
+	public static final field INTEROP Lkotlinx/library/watchdog/ExemptionReason;
+	public static final field OTHER Lkotlinx/library/watchdog/ExemptionReason;
+	public static final field TODO Lkotlinx/library/watchdog/ExemptionReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lkotlinx/library/watchdog/ExemptionReason;
+	public static fun values ()[Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyBooleanParameter : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyDataClass : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyDefaultFacadeName : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyExhaustive : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyFunctionTypeAlias : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyInconsistentParameterOrder : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyInlinedLogic : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyKotlinOnlyApi : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyMangledJvmName : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyMutableCollection : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyNonStaticCompanionApi : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyNonTransitiveDependency : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyNullableBoolean : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyOpen : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyPairOrTriple : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyRequiredParameterAfterOptional : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyUndocumented : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyWithoutEquals : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyWithoutEqualsHashCodeOrToString : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyWithoutHashCode : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyWithoutJvmOverloads : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyWithoutToString : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+	public abstract fun reason ()Lkotlinx/library/watchdog/ExemptionReason;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+}
+
+public abstract interface annotation class kotlinx/library/watchdog/InternalAnnotationMarker : java/lang/annotation/Annotation {
+}
+

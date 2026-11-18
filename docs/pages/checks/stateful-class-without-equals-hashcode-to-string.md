@@ -147,9 +147,9 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=STATEFUL_CLASS_WITHOUT_EQUALS:error
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=STATEFUL_CLASS_WITHOUT_HASH_CODE:error
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=STATEFUL_CLASS_WITHOUT_TO_STRING:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=STATEFUL_CLASS_WITHOUT_EQUALS:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=STATEFUL_CLASS_WITHOUT_HASH_CODE:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=STATEFUL_CLASS_WITHOUT_TO_STRING:error
 ```
 
 ## See also

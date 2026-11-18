@@ -125,7 +125,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:publicTypeWithInternalApi=false
+-P plugin:kotlinx.library.watchdog:publicTypeWithInternalApi=false
 ```
 
 ## See also

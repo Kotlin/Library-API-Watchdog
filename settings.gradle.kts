@@ -27,11 +27,11 @@ pluginDevKit {
 
 rootProject.name = "library-api-watchdog"
 
-include("kotlin-library-api-watchdog-compiler-plugin")
-project(":kotlin-library-api-watchdog-compiler-plugin").projectDir = file("compiler-plugin")
+include("library-api-watchdog-compiler-plugin")
+project(":library-api-watchdog-compiler-plugin").projectDir = file("compiler-plugin")
 
-include("kotlin-library-api-watchdog-exempts-fixer")
-project(":kotlin-library-api-watchdog-exempts-fixer").projectDir = file("exempts-fixer")
+include("library-api-watchdog-exempts-fixer")
+project(":library-api-watchdog-exempts-fixer").projectDir = file("exempts-fixer")
 
 include("gradle-plugin-test")
 

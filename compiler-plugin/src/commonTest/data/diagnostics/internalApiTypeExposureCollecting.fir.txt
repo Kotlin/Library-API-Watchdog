@@ -2,7 +2,7 @@ Module: lib
 FILE: internalTypes.kt
     package lib.api
 
-    @R|org/jetbrains/kotlinx/library/api/watchdog/InternalAnnotationMarker|() @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|) [evaluated = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|)]) public final annotation class InternalLibApi : R|kotlin/Annotation| {
+    @R|kotlinx/library/watchdog/InternalAnnotationMarker|() @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|) [evaluated = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|)]) public final annotation class InternalLibApi : R|kotlin/Annotation| {
         public constructor(): R|lib/api/InternalLibApi| {
             super<R|kotlin/Any|>()
         }
@@ -27,9 +27,9 @@ FILE: exposure.kt
     public final fun collected(): R|lib/api/InternalType| {
         ^collected R|lib/api/InternalType.InternalType|()
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final fun exempted(): R|lib/api/InternalType| {
+    @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final fun exempted(): R|lib/api/InternalType| {
         ^exempted R|lib/api/InternalType.InternalType|()
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final fun supported(): R|lib/api/SupportedType| {
+    @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final fun supported(): R|lib/api/SupportedType| {
         ^supported R|lib/api/SupportedType.SupportedType|()
     }

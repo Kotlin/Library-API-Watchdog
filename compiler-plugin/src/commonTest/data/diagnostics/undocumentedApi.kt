@@ -5,7 +5,7 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyUndocumented
+import kotlinx.library.watchdog.IntentionallyUndocumented
 
 public class <!UNDOCUMENTED_PUBLIC_API!>UndocumentedClass<!>
 

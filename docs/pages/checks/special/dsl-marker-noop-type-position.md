@@ -90,7 +90,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=DSL_MARKER_NOOP_TYPE_POSITION:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=DSL_MARKER_NOOP_TYPE_POSITION:error
 ```
 
 ## See also

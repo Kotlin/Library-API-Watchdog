@@ -12,7 +12,7 @@ gradlePlugin {
     plugins {
         register("develocityConventions") {
             id = "library-api-watchdog.develocity-conventions"
-            implementationClass = "org.jetbrains.kotlinx.library.api.watchdog.conventions.DevelocitySettingsConventionPlugin"
+            implementationClass = "kotlinx.library.watchdog.conventions.DevelocitySettingsConventionPlugin"
         }
     }
 }

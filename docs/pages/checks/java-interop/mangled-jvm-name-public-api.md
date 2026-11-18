@@ -176,7 +176,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=MANGLED_JVM_NAME_PUBLIC_API:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=MANGLED_JVM_NAME_PUBLIC_API:error
 ```
 
 ## See also

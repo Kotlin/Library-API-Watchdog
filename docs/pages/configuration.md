@@ -74,7 +74,7 @@ apiWatchdog {
 Applying the plugin:
 
 - Registers the compiler plugin for every compilation except test compilations.
-- Adds the `org.jetbrains.kotlinx:kotlin-library-api-watchdog-plugin-annotations` dependency,
+- Adds the `org.jetbrains.kotlinx:library-api-watchdog-plugin-annotations` dependency,
   the library with the `@Intentionally*` exemption annotations.
 - Requires explicit API mode, see [Explicit API mode](#explicit-api-mode).
 - Warns when binary compatibility validation is off, with a setup snippet.
@@ -188,7 +188,7 @@ apiWatchdog {
 `ignore` skips a check on every declaration that carries one of the listed annotations:
 
 ```kotlin build.gradle.kts
-import org.jetbrains.kotlinx.library.api.watchdog.WatchdogChecks
+import kotlinx.library.watchdog.WatchdogChecks
 
 apiWatchdog {
     ignore(
@@ -370,7 +370,7 @@ formats, the subproject selection, and included builds.
 A direct compiler call configures the plugin with `-P` options of this form:
 
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:<option>=<value>
+-P plugin:kotlinx.library.watchdog:<option>=<value>
 ```
 
 | Option                      | Value                                                  | Gradle equivalent             |
@@ -391,15 +391,15 @@ checks that a Boolean property turns off: the option rejects them. `<severity>` 
 pattern has the [format of the ABI validation filters](https://kotlinlang.org/docs/gradle-binary-compatibility-validation.html#configure-filters). One value of each option:
 
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=UNDOCUMENTED_PUBLIC_API:error
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:ignoreWhenAnnotated=STATEFUL_CLASS_WITHOUT_EQUALS:com.example.GeneratedValueMembers
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:internalApiAnnotation=com.example.dependency.InternalDependencyApi
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:excludedName=com.example.internal.**
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:includedName=com.example.api.**
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:includedAnnotation=com.example.PublicApi
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:publicTypeWithInternalApi=false
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:reportUndocumentedClassProperties=true
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:requireExplicitApi=false
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=UNDOCUMENTED_PUBLIC_API:error
+-P plugin:kotlinx.library.watchdog:ignoreWhenAnnotated=STATEFUL_CLASS_WITHOUT_EQUALS:com.example.GeneratedValueMembers
+-P plugin:kotlinx.library.watchdog:internalApiAnnotation=com.example.dependency.InternalDependencyApi
+-P plugin:kotlinx.library.watchdog:excludedName=com.example.internal.**
+-P plugin:kotlinx.library.watchdog:includedName=com.example.api.**
+-P plugin:kotlinx.library.watchdog:includedAnnotation=com.example.PublicApi
+-P plugin:kotlinx.library.watchdog:publicTypeWithInternalApi=false
+-P plugin:kotlinx.library.watchdog:reportUndocumentedClassProperties=true
+-P plugin:kotlinx.library.watchdog:requireExplicitApi=false
 ```
 
 [`PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY`](./checks/special/public-type-from-non-transitive-dependency.md)

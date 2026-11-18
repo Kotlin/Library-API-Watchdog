@@ -12,9 +12,9 @@
 
 package test
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.InternalAnnotationMarker
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutJvmOverloads
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.InternalAnnotationMarker
+import kotlinx.library.watchdog.IntentionallyWithoutJvmOverloads
 
 /** Marks internal API. */
 @InternalAnnotationMarker

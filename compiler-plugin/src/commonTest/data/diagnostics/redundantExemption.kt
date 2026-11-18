@@ -5,26 +5,26 @@
 // FILE: declarations.kt
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyBooleanParameter
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDataClass
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyExhaustive
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyFunctionTypeAlias
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyInconsistentParameterOrder
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyInlinedLogic
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyKotlinOnlyApi
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyMangledJvmName
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyMutableCollection
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyNonStaticCompanionApi
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyNullableBoolean
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyPairOrTriple
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyRequiredParameterAfterOptional
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyUndocumented
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutEquals
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutEqualsHashCodeOrToString
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutJvmOverloads
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyBooleanParameter
+import kotlinx.library.watchdog.IntentionallyDataClass
+import kotlinx.library.watchdog.IntentionallyExhaustive
+import kotlinx.library.watchdog.IntentionallyFunctionTypeAlias
+import kotlinx.library.watchdog.IntentionallyInconsistentParameterOrder
+import kotlinx.library.watchdog.IntentionallyInlinedLogic
+import kotlinx.library.watchdog.IntentionallyKotlinOnlyApi
+import kotlinx.library.watchdog.IntentionallyMangledJvmName
+import kotlinx.library.watchdog.IntentionallyMutableCollection
+import kotlinx.library.watchdog.IntentionallyNonStaticCompanionApi
+import kotlinx.library.watchdog.IntentionallyNullableBoolean
+import kotlinx.library.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.IntentionallyPairOrTriple
+import kotlinx.library.watchdog.IntentionallyRequiredParameterAfterOptional
+import kotlinx.library.watchdog.IntentionallyUndocumented
+import kotlinx.library.watchdog.IntentionallyWithoutEquals
+import kotlinx.library.watchdog.IntentionallyWithoutEqualsHashCodeOrToString
+import kotlinx.library.watchdog.IntentionallyWithoutJvmOverloads
+import kotlinx.library.watchdog.IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility
 
 @IntentionallyOpen(reason = ExemptionReason.API_DESIGN)
 public open class NeededOpen
@@ -236,8 +236,8 @@ public class CoveredIds {
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public fun facadeMember(): Int = 1
 
@@ -246,7 +246,7 @@ public fun facadeMember(): Int = 1
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public fun defaultFacadeMember(): Int = 1

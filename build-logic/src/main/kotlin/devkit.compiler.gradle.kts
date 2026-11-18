@@ -1,7 +1,7 @@
+import kotlinx.library.watchdog.conventions.catalogVersion
+import kotlinx.library.watchdog.conventions.ciSingleVersion
+import kotlinx.library.watchdog.conventions.config
 import org.jetbrains.kotlin.gradle.plugin.KotlinTargetWithTests
-import org.jetbrains.kotlinx.library.api.watchdog.conventions.catalogVersion
-import org.jetbrains.kotlinx.library.api.watchdog.conventions.ciSingleVersion
-import org.jetbrains.kotlinx.library.api.watchdog.conventions.config
 
 plugins {
     kotlin("compiler.plugin.devkit.compiler-plugin")

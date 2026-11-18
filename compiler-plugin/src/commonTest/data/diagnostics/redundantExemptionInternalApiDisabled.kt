@@ -9,7 +9,7 @@
 // FILE: internalTypes.kt
 package lib.api
 
-import org.jetbrains.kotlinx.library.api.watchdog.InternalAnnotationMarker
+import kotlinx.library.watchdog.InternalAnnotationMarker
 
 @InternalAnnotationMarker
 @Target(AnnotationTarget.CLASS)
@@ -22,8 +22,8 @@ public open class InternalType
 // FILE: exposure.kt
 package consumer
 
+import kotlinx.library.watchdog.IntentionallyExposedInternalApiForBackwardsCompatibility
 import lib.api.InternalType
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyExposedInternalApiForBackwardsCompatibility
 
 public fun unreported(): InternalType = InternalType()
 

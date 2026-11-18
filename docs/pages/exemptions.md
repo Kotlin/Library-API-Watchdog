@@ -250,7 +250,7 @@ An annotation ignore rule skips one check on every declaration that carries a gi
 Use it when every annotated declaration already satisfies the check.
 
 ```kotlin build.gradle.kts
-import org.jetbrains.kotlinx.library.api.watchdog.WatchdogChecks
+import kotlinx.library.watchdog.WatchdogChecks
 
 apiWatchdog {
     ignore(
@@ -266,5 +266,5 @@ the rule also covers every declaration nested in the annotated one.
 ## The annotations artifact
 
 The `@Intentionally*` annotations, `@InternalAnnotationMarker`, and `ExemptionReason` are in
-`org.jetbrains.kotlinx:kotlin-library-api-watchdog-plugin-annotations`. The Gradle plugin adds this
+`org.jetbrains.kotlinx:library-api-watchdog-plugin-annotations`. The Gradle plugin adds this
 dependency to the project.

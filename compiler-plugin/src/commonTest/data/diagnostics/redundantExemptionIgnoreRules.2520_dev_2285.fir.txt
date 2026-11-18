@@ -7,7 +7,7 @@ FILE: declarations.kt
         }
 
     }
-    @R|foo/bar/Generated|() @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyDataClass|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final data class GeneratedPoint : R|kotlin/Any| {
+    @R|foo/bar/Generated|() @R|kotlinx/library/watchdog/IntentionallyDataClass|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final data class GeneratedPoint : R|kotlin/Any| {
         public constructor(x: R|kotlin/Int|): R|foo/bar/GeneratedPoint| {
             super<R|kotlin/Any|>()
         }
@@ -20,7 +20,7 @@ FILE: declarations.kt
         public final fun copy(x: R|kotlin/Int| = this@R|foo/bar/GeneratedPoint|.R|foo/bar/GeneratedPoint.x|): R|foo/bar/GeneratedPoint|
 
     }
-    @R|foo/bar/Generated|() @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyDataClass|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final class GeneratedPlain : R|kotlin/Any| {
+    @R|foo/bar/Generated|() @R|kotlinx/library/watchdog/IntentionallyDataClass|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final class GeneratedPlain : R|kotlin/Any| {
         public constructor(): R|foo/bar/GeneratedPlain| {
             super<R|kotlin/Any|>()
         }
@@ -35,7 +35,7 @@ FILE: declarations.kt
             public get(): R|kotlin/Int|
 
     }
-    @R|foo/bar/Generated|() @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyMangledJvmName|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final class GeneratedIds : R|kotlin/Any| {
+    @R|foo/bar/Generated|() @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final class GeneratedIds : R|kotlin/Any| {
         public constructor(): R|foo/bar/GeneratedIds| {
             super<R|kotlin/Any|>()
         }
@@ -45,7 +45,7 @@ FILE: declarations.kt
         }
 
     }
-    @R|foo/bar/Generated|() @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyMangledJvmName|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final class GeneratedNames : R|kotlin/Any| {
+    @R|foo/bar/Generated|() @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final class GeneratedNames : R|kotlin/Any| {
         public constructor(): R|foo/bar/GeneratedNames| {
             super<R|kotlin/Any|>()
         }

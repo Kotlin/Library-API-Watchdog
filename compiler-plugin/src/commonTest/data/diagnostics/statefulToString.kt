@@ -4,10 +4,10 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutToString
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutEquals
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutEqualsHashCodeOrToString
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutHashCode
+import kotlinx.library.watchdog.IntentionallyWithoutToString
+import kotlinx.library.watchdog.IntentionallyWithoutEquals
+import kotlinx.library.watchdog.IntentionallyWithoutEqualsHashCodeOrToString
+import kotlinx.library.watchdog.IntentionallyWithoutHashCode
 
 public class <!STATEFUL_CLASS_WITHOUT_EQUALS, STATEFUL_CLASS_WITHOUT_HASH_CODE, STATEFUL_CLASS_WITHOUT_TO_STRING!>Connection<!>(public val host: String)
 

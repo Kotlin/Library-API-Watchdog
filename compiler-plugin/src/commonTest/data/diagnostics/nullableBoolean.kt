@@ -4,7 +4,7 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyNullableBoolean
+import kotlinx.library.watchdog.IntentionallyNullableBoolean
 
 public fun probe(): <!NULLABLE_BOOLEAN_PUBLIC_API!>Boolean?<!> = null
 

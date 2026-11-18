@@ -4,7 +4,7 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDataClass
+import kotlinx.library.watchdog.IntentionallyDataClass
 
 public data class <!DATA_CLASS_PUBLIC_API!>Coordinates<!>(val x: Int, val y: Int)
 

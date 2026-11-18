@@ -4,7 +4,7 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility
+import kotlinx.library.watchdog.IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility
 
 @DslMarker
 @Target(AnnotationTarget.CLASS, AnnotationTarget.TYPEALIAS, AnnotationTarget.TYPE, <!DSL_MARKER_NOOP_TARGET!>AnnotationTarget.FUNCTION<!>)

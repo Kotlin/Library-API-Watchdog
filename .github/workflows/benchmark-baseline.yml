@@ -81,11 +81,11 @@ jobs:
 
       - name: Compare with the baseline
         if: ${{ !inputs.record }}
-        run: ./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmarkBaseline
+        run: ./gradlew :library-api-watchdog-compiler-plugin:benchmarkBaseline
 
       - name: Record the baseline
         if: ${{ inputs.record }}
-        run: ./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmarkBaseline -Pbenchmark.baseline.record=true
+        run: ./gradlew :library-api-watchdog-compiler-plugin:benchmarkBaseline -Pbenchmark.baseline.record=true
 
       # The task writes no summary when it stops before the measurement, for example on a baseline of other settings.
       - name: Publish the summary

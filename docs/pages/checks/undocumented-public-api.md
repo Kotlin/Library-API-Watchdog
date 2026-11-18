@@ -99,7 +99,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=UNDOCUMENTED_PUBLIC_API:warning
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=UNDOCUMENTED_PUBLIC_API:warning
 ```
 
 ### Class properties
@@ -116,7 +116,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:reportUndocumentedClassProperties=true
+-P plugin:kotlinx.library.watchdog:reportUndocumentedClassProperties=true
 ```
 
 ## See also

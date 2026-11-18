@@ -109,7 +109,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=NULLABLE_BOOLEAN_PUBLIC_API:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=NULLABLE_BOOLEAN_PUBLIC_API:error
 ```
 
 ## See also

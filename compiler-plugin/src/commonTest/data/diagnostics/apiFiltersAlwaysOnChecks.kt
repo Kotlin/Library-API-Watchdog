@@ -10,7 +10,7 @@
 // FILE: internal.kt
 package test.internal
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.IntentionallyOpen
 
 <!EXEMPTION_WITHOUT_EXPLANATION, REDUNDANT_EXEMPTION!>@IntentionallyOpen<!>
 public open class Excluded
@@ -29,7 +29,7 @@ public fun excludedProcess(tag: <!DSL_MARKER_NOOP_TYPE_POSITION!>@ExcludedDsl<!>
 // FILE: other.kt
 package test.other
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.IntentionallyOpen
 
 <!EXEMPTION_WITHOUT_EXPLANATION, REDUNDANT_EXEMPTION!>@IntentionallyOpen<!>
 public open class NotIncluded

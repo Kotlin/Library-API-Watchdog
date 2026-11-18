@@ -1,7 +1,7 @@
 FILE: internal.kt
     package test.internal
 
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyOpen|() public open class Excluded : R|kotlin/Any| {
+    @R|kotlinx/library/watchdog/IntentionallyOpen|() public open class Excluded : R|kotlin/Any| {
         public constructor(): R|test/internal/Excluded| {
             super<R|kotlin/Any|>()
         }
@@ -30,7 +30,7 @@ FILE: internal.kt
 FILE: other.kt
     package test.other
 
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyOpen|() public open class NotIncluded : R|kotlin/Any| {
+    @R|kotlinx/library/watchdog/IntentionallyOpen|() public open class NotIncluded : R|kotlin/Any| {
         public constructor(): R|test/other/NotIncluded| {
             super<R|kotlin/Any|>()
         }

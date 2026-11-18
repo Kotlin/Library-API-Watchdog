@@ -68,7 +68,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=SUBCLASS_OPT_IN_WITHOUT_MARKERS:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=SUBCLASS_OPT_IN_WITHOUT_MARKERS:error
 ```
 
 ## See also
