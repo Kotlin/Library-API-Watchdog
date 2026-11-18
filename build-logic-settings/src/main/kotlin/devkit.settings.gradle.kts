@@ -25,17 +25,11 @@ gradle.lifecycle.beforeProject {
         ?: libraryProperties.getProperty("version")
 }
 
-dependencyResolutionManagement {
+// The dev kit adds the Kotlin development repositories when Gradle has evaluated the settings. The proxies of
+// `gradle/repositories.settings.gradle.kts` have their artifacts, so only the proxies stay.
+gradle.settingsEvaluated {
     @Suppress("UnstableApiUsage")
-    repositories {
-        maven("https://packages.jetbrains.team/maven/p/compiler-plugin-dev-kit/eap") {
-            // Space can challenge a public read on a GitHub runner. With an empty username, Gradle
-            // retries the challenge as an anonymous request.
-            credentials {
-                username = ""
-                password = ""
-            }
-        }
-        mavenCentral()
+    dependencyResolutionManagement.repositories.removeIf {
+        it is MavenArtifactRepository && !it.url.toString().startsWith("https://packages.jetbrains.team/maven/p/kt-lib/")
     }
 }

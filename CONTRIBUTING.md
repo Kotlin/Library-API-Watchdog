@@ -2,11 +2,26 @@
 
 ## Build
 
-The build gets the compiler-plugin-dev-kit from its
-[Space EAP repository](https://packages.jetbrains.team/maven/p/compiler-plugin-dev-kit/eap).
-The `devkit` entry of [gradle/libs.versions.toml](gradle/libs.versions.toml) sets its version.
-The dev kit settings plugin gives the Kotlin development repositories, the plugin coordinates,
-and the functional-test publishing.
+The build gets every plugin and every Maven dependency from two Space proxies.
+[gradle/repositories.settings.gradle.kts](gradle/repositories.settings.gradle.kts) declares them for every build, and
+the functional tests use them in the test builds:
+
+| Proxy | Holds |
+|---|---|
+| [build-deps](https://packages.jetbrains.team/maven/p/kt-lib/build-deps) | The release versions. |
+| [build-deps-eap](https://packages.jetbrains.team/maven/p/kt-lib/build-deps-eap) | The development versions: the compiler-plugin-dev-kit, the Kotlin development builds, and the Kotlin builds of the IDEs. |
+
+A proxy gives a version that it already has to every request. The first request of a new version needs a token. CI has
+no token. So after a change of a dependency version, run the build and the tests that use the dependency with the token
+before you push. Put the token into the `gradle.properties` file of the Gradle user home:
+
+```properties
+space.username.watchdog=<username>
+space.password.watchdog=<token>
+```
+
+The `devkit` entry of [gradle/libs.versions.toml](gradle/libs.versions.toml) sets the version of the
+compiler-plugin-dev-kit. The dev kit settings plugin gives the plugin coordinates and the functional-test publishing.
 
 The repository is a composite build:
 

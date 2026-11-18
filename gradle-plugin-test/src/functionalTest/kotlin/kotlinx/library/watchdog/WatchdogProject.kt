@@ -257,9 +257,13 @@ internal class WatchdogFixture(
 ) : AbstractDevKitGradleProject(multiplatform = kind.multiplatform) {
     override val pluginUnderTest: Plugin = Plugin(WATCHDOG_PLUGIN_ID, pluginUnderTestVersion)
 
+    // The proxies of `gradle/repositories.settings.gradle.kts` replace the remote repositories of the dev kit defaults.
     // The dev kit runtime artifacts come from mavenLocal.
     override fun repositories(defaults: List<Repository>): Repositories =
-        Repositories((defaults + Repository.MAVEN_LOCAL).toMutableList())
+        Repositories(
+            (Repository.FUNC_TEST_INCLUDED_BUILDS + Repository.FUNC_TEST + PROXY_REPOSITORIES + Repository.MAVEN_LOCAL)
+                .toMutableList()
+        )
 
     // AGP 8 refuses AndroidX dependencies without the opt-in.
     override val extraGradleProperties: List<String>
@@ -504,6 +508,21 @@ internal const val KOTLIN_JVM_PLUGIN_ID = "org.jetbrains.kotlin.jvm"
 internal const val KOTLIN_MULTIPLATFORM_PLUGIN_ID = "org.jetbrains.kotlin.multiplatform"
 internal const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
 private val KOTLIN_PLUGIN_IDS = setOf(KOTLIN_JVM_PLUGIN_ID, KOTLIN_MULTIPLATFORM_PLUGIN_ID, KOTLIN_ANDROID_PLUGIN_ID)
+// The same repositories and credentials as in `gradle/repositories.settings.gradle.kts`.
+private val PROXY_REPOSITORIES: List<Repository> = listOf("build-deps", "build-deps-eap").map { proxy ->
+    Repository.ofMaven("https://packages.jetbrains.team/maven/p/kt-lib/$proxy").withConfigureAction(
+        """
+        val spaceUsername = providers.gradleProperty("space.username.watchdog").orNull
+        val spacePassword = providers.gradleProperty("space.password.watchdog").orNull
+        if (spaceUsername != null && spacePassword != null) {
+            credentials { username = spaceUsername; password = spacePassword }
+            authentication { create<BasicAuthentication>("basic") }
+        } else {
+            credentials { username = ""; password = "" }
+        }
+        """.trimIndent()
+    )
+}
 private const val JVM_TARGET_17 = "compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17 }"
 
 private val watchdogAnnotationImports: List<String> = listOf(
