@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.compiler.plugin.devkit.ProjectOrGav
+import org.jetbrains.kotlinx.library.api.watchdog.conventions.ciSingleVersion
 
 plugins {
     id("devkit.gradle")
@@ -16,13 +17,15 @@ pluginDevKit {
     companionLibrary("kotlin-library-api-watchdog-plugin-annotations")
     compilerPlugin = ProjectOrGav.LocalProject(project(":kotlin-library-api-watchdog-compiler-plugin").isolated)
 
-    // Every TestKit build gets these Gradle properties. A TestKit daemon otherwise uses the JVM default heap of a
-    // quarter of the machine's RAM. The 16 GB CI runners cannot fit several of those heaps next to the other JVMs
-    // of a test lane.
+    // In the single-version CI lanes, every TestKit build gets these Gradle properties. A TestKit daemon otherwise
+    // uses the JVM default heap of a quarter of the machine's RAM. The 16 GB CI runners can't fit several of those
+    // heaps next to the other JVMs of a test lane.
     // The `org.gradle.jvmargs` value replaces the dev kit line with the same key, so it repeats that line's flags.
-    // The dev kit joins the properties with commas, so a value cannot contain one.
-    functionalTestProperties.addAll(
-        "org.gradle.jvmargs=-Dfile.encoding=UTF-8 -Xmx1500m -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=512m",
-        "kotlin.daemon.jvmargs=-Xmx1g",
-    )
+    // The dev kit joins the properties with commas, so a value can't contain one.
+    if (ciSingleVersion) {
+        functionalTestProperties.addAll(
+            "org.gradle.jvmargs=-Dfile.encoding=UTF-8 -Xmx1500m -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=512m",
+            "kotlin.daemon.jvmargs=-Xmx1g",
+        )
+    }
 }

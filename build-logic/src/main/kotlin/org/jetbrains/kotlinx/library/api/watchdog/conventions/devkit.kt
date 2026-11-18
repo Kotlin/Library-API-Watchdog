@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.compiler.plugin.devkit.DevKitPropertiesDsl
 // The "Gradle tests" workflow sets WATCHDOG_CI_SINGLE_VERSION in lanes that test one Kotlin version. The dev kit
 // then registers only the versions that the `kotlin.compiler.plugin.devkit.*` Gradle properties request, or the
 // build's own Kotlin version when they request none. The Gradle plugin tests then run fewer forked JVMs per test
-// task.
+// task, and their TestKit daemons get a heap limit.
 val DevKitPropertiesDsl<*>.ciSingleVersion: Boolean
     get() = project.ciSingleVersion
 
