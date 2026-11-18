@@ -8,8 +8,8 @@ FILE: common.kt
         }
 
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyWithoutJvmOverloads|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) public final expect fun encode(v: R|kotlin/Int|, compact: R|kotlin/Boolean| = Boolean(false)): R|kotlin/Unit|
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyKotlinOnlyApi|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) public final expect class Loader : R|kotlin/Any| {
+    @R|kotlinx/library/watchdog/IntentionallyWithoutJvmOverloads|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public final expect fun encode(v: R|kotlin/Int|, compact: R|kotlin/Boolean| = Boolean(false)): R|kotlin/Unit|
+    @R|kotlinx/library/watchdog/IntentionallyKotlinOnlyApi|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public final expect class Loader : R|kotlin/Any| {
         public expect constructor(): R|test/Loader|
 
         public final expect suspend fun load(): R|kotlin/Int|
@@ -21,12 +21,12 @@ FILE: common.kt
         public final expect class Inner : R|kotlin/Any| {
             public expect constructor(): R|test/Outer.Inner|
 
-            @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyWithoutJvmOverloads|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) public final expect fun encode(v: R|kotlin/Int|, compact: R|kotlin/Boolean| = Boolean(false)): R|kotlin/Unit|
+            @R|kotlinx/library/watchdog/IntentionallyWithoutJvmOverloads|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public final expect fun encode(v: R|kotlin/Int|, compact: R|kotlin/Boolean| = Boolean(false)): R|kotlin/Unit|
 
         }
 
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyWithoutJvmOverloads|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) public final expect fun decode(v: R|kotlin/Int|, compact: R|kotlin/Boolean| = Boolean(false)): R|kotlin/Unit|
+    @R|kotlinx/library/watchdog/IntentionallyWithoutJvmOverloads|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public final expect fun decode(v: R|kotlin/Int|, compact: R|kotlin/Boolean| = Boolean(false)): R|kotlin/Unit|
 Module: jvm
 FILE: annotatedFile.kt
     @FILE:R|test/PublicApi|()

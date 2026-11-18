@@ -10,13 +10,13 @@ run as part of `check`, and their results are reports for humans, not assertions
 
 ```bash
 # Everything (all checkers and both benchmarks, takes tens of minutes):
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmark
+./gradlew :library-api-watchdog-compiler-plugin:benchmark
 
 # Only the isolated per-checker benchmark:
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmark -Pbenchmark.include=IsolatedCheckerBenchmark
+./gradlew :library-api-watchdog-compiler-plugin:benchmark -Pbenchmark.include=IsolatedCheckerBenchmark
 
 # A subset of checkers with custom JMH options:
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmark \
+./gradlew :library-api-watchdog-compiler-plugin:benchmark \
     -Pbenchmark.include=IsolatedCheckerBenchmark \
     "-Pbenchmark.args=-p checker=none,UndocumentedApiChecker -p corpusFiles=400"
 ```
@@ -36,15 +36,15 @@ The `profile` task runs one benchmark subject with Java Flight Recorder. By defa
 an `allCheckers` whole compilation:
 
 ```bash
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:profile
+./gradlew :library-api-watchdog-compiler-plugin:profile
 
 # Profile one checker over already-resolved FIR:
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:profile \
+./gradlew :library-api-watchdog-compiler-plugin:profile \
     -Pprofile.benchmark=isolated \
     -Pprofile.subject=UndocumentedApiChecker
 
 # Profile the whole-compilation plugin baseline with a larger corpus and shorter run:
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:profile \
+./gradlew :library-api-watchdog-compiler-plugin:profile \
     -Pprofile.subject=pluginBaseline \
     -Pprofile.corpusFiles=400 \
     "-Pprofile.args=-wi 1 -i 2"
@@ -91,13 +91,13 @@ and push to `main` that changes the compiler plugin.
 
 ```bash
 # Compare with the baseline of this machine profile. Fails on a regression or without a baseline file.
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmarkBaseline
+./gradlew :library-api-watchdog-compiler-plugin:benchmarkBaseline
 
 # Report only. Use it on a machine without a baseline file.
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmarkBaseline -Pbenchmark.baseline.allowMissing=true
+./gradlew :library-api-watchdog-compiler-plugin:benchmarkBaseline -Pbenchmark.baseline.allowMissing=true
 
 # Write the baseline file of this machine profile.
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmarkBaseline -Pbenchmark.baseline.record=true
+./gradlew :library-api-watchdog-compiler-plugin:benchmarkBaseline -Pbenchmark.baseline.record=true
 ```
 
 The task runs the benchmark in its own JVM, without JMH forks, so the corpus compiles once and every
@@ -179,7 +179,7 @@ select an always-error check alone.
 After changing the templates, verify the corpus still exercises every benchmark-eligible checker:
 
 ```bash
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmarkCorpusAudit
+./gradlew :library-api-watchdog-compiler-plugin:benchmarkCorpusAudit
 ```
 
 It compiles the corpus with everything enabled and prints how often each diagnostic fired.

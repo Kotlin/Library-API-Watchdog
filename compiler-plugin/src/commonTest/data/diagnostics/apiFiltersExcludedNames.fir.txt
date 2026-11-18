@@ -156,7 +156,7 @@ FILE: api.kt
         }
 
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final fun exemptedLeak(): R|test/internal/InternalByPackage| {
+    @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final fun exemptedLeak(): R|test/internal/InternalByPackage| {
         ^exemptedLeak R|test/internal/InternalByPackage.InternalByPackage|()
     }
     public final class Shape2 : R|kotlin/Any| {

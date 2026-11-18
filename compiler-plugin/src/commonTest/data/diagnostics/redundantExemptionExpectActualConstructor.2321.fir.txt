@@ -12,21 +12,21 @@ FILE: common.kt
 
     }
     public final expect class Needed : R|kotlin/Any| {
-        public expect constructor(@R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyNullableBoolean|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) flag: R|kotlin/Boolean?|): R|foo/bar/Needed|
+        public expect constructor(@R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) flag: R|kotlin/Boolean?|): R|foo/bar/Needed|
 
-        @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyNullableBoolean|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) public final expect val flag: R|kotlin/Boolean?|
+        @R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public final expect val flag: R|kotlin/Boolean?|
             public get(): R|kotlin/Boolean?|
 
     }
     internal final expect class Redundant : R|kotlin/Any| {
-        public expect constructor(@R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyNullableBoolean|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) flag: R|kotlin/Boolean?|): R|foo/bar/Redundant|
+        public expect constructor(@R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) flag: R|kotlin/Boolean?|): R|foo/bar/Redundant|
 
         public final expect val flag: R|kotlin/Boolean?|
             public get(): R|kotlin/Boolean?|
 
     }
     public final expect class Inherited : R|kotlin/Any| {
-        @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyMangledJvmName|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) public expect constructor(@R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyMangledJvmName|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) id: R|foo/bar/Id|): R|foo/bar/Inherited|
+        @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public expect constructor(@R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) id: R|foo/bar/Id|): R|foo/bar/Inherited|
 
         public final expect val id: R|foo/bar/Id|
             public get(): R|foo/bar/Id|
@@ -37,25 +37,25 @@ FILE: jvm.kt
     package foo.bar
 
     public final actual class Needed : R|kotlin/Any| {
-        public actual constructor(@R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyNullableBoolean|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) flag: R|kotlin/Boolean?|): R|foo/bar/Needed| {
+        public actual constructor(@R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) flag: R|kotlin/Boolean?|): R|foo/bar/Needed| {
             super<R|kotlin/Any|>()
         }
 
-        @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyNullableBoolean|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) public final actual val flag: R|kotlin/Boolean?| = R|<local>/flag|
+        @R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public final actual val flag: R|kotlin/Boolean?| = R|<local>/flag|
             public get(): R|kotlin/Boolean?|
 
     }
     internal final actual class Redundant : R|kotlin/Any| {
-        public actual constructor(@R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyNullableBoolean|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) flag: R|kotlin/Boolean?|): R|foo/bar/Redundant| {
+        public actual constructor(@R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) flag: R|kotlin/Boolean?|): R|foo/bar/Redundant| {
             super<R|kotlin/Any|>()
         }
 
-        @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyNullableBoolean|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) public final actual val flag: R|kotlin/Boolean?| = R|<local>/flag|
+        @R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public final actual val flag: R|kotlin/Boolean?| = R|<local>/flag|
             public get(): R|kotlin/Boolean?|
 
     }
     public final actual class Inherited : R|kotlin/Any| {
-        @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyMangledJvmName|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) public actual constructor(id: R|foo/bar/Id|): R|foo/bar/Inherited| {
+        @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public actual constructor(id: R|foo/bar/Id|): R|foo/bar/Inherited| {
             super<R|kotlin/Any|>()
         }
 

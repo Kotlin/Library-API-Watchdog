@@ -11,11 +11,11 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyBooleanParameter
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDataClass
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyMangledJvmName
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyBooleanParameter
+import kotlinx.library.watchdog.IntentionallyDataClass
+import kotlinx.library.watchdog.IntentionallyMangledJvmName
+import kotlinx.library.watchdog.IntentionallyOpen
 
 public open class CommonOpen
 
@@ -52,10 +52,10 @@ public expect class Record(value: Int) {
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyBooleanParameter
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDataClass
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyMangledJvmName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyBooleanParameter
+import kotlinx.library.watchdog.IntentionallyDataClass
+import kotlinx.library.watchdog.IntentionallyMangledJvmName
 
 public actual class Server public actual constructor() {
     @IntentionallyBooleanParameter(reason = ExemptionReason.API_DESIGN)

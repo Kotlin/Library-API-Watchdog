@@ -6,7 +6,7 @@
 // FILE: internalTypes.kt
 package lib.api
 
-import org.jetbrains.kotlinx.library.api.watchdog.InternalAnnotationMarker
+import kotlinx.library.watchdog.InternalAnnotationMarker
 
 /** Marks declarations that are public only for technical reasons. */
 @InternalAnnotationMarker
@@ -114,11 +114,11 @@ public fun supported(value: SupportedType): List<SupportedType> = listOf(value)
 // FILE: exempted.kt
 package consumer.exempted
 
+import kotlinx.library.watchdog.IntentionallyExposedInternalApiForBackwardsCompatibility
 import lib.api.InternalAlias
 import lib.api.InternalBase
 import lib.api.InternalLibApi
 import lib.api.InternalType
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyExposedInternalApiForBackwardsCompatibility
 
 // The exemption covers the declaration, a parameter, a type parameter, or a type usage.
 

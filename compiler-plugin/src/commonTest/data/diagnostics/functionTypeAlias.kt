@@ -5,7 +5,7 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyFunctionTypeAlias
+import kotlinx.library.watchdog.IntentionallyFunctionTypeAlias
 
 public typealias <!FUNCTION_TYPE_ALIAS_PUBLIC_API!>Callback<!> = (Int) -> Unit
 

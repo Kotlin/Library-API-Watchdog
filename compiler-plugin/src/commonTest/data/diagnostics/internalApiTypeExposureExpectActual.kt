@@ -11,8 +11,8 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyExposedInternalApiForBackwardsCompatibility
-import org.jetbrains.kotlinx.library.api.watchdog.InternalAnnotationMarker
+import kotlinx.library.watchdog.IntentionallyExposedInternalApiForBackwardsCompatibility
+import kotlinx.library.watchdog.InternalAnnotationMarker
 
 @InternalAnnotationMarker
 @Target(AnnotationTarget.CLASS)
@@ -41,7 +41,7 @@ public expect class Holder() {
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyExposedInternalApiForBackwardsCompatibility
+import kotlinx.library.watchdog.IntentionallyExposedInternalApiForBackwardsCompatibility
 
 public actual fun leak(): Hidden = Hidden()
 

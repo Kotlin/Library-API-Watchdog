@@ -4,7 +4,7 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyPairOrTriple
+import kotlinx.library.watchdog.IntentionallyPairOrTriple
 
 public fun locate(): <!PAIR_OR_TRIPLE_PUBLIC_API!>Pair<Int, Int><!> = 0 to 0
 

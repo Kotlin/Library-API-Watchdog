@@ -1,0 +1,15 @@
+package kotlinx.library.watchdog.fir
+
+import org.jetbrains.kotlin.diagnostics.DiagnosticContext
+import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
+import org.jetbrains.kotlin.diagnostics.KtDiagnostic
+
+internal actual fun delegatingDiagnosticReporter(
+    delegate: DiagnosticReporter,
+    onReport: (diagnostic: KtDiagnostic?, context: DiagnosticContext) -> Unit
+): DiagnosticReporter = object : DiagnosticReporter() {
+    override val hasErrors: Boolean
+        get() = delegate.hasErrors
+
+    override fun report(diagnostic: KtDiagnostic?, context: DiagnosticContext) = onReport(diagnostic, context)
+}

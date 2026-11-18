@@ -78,8 +78,8 @@ public val <!TOP_LEVEL_API_WITHOUT_JVM_NAME!>fieldAnnotationOnly<!>: Int = 0
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public fun legacyEntryPoint(): Int = 0
 

@@ -115,13 +115,13 @@ jobs:
           ./gradlew \
             :build-logic:test \
             :gradle-plugin:test \
-            :gradle-plugin:kotlin-library-api-watchdog-report-aggregation:test
+            :gradle-plugin:library-api-watchdog-report-aggregation:test
 
       - name: Check the ABI dumps
         run: |
           ./gradlew \
             :gradle-plugin:checkKotlinAbi \
-            :gradle-plugin:kotlin-library-api-watchdog-report-aggregation:checkKotlinAbi \
+            :gradle-plugin:library-api-watchdog-report-aggregation:checkKotlinAbi \
             :plugin-annotations:checkLegacyAbi
 
       - name: Save test reports
@@ -157,9 +157,9 @@ jobs:
 
       - name: Run exempts fixer tests
         run: |
-          ./gradlew :kotlin-library-api-watchdog-exempts-fixer:allTests || {
+          ./gradlew :library-api-watchdog-exempts-fixer:allTests || {
             echo "Tests failed; retrying once."
-            ./gradlew :kotlin-library-api-watchdog-exempts-fixer:allTests
+            ./gradlew :library-api-watchdog-exempts-fixer:allTests
           }
 
       - name: Save test reports
@@ -184,7 +184,7 @@ jobs:
     env:
       # With this variable set, the dev kit registers only the Kotlin version that
       # `kotlin.compiler.plugin.devkit.defaultTestVersion` requests. See `config()` in
-      # build-logic/src/main/kotlin/org/jetbrains/kotlinx/library/api/watchdog/conventions/devkit.kt.
+      # build-logic/src/main/kotlin/kotlinx/library/watchdog/conventions/devkit.kt.
       WATCHDOG_CI_SINGLE_VERSION: true
     steps:
       - name: Checkout repository

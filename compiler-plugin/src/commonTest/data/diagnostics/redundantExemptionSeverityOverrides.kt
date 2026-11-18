@@ -8,11 +8,11 @@
 // FILE: declarations.kt
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyBooleanParameter
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyKotlinOnlyApi
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyMangledJvmName
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyMutableCollection
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyBooleanParameter
+import kotlinx.library.watchdog.IntentionallyKotlinOnlyApi
+import kotlinx.library.watchdog.IntentionallyMangledJvmName
+import kotlinx.library.watchdog.IntentionallyMutableCollection
 
 @IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN)
 public fun neededBuffer(): MutableList<Int> = mutableListOf()

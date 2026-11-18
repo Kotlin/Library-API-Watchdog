@@ -1,0 +1,35 @@
+package kotlinx.library.watchdog.fir
+
+import org.jetbrains.kotlin.KtSourceElement
+import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
+import org.jetbrains.kotlin.diagnostics.reportOn
+import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
+import org.jetbrains.kotlin.fir.types.ConeKotlinType
+import org.jetbrains.kotlin.fir.types.classId
+import org.jetbrains.kotlin.fir.types.isMarkedNullable
+import org.jetbrains.kotlin.fir.types.lowerBoundIfFlexible
+import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.StandardClassIds
+
+internal class NullableBooleanChecker(
+    private val severities: WatchdogDiagnosticSeverities,
+) : ExposedTypeChecker(WatchdogClassIds.IntentionallyNullableBoolean) {
+    /** The upper bound of a flexible type is nullable, so the lower bound is what the source declares. */
+    override fun ConeKotlinType.declaredBound(): ConeKotlinType = lowerBoundIfFlexible()
+
+    context(context: CheckerContext)
+    override fun ConeKotlinType.violatingClassifier(): Name? =
+        StandardClassIds.Boolean.shortClassName
+            .takeIf { classId == StandardClassIds.Boolean && isMarkedNullable }
+
+    context(context: CheckerContext, reporter: DiagnosticReporter)
+    override fun report(source: KtSourceElement?, kind: String, name: Name, violation: Name) {
+        val factory = severities[WatchdogDiagnostics.NULLABLE_BOOLEAN_PUBLIC_API] ?: return
+        reporter.reportOn(
+            source = source,
+            factory = factory,
+            a = WatchdogDiagnosticMessages.parameterValueFor(factory.name, kind),
+            b = name,
+        )
+    }
+}

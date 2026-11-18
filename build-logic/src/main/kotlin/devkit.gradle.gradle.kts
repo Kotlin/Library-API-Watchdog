@@ -1,4 +1,4 @@
-import org.jetbrains.kotlinx.library.api.watchdog.conventions.config
+import kotlinx.library.watchdog.conventions.config
 
 plugins {
     kotlin("compiler.plugin.devkit.gradle-plugin")

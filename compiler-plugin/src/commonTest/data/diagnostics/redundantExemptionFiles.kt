@@ -7,7 +7,7 @@
 // FILE: markers.kt
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.InternalAnnotationMarker
+import kotlinx.library.watchdog.InternalAnnotationMarker
 
 @InternalAnnotationMarker
 public annotation class MarkedInternal
@@ -17,8 +17,8 @@ public annotation class MarkedInternal
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 private fun hidden(): Int = 1
 
@@ -29,8 +29,8 @@ internal fun alsoHidden(): Int = hidden()
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public val facadeProperty: Int = 1
 
@@ -39,8 +39,8 @@ public val facadeProperty: Int = 1
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public const val LIMIT: Int = 1
 
@@ -49,8 +49,8 @@ public const val LIMIT: Int = 1
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 @PublishedApi
 internal fun published(): Int = 1
@@ -60,8 +60,8 @@ internal fun published(): Int = 1
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public typealias Count = Int
 
@@ -70,8 +70,8 @@ public typealias Count = Int
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 @MarkedInternal
 public fun marked(): Int = 1
@@ -81,8 +81,8 @@ public fun marked(): Int = 1
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public suspend fun load(): Int = 1
 
@@ -93,8 +93,8 @@ public suspend fun load(): Int = 1
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public fun part(): Int = 1
 
@@ -103,8 +103,8 @@ public fun part(): Int = 1
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public class OnlyClass
 
@@ -117,8 +117,8 @@ public fun visible(): Int = helper()
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public val Int.doubled: Int
     get() = this * 2

@@ -84,9 +84,9 @@ jobs:
         env:
           TEST_TASK: ${{ env.LATEST_KOTLIN_ONLY == 'true' && 'latestKotlinTest' || 'allTests' }}
         run: |
-          ./gradlew ":kotlin-library-api-watchdog-compiler-plugin:$TEST_TASK" || {
+          ./gradlew ":library-api-watchdog-compiler-plugin:$TEST_TASK" || {
             echo "Tests failed; retrying once."
-            ./gradlew ":kotlin-library-api-watchdog-compiler-plugin:$TEST_TASK"
+            ./gradlew ":library-api-watchdog-compiler-plugin:$TEST_TASK"
           }
 
       - name: Save test reports
@@ -102,4 +102,4 @@ jobs:
 
       - name: Audit benchmark corpus
         if: env.LATEST_KOTLIN_ONLY != 'true'
-        run: ./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmarkCorpusAudit
+        run: ./gradlew :library-api-watchdog-compiler-plugin:benchmarkCorpusAudit

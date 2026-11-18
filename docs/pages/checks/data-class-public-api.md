@@ -197,7 +197,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=DATA_CLASS_PUBLIC_API:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=DATA_CLASS_PUBLIC_API:error
 ```
 
 ## See also

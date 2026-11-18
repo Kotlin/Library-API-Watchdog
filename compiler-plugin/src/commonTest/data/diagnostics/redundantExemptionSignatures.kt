@@ -5,12 +5,12 @@
 // FILE: declarations.kt
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyBooleanParameter
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyMutableCollection
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyPairOrTriple
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyRequiredParameterAfterOptional
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutJvmOverloads
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyBooleanParameter
+import kotlinx.library.watchdog.IntentionallyMutableCollection
+import kotlinx.library.watchdog.IntentionallyPairOrTriple
+import kotlinx.library.watchdog.IntentionallyRequiredParameterAfterOptional
+import kotlinx.library.watchdog.IntentionallyWithoutJvmOverloads
 
 public typealias Buffers = List<<!REDUNDANT_EXEMPTION!>@IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN)<!> MutableSet<Int>>
 

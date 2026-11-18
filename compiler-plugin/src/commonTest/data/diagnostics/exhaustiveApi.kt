@@ -4,7 +4,7 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyExhaustive
+import kotlinx.library.watchdog.IntentionallyExhaustive
 
 public enum class <!EXHAUSTIVE_PUBLIC_API!>UnmarkedEnum<!> {
     A,

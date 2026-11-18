@@ -4,6 +4,7 @@
 
 ### Added
 
+- The HTML report shows the missing setup step of the **Open in IDE** buttons on Windows and Linux.
 - [API filters](https://kotlin.github.io/Library-API-Watchdog/exemptions#api-filters): the watchdog applies the
   filters of the binary compatibility validation of the project.
 
@@ -13,6 +14,10 @@
   [Internal API types in public API](https://kotlin.github.io/Library-API-Watchdog/checks/special/public-type-with-internal-api)
   and warnings of [Redundant exemptions](https://kotlin.github.io/Library-API-Watchdog/checks/special/redundant-exemption).
   `apiWatchdog { useAbiValidationFilters = false }` turns the filters off.
+- The packages and the compiler plugin id start with `kotlinx.library.watchdog`, not with
+  `org.jetbrains.kotlinx.library.api.watchdog`.
+- The artifact ids don't have the `kotlin-` prefix, for example `library-api-watchdog-plugin-annotations`.
+- The HTML report lists the entries of a diagnostic in the order of file path, line, and column.
 - The check "Public types marked as internal API" has the new title "Internal API types in public API".
 
 ## 0.2.0 - 2026-11-06

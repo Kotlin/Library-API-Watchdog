@@ -444,7 +444,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=INLINE_FUNCTION_WITH_LOGIC:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=INLINE_FUNCTION_WITH_LOGIC:error
 ```
 
 ## See also

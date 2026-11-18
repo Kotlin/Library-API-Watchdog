@@ -35,7 +35,7 @@ public class <!UNDOCUMENTED_PUBLIC_API!>InSimilarPackage<!>
 // FILE: api.kt
 package test.api
 
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyExposedInternalApiForBackwardsCompatibility
+import kotlinx.library.watchdog.IntentionallyExposedInternalApiForBackwardsCompatibility
 import test.internal.InternalByPackage
 import test.internal.InternalName
 

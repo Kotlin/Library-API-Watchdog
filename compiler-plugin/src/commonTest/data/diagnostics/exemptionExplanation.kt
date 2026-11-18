@@ -4,17 +4,17 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDataClass
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyExhaustive
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyFunctionTypeAlias
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyKotlinOnlyApi
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyMutableCollection
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyNonTransitiveDependency
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyUndocumented
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyWithoutEqualsHashCodeOrToString
-import org.jetbrains.kotlinx.library.api.watchdog.InternalAnnotationMarker
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDataClass
+import kotlinx.library.watchdog.IntentionallyExhaustive
+import kotlinx.library.watchdog.IntentionallyFunctionTypeAlias
+import kotlinx.library.watchdog.IntentionallyKotlinOnlyApi
+import kotlinx.library.watchdog.IntentionallyMutableCollection
+import kotlinx.library.watchdog.IntentionallyNonTransitiveDependency
+import kotlinx.library.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.IntentionallyUndocumented
+import kotlinx.library.watchdog.IntentionallyWithoutEqualsHashCodeOrToString
+import kotlinx.library.watchdog.InternalAnnotationMarker
 
 <!EXEMPTION_WITHOUT_EXPLANATION!>@IntentionallyOpen<!>
 public open class BareOpenExemption

@@ -5,9 +5,9 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
-import org.jetbrains.kotlinx.library.api.watchdog.InternalAnnotationMarker
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.InternalAnnotationMarker
 
 /** A value class used to exercise JVM name mangling. */
 @JvmInline

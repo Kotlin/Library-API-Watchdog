@@ -131,10 +131,10 @@ jobs:
       - name: Cross-check documentation examples
         run: |
           ./gradlew :gradle-plugin-test:k240FunctionalTest \
-            --tests org.jetbrains.kotlinx.library.api.watchdog.DocsExamplesTest || {
+            --tests kotlinx.library.watchdog.DocsExamplesTest || {
               echo "Tests failed; retrying once."
               ./gradlew :gradle-plugin-test:k240FunctionalTest \
-                --tests org.jetbrains.kotlinx.library.api.watchdog.DocsExamplesTest
+                --tests kotlinx.library.watchdog.DocsExamplesTest
             }
 
       - name: Build Dokka API reference

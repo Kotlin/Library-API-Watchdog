@@ -7,10 +7,10 @@
 // FILE: declarations.kt
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyBooleanParameter
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDataClass
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyBooleanParameter
+import kotlinx.library.watchdog.IntentionallyDataClass
+import kotlinx.library.watchdog.IntentionallyOpen
 
 @IntentionallyOpen(reason = ExemptionReason.API_DESIGN)
 public class FinalWithOpenExemption
@@ -29,7 +29,7 @@ public fun read(@IntentionallyBooleanParameter(reason = ExemptionReason.API_DESI
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDefaultFacadeName
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
 
 public fun facadeMember(): Int = 1

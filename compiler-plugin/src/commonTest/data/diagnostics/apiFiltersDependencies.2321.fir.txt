@@ -20,7 +20,7 @@ FILE: ownInternal.kt
     }
     @R|kotlin/PublishedApi|() internal final fun publishedInternal(flag: R|kotlin/Boolean|): R|kotlin/Unit| {
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/InternalAnnotationMarker|() @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.FILE|, Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|)) public final annotation class HiddenApi : R|kotlin/Annotation| {
+    @R|kotlinx/library/watchdog/InternalAnnotationMarker|() @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.FILE|, Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|)) public final annotation class HiddenApi : R|kotlin/Annotation| {
         public constructor(): R|app/internal/HiddenApi| {
             super<R|kotlin/Any|>()
         }

@@ -13,7 +13,7 @@ public open class LibInternal
 // FILE: ownInternal.kt
 package app.internal
 
-import org.jetbrains.kotlinx.library.api.watchdog.InternalAnnotationMarker
+import kotlinx.library.watchdog.InternalAnnotationMarker
 
 public open class OwnInternal
 

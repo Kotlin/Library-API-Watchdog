@@ -22,26 +22,26 @@ jvmTargetConventions {
 
 kotlin {
     explicitApi()
-    compilerOptions.optIn.add("org.jetbrains.kotlinx.library.api.watchdog.InternalWatchdogApi")
+    compilerOptions.optIn.add("kotlinx.library.watchdog.InternalWatchdogApi")
 
     abiValidation()
 }
 
 dependencies {
     implementation(pluginDevKit("version-resolution"))
-    implementation(project(":kotlin-library-api-watchdog-report-aggregation"))
+    implementation(project(":library-api-watchdog-report-aggregation"))
     testImplementation(kotlin("test-junit"))
 }
 
 pluginDevKit {
-    pluginPackage = "org.jetbrains.kotlinx.library.api.watchdog"
-    companionLibrary("kotlin-library-api-watchdog-plugin-annotations")
-    compilerPlugin = ProjectOrGav.Sibling("kotlin-library-api-watchdog-compiler-plugin")
+    pluginPackage = "kotlinx.library.watchdog"
+    companionLibrary("library-api-watchdog-plugin-annotations")
+    compilerPlugin = ProjectOrGav.Sibling("library-api-watchdog-compiler-plugin")
 }
 
 // The root build runs `check` of this project only.
 tasks.check {
-    dependsOn(":kotlin-library-api-watchdog-report-aggregation:check")
+    dependsOn(":library-api-watchdog-report-aggregation:check")
 }
 
 gradlePlugin {
@@ -51,7 +51,7 @@ gradlePlugin {
             displayName = "Library API Watchdog"
             description =
                 "Warns Kotlin library authors about public API declarations that are hard to evolve"
-            implementationClass = "org.jetbrains.kotlinx.library.api.watchdog.WatchdogSupportPlugin"
+            implementationClass = "kotlinx.library.watchdog.WatchdogSupportPlugin"
         }
     }
 }

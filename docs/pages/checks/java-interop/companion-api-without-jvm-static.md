@@ -113,7 +113,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=COMPANION_API_WITHOUT_JVM_STATIC:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=COMPANION_API_WITHOUT_JVM_STATIC:error
 ```
 
 ## See also

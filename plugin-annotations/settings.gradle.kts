@@ -17,4 +17,4 @@ pluginManagement {
 
 plugins { id("devkit-included") }
 
-rootProject.name = "kotlin-library-api-watchdog-plugin-annotations"
+rootProject.name = "library-api-watchdog-plugin-annotations"

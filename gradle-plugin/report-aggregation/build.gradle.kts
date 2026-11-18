@@ -1,12 +1,12 @@
 @file:OptIn(ExperimentalAbiValidation::class)
 
+import kotlinx.library.watchdog.conventions.ChromeForTestingArguments
+import kotlinx.library.watchdog.conventions.GenerateCheckDescriptions
+import kotlinx.library.watchdog.conventions.chromeForTesting
+import kotlinx.library.watchdog.conventions.registerDiagnosticsGenerator
+import kotlinx.library.watchdog.conventions.repositoryRoot
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
-import org.jetbrains.kotlinx.library.api.watchdog.conventions.ChromeForTestingArguments
-import org.jetbrains.kotlinx.library.api.watchdog.conventions.GenerateCheckDescriptions
-import org.jetbrains.kotlinx.library.api.watchdog.conventions.chromeForTesting
-import org.jetbrains.kotlinx.library.api.watchdog.conventions.registerDiagnosticsGenerator
-import org.jetbrains.kotlinx.library.api.watchdog.conventions.repositoryRoot
 
 plugins {
     kotlin("jvm")
@@ -27,7 +27,7 @@ jvmTargetConventions {
 val generateCheckDescriptions = registerDiagnosticsGenerator<GenerateCheckDescriptions>(
     name = "generateCheckDescriptions",
     description = "Generates the report check descriptions and message templates from diagnostics.json.",
-    packageName = "org.jetbrains.kotlinx.library.api.watchdog",
+    packageName = "kotlinx.library.watchdog",
     outputDirectory = "checkDescriptions/main/kotlin",
 ) {
     toolVersion.set(project.version.toString())
@@ -35,11 +35,11 @@ val generateCheckDescriptions = registerDiagnosticsGenerator<GenerateCheckDescri
 
 kotlin {
     explicitApi()
-    compilerOptions.optIn.add("org.jetbrains.kotlinx.library.api.watchdog.InternalWatchdogApi")
+    compilerOptions.optIn.add("kotlinx.library.watchdog.InternalWatchdogApi")
     abiValidation {
         filters {
             exclude {
-                annotatedWith.add("org.jetbrains.kotlinx.library.api.watchdog.InternalWatchdogApi")
+                annotatedWith.add("kotlinx.library.watchdog.InternalWatchdogApi")
             }
         }
     }
@@ -62,7 +62,7 @@ val chromeForTestingDirectories = chromeForTesting(libs.versions.chromeForTestin
 tasks.processResources {
     // The HTML report embeds the repository logo as its favicon.
     from(repositoryRoot.file("assets/logo.svg")) {
-        into("org/jetbrains/kotlinx/library/api/watchdog")
+        into("kotlinx/library/watchdog")
         rename { "favicon.svg" }
     }
 }
@@ -83,7 +83,7 @@ gradlePlugin {
             description =
                 "Aggregates the API Watchdog reports of library modules"
             implementationClass =
-                "org.jetbrains.kotlinx.library.api.watchdog.WatchdogReportAggregationPlugin"
+                "kotlinx.library.watchdog.WatchdogReportAggregationPlugin"
         }
     }
 }

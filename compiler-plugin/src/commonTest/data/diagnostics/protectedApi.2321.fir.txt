@@ -10,7 +10,7 @@ FILE: protectedApi.kt
             public get(): R|kotlin/String|
 
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/InternalAnnotationMarker|() @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|)) public final annotation class InternalApi : R|kotlin/Annotation| {
+    @R|kotlinx/library/watchdog/InternalAnnotationMarker|() @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|)) public final annotation class InternalApi : R|kotlin/Annotation| {
         public constructor(): R|foo/bar/InternalApi| {
             super<R|kotlin/Any|>()
         }
@@ -25,7 +25,7 @@ FILE: protectedApi.kt
     public final fun facadeAnchor(): R|kotlin/Int| {
         ^facadeAnchor Int(0)
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyOpen|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|) public open class ProtectedApi : R|kotlin/Any| {
+    @R|kotlinx/library/watchdog/IntentionallyOpen|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public open class ProtectedApi : R|kotlin/Any| {
         public constructor(): R|foo/bar/ProtectedApi| {
             super<R|kotlin/Any|>()
         }

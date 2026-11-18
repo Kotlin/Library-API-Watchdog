@@ -14,10 +14,10 @@ FILE: common.kt
     public final suspend fun commonSuspend(): R|kotlin/Int| {
         ^commonSuspend Int(0)
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyMangledJvmName|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final fun commonPlain(): R|kotlin/Int| {
+    @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final fun commonPlain(): R|kotlin/Int| {
         ^commonPlain Int(0)
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyOpen|() public open class Unexplained : R|kotlin/Any| {
+    @R|kotlinx/library/watchdog/IntentionallyOpen|() public open class Unexplained : R|kotlin/Any| {
         public constructor(): R|foo/bar/Unexplained| {
             super<R|kotlin/Any|>()
         }
@@ -26,18 +26,18 @@ FILE: common.kt
     public final expect class Server : R|kotlin/Any| {
         public expect constructor(): R|foo/bar/Server|
 
-        @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyBooleanParameter|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final expect fun configure(name: R|kotlin/String|): R|kotlin/Unit|
+        @R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final expect fun configure(name: R|kotlin/String|): R|kotlin/Unit|
 
-        @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyMangledJvmName|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final expect fun find(): R|kotlin/Unit|
+        @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final expect fun find(): R|kotlin/Unit|
 
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyMangledJvmName|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final expect class Finder : R|kotlin/Any| {
+    @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final expect class Finder : R|kotlin/Any| {
         public expect constructor(): R|foo/bar/Finder|
 
         public final expect fun find(): R|kotlin/Unit|
 
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyDataClass|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final expect class Record : R|kotlin/Any| {
+    @R|kotlinx/library/watchdog/IntentionallyDataClass|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final expect class Record : R|kotlin/Any| {
         public expect constructor(value: R|kotlin/Int|): R|foo/bar/Record|
 
         public final expect val value: R|kotlin/Int|
@@ -53,14 +53,14 @@ FILE: jvm.kt
             super<R|kotlin/Any|>()
         }
 
-        @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyBooleanParameter|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final actual fun configure(name: R|kotlin/String|): R|kotlin/Unit| {
+        @R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final actual fun configure(name: R|kotlin/String|): R|kotlin/Unit| {
         }
 
-        @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyMangledJvmName|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final actual fun find(): R|kotlin/Unit| {
+        @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final actual fun find(): R|kotlin/Unit| {
         }
 
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyMangledJvmName|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final actual class Finder : R|kotlin/Any| {
+    @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final actual class Finder : R|kotlin/Any| {
         public actual constructor(): R|foo/bar/Finder| {
             super<R|kotlin/Any|>()
         }
@@ -69,7 +69,7 @@ FILE: jvm.kt
         }
 
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyDataClass|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final actual class Record : R|kotlin/Any| {
+    @R|kotlinx/library/watchdog/IntentionallyDataClass|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final actual class Record : R|kotlin/Any| {
         public actual constructor(value: R|kotlin/Int|): R|foo/bar/Record| {
             super<R|kotlin/Any|>()
         }

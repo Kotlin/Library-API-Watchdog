@@ -76,7 +76,7 @@ apiWatchdog {
 
 For a direct compiler call:
 ```
--P plugin:org.jetbrains.kotlinx.library.api.watchdog:diagnosticSeverity=FUNCTION_TYPE_ALIAS_PUBLIC_API:error
+-P plugin:kotlinx.library.watchdog:diagnosticSeverity=FUNCTION_TYPE_ALIAS_PUBLIC_API:error
 ```
 
 ## See also

@@ -1,0 +1,7 @@
+package kotlinx.library.watchdog.fir
+
+import org.jetbrains.kotlin.fir.declarations.FirProperty
+import org.jetbrains.kotlin.fir.declarations.isLocal
+
+internal actual val FirProperty.isLocalCompat: Boolean
+    get() = isLocal

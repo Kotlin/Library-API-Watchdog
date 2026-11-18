@@ -207,7 +207,7 @@ jobs:
         run: |
           ./gradlew publishAllPublicationsToBuildRepository \
             :gradle-plugin:publishAllPublicationsToBuildRepository \
-            :gradle-plugin:kotlin-library-api-watchdog-report-aggregation:publishAllPublicationsToBuildRepository
+            :gradle-plugin:library-api-watchdog-report-aggregation:publishAllPublicationsToBuildRepository
 
       - name: Summarize
         env:

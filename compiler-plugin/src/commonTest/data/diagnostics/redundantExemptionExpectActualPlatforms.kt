@@ -13,9 +13,9 @@
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDataClass
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyKotlinOnlyApi
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDataClass
+import kotlinx.library.watchdog.IntentionallyKotlinOnlyApi
 
 <!REDUNDANT_EXEMPTION!>@IntentionallyKotlinOnlyApi(reason = ExemptionReason.API_DESIGN)<!>
 public expect class Service() {
@@ -37,9 +37,9 @@ public expect class Record(value: Int) {
 
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDataClass
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyKotlinOnlyApi
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDataClass
+import kotlinx.library.watchdog.IntentionallyKotlinOnlyApi
 
 public actual class Service public actual constructor() {
     public actual fun run() {}

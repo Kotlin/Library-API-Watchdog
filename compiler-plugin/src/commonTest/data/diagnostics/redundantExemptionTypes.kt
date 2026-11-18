@@ -7,12 +7,12 @@
 // FILE: declarations.kt
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyDataClass
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyMutableCollection
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyNullableBoolean
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyPairOrTriple
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyDataClass
+import kotlinx.library.watchdog.IntentionallyMutableCollection
+import kotlinx.library.watchdog.IntentionallyNullableBoolean
+import kotlinx.library.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.IntentionallyPairOrTriple
 
 public fun deep(): Map<String, List<@IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN) MutableList<Int>>> = emptyMap()
 
@@ -81,7 +81,7 @@ public class AliasedExemption
 @Opened(reason = ExemptionReason.API_DESIGN)
 public open class AliasedNeededExemption
 
-<!REDUNDANT_EXEMPTION!>@org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen(reason = ExemptionReason.API_DESIGN)<!>
+<!REDUNDANT_EXEMPTION!>@kotlinx.library.watchdog.IntentionallyOpen(reason = ExemptionReason.API_DESIGN)<!>
 public class Qualified
 
 @IntentionallyOpen("Subclassing is the extension point.", ExemptionReason.API_DESIGN)

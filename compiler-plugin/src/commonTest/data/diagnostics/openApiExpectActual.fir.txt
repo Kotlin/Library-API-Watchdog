@@ -22,7 +22,7 @@ FILE: common.kt
         protected expect constructor(): R|foo/bar/ProtectedConstructors|
 
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyOpen|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public abstract expect class ExemptOnExpect : R|kotlin/Any| {
+    @R|kotlinx/library/watchdog/IntentionallyOpen|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public abstract expect class ExemptOnExpect : R|kotlin/Any| {
     }
     @R|kotlin/SubclassOptInRequired|(markerClass = vararg(<getClass>(Q|foo/bar/Marker|)) [evaluated = vararg(<getClass>(Q|foo/bar/Marker|))]) public abstract expect class OptInOnExpectOnly : R|kotlin/Any| {
         public expect constructor(): R|foo/bar/OptInOnExpectOnly|
@@ -44,7 +44,7 @@ FILE: common.kt
     }
     public open expect class ExemptAlias : R|kotlin/Any| {
     }
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyOpen|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public open expect class ExemptAliasOnExpect : R|kotlin/Any| {
+    @R|kotlinx/library/watchdog/IntentionallyOpen|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public open expect class ExemptAliasOnExpect : R|kotlin/Any| {
     }
     public open expect class AliasToOwnClass : R|kotlin/Any| {
     }
@@ -121,7 +121,7 @@ FILE: jvm.kt
     public final actual typealias AliasToStringBuilder = R|java/lang/StringBuilder|
     public final actual typealias AliasToRunnable = R|java/lang/Runnable|
     public final actual typealias OptInAliasToRunnable = R|java/lang/Runnable|
-    @R|org/jetbrains/kotlinx/library/api/watchdog/IntentionallyOpen|(reason = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason|.R|org/jetbrains/kotlinx/library/api/watchdog/ExemptionReason.API_DESIGN|]) public final actual typealias ExemptAlias = R|java/lang/Thread|
+    @R|kotlinx/library/watchdog/IntentionallyOpen|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final actual typealias ExemptAlias = R|java/lang/Thread|
     public final actual typealias ExemptAliasOnExpect = R|java/lang/Thread|
     public final actual typealias AliasToOwnClass = R|foo/bar/OwnOpenClass|
     public open class OwnOpenClass : R|kotlin/Any| {

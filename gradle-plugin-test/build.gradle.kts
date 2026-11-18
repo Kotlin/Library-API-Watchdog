@@ -1,5 +1,5 @@
+import kotlinx.library.watchdog.conventions.ciSingleVersion
 import org.jetbrains.kotlin.compiler.plugin.devkit.ProjectOrGav
-import org.jetbrains.kotlinx.library.api.watchdog.conventions.ciSingleVersion
 
 plugins {
     id("devkit.gradle")
@@ -9,13 +9,13 @@ plugins {
 // The dev kit publishes the included builds of the functional test classpath for the tests. The Gradle plugin brings
 // the report aggregation plugin of the same build.
 dependencies {
-    functionalTestRuntimeOnly("$group:kotlin-library-api-watchdog-gradle-plugin:$version")
+    functionalTestRuntimeOnly("$group:library-api-watchdog-gradle-plugin:$version")
 }
 
 pluginDevKit {
-    pluginPackage = "org.jetbrains.kotlinx.library.api.watchdog"
-    companionLibrary("kotlin-library-api-watchdog-plugin-annotations")
-    compilerPlugin = ProjectOrGav.LocalProject(project(":kotlin-library-api-watchdog-compiler-plugin").isolated)
+    pluginPackage = "kotlinx.library.watchdog"
+    companionLibrary("library-api-watchdog-plugin-annotations")
+    compilerPlugin = ProjectOrGav.LocalProject(project(":library-api-watchdog-compiler-plugin").isolated)
 
     // In the single-version CI lanes, every TestKit build gets these Gradle properties. A TestKit daemon otherwise
     // uses the JVM default heap of a quarter of the machine's RAM. The 16 GB CI runners can't fit several of those

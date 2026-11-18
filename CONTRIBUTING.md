@@ -27,15 +27,15 @@ publication tasks of the included builds. The root `publishAllPublicationsToBuil
 ## Tests
 
 ```bash
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:allTests           # diagnostics tests against every supported Kotlin version
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:latestKotlinTest   # diagnostics tests against the newest Kotlin dev build
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:generateTests      # regenerate the JUnit classes from the test data
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmarkCorpusAudit # check that the corpus triggers every benchmark-eligible checker
-./gradlew :kotlin-library-api-watchdog-compiler-plugin:benchmarkBaseline   # compare checker allocation with the CI baseline
-./gradlew :kotlin-library-api-watchdog-exempts-fixer:allTests             # exemption fixer tests against every supported Kotlin version
+./gradlew :library-api-watchdog-compiler-plugin:allTests           # diagnostics tests against every supported Kotlin version
+./gradlew :library-api-watchdog-compiler-plugin:latestKotlinTest   # diagnostics tests against the newest Kotlin dev build
+./gradlew :library-api-watchdog-compiler-plugin:generateTests      # regenerate the JUnit classes from the test data
+./gradlew :library-api-watchdog-compiler-plugin:benchmarkCorpusAudit # check that the corpus triggers every benchmark-eligible checker
+./gradlew :library-api-watchdog-compiler-plugin:benchmarkBaseline   # compare checker allocation with the CI baseline
+./gradlew :library-api-watchdog-exempts-fixer:allTests             # exemption fixer tests against every supported Kotlin version
 ./gradlew :gradle-plugin-test:allVersionedFunctionalTests                 # Gradle TestKit tests against every supported Kotlin version
 ./gradlew :gradle-plugin:test                                             # Gradle plugin unit tests
-./gradlew :gradle-plugin:kotlin-library-api-watchdog-report-aggregation:test # report aggregation tests
+./gradlew :gradle-plugin:library-api-watchdog-report-aggregation:test # report aggregation tests
 ./gradlew :build-logic:test                                               # build logic tests
 ```
 
@@ -53,16 +53,16 @@ The benchmarks and the baseline check are in
 
 ## Modules
 
-- [`:kotlin-library-api-watchdog-compiler-plugin`](compiler-plugin/src): the compiler plugin, FIR checkers only. The
+- [`:library-api-watchdog-compiler-plugin`](compiler-plugin/src): the compiler plugin, FIR checkers only. The
   test data is in [compiler-plugin/src/commonTest/data/diagnostics](compiler-plugin/src/commonTest/data/diagnostics).
-- [`:plugin-annotations`](plugin-annotations/src/commonMain/kotlin), the `kotlin-library-api-watchdog-plugin-annotations`
+- [`:plugin-annotations`](plugin-annotations/src/commonMain/kotlin), the `library-api-watchdog-plugin-annotations`
   artifact: the `@Intentionally*` exemption annotations, `@InternalAnnotationMarker`, and the `ExemptionReason` enum.
-- [`:kotlin-library-api-watchdog-exempts-fixer`](exempts-fixer/src): reads the compiler diagnostic reports and applies
+- [`:library-api-watchdog-exempts-fixer`](exempts-fixer/src): reads the compiler diagnostic reports and applies
   the exemption annotations to Kotlin sources.
-- [`:gradle-plugin`](gradle-plugin/src), the `kotlin-library-api-watchdog-gradle-plugin` artifact: applies the
+- [`:gradle-plugin`](gradle-plugin/src), the `library-api-watchdog-gradle-plugin` artifact: applies the
   compiler plugin and the annotations dependency, and registers the `exemptExistingApi` and
   `generateApiWatchdogReport` tasks. Plugin id `org.jetbrains.kotlin.library.api-watchdog`.
-- [`:gradle-plugin:kotlin-library-api-watchdog-report-aggregation`](gradle-plugin/report-aggregation/src): combines
+- [`:gradle-plugin:library-api-watchdog-report-aggregation`](gradle-plugin/report-aggregation/src): combines
   the reports of several projects. Plugin id `org.jetbrains.kotlin.library.api-watchdog-report-aggregation`.
 
 ## Artifact lists

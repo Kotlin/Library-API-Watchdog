@@ -9,8 +9,8 @@
 // FILE: models.kt
 package com.example.models
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyOpen
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyOpen
 
 /** A model type of the declared `models` dependency. */
 @IntentionallyOpen(reason = ExemptionReason.API_DESIGN)
@@ -28,8 +28,8 @@ package consumer
 
 import com.example.models.Model
 import com.example.shared.Shared
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyNonTransitiveDependency
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyNonTransitiveDependency
 
 @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "The host ships the models.")
 public fun neededReturn(): Model = Model()

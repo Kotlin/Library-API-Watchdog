@@ -5,8 +5,8 @@
 // FILE: shapes.kt
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyInconsistentParameterOrder
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyInconsistentParameterOrder
 
 @IntentionallyInconsistentParameterOrder(reason = ExemptionReason.API_DESIGN)
 public fun draw(x: Int, y: Int) {}
@@ -38,8 +38,8 @@ public class Square <!REDUNDANT_EXEMPTION!>@IntentionallyInconsistentParameterOr
 // FILE: other.kt
 package foo.bar
 
-import org.jetbrains.kotlinx.library.api.watchdog.ExemptionReason
-import org.jetbrains.kotlinx.library.api.watchdog.IntentionallyInconsistentParameterOrder
+import kotlinx.library.watchdog.ExemptionReason
+import kotlinx.library.watchdog.IntentionallyInconsistentParameterOrder
 
 @IntentionallyInconsistentParameterOrder(reason = ExemptionReason.API_DESIGN)
 public fun draw(y: Int, x: Int, scale: Double) {}
