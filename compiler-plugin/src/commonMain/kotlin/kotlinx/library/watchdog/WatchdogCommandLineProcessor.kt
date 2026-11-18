@@ -51,6 +51,10 @@ object WatchdogConfigurationKeys {
     val REQUIRE_EXPLICIT_API: CompilerConfigurationKey<Boolean> =
         CompilerConfigurationKey.create("watchdog require explicit API mode")
 
+    /** Whether the public API checks skip a `@Deprecated` declaration. Default is `false`. */
+    val IGNORE_DEPRECATED_API: CompilerConfigurationKey<Boolean> =
+        CompilerConfigurationKey.create("watchdog ignore deprecated API")
+
     /** The compile classpath and the subset that consumers get. The Gradle plugin and the benchmarks pass them. */
     val COMPILE_DEPENDENCY_PATHS: CompilerConfigurationKey<Set<String>> =
         CompilerConfigurationKey.create("watchdog compile dependency paths")
@@ -83,6 +87,7 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
             EXEMPTING_EXISTING_API_OPTION,
             REPORT_UNDOCUMENTED_CLASS_PROPERTIES_OPTION,
             REQUIRE_EXPLICIT_API_OPTION,
+            IGNORE_DEPRECATED_API_OPTION,
             DIAGNOSTICS_OUTPUT_FILE_OPTION,
             COMPILE_DEPENDENCY_PATHS_OPTION,
             TRANSITIVE_DEPENDENCY_PATHS_OPTION,
@@ -208,6 +213,15 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
             allowMultipleOccurrences = false,
         )
 
+        val IGNORE_DEPRECATED_API_OPTION: CliOption = CliOption(
+            optionName = "ignoreDeprecatedApi",
+            valueDescription = "<true|false>",
+            description = "Don't check a declaration with @Deprecated or the declarations nested in it. " +
+                    "Off by default.",
+            required = false,
+            allowMultipleOccurrences = false,
+        )
+
         val COMPILE_DEPENDENCY_PATHS_OPTION: CliOption = dependencyPathsOption(
             optionName = "compileDependencyPaths",
             description = "Compile dependency paths that PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY reads.",
@@ -307,6 +321,9 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
             }
             REQUIRE_EXPLICIT_API_OPTION.optionName -> {
                 configuration.put(WatchdogConfigurationKeys.REQUIRE_EXPLICIT_API, parseBoolean(option.optionName, value))
+            }
+            IGNORE_DEPRECATED_API_OPTION.optionName -> {
+                configuration.put(WatchdogConfigurationKeys.IGNORE_DEPRECATED_API, parseBoolean(option.optionName, value))
             }
             COMPILE_DEPENDENCY_PATHS_OPTION.optionName -> {
                 // The Gradle plugin passes a blank value for a disabled exposure check.

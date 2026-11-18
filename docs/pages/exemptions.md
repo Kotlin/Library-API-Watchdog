@@ -1,12 +1,13 @@
 # Exemptions and internal API
 
-Five mechanisms exclude a declaration from a check while the check stays enabled for the project:
+Six mechanisms exclude a declaration from a check while the check stays enabled for the project:
 
 | Mechanism                                           | Excludes                                              | From                       |
 |-----------------------------------------------------|-------------------------------------------------------|----------------------------|
 | [Exemption annotation](#exemption-annotations)      | One declaration                                       | One check                  |
 | [Dependency exemption](#dependency-exemptions)      | Every use of a dependency's types in the module       | One check                  |
 | [Internal API annotation](#internal-api-annotations) | One declaration and the declarations nested in it     | Every public API check     |
+| [Deprecated API](#deprecated-api)                   | Every `@Deprecated` declaration and the declarations nested in it | Every public API check |
 | [API filter](#api-filters)                          | Every declaration that the name and annotation rules leave out | Every public API check |
 | [Annotation ignore rule](#annotation-ignore-rules)  | Every declaration with a given annotation             | One configurable check     |
 
@@ -190,6 +191,17 @@ apiWatchdog {
 ```
 
 See [Without Gradle](./configuration.md#without-gradle) for more details about the compiler option.
+
+## Deprecated API
+
+With `ignoreDeprecatedApi`, the public API checks skip every `@Deprecated` declaration and every
+declaration nested in it. Default is `false`.
+
+```kotlin build.gradle.kts
+apiWatchdog {
+    ignoreDeprecatedApi = true
+}
+```
 
 ## API filters
 

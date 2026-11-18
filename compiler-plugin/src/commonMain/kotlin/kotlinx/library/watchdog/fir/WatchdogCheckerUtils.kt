@@ -62,6 +62,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.JvmStandardClassIds
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.SpecialNames
+import org.jetbrains.kotlin.name.StandardClassIds
 
 /** The kind word of `diagnostics.json` for this class, or null when no message names the kind. */
 internal val FirRegularClass.kindParameterValue: String?
@@ -274,7 +275,7 @@ internal fun FirMemberDeclaration.isWatchedPublicApi(): Boolean {
         return false
     }
 
-    return !isMarkedAsInternalApi() && passesApiFilters()
+    return !isUnwatchedByAnnotation() && passesApiFilters()
 }
 
 /**
@@ -339,7 +340,7 @@ private fun FirCallableSymbol<*>.isIncludedApiMember(filters: ConfiguredApiFilte
     }
     val publicApi = effectiveVisibility.publicApi ||
             (fir as? FirMemberDeclaration)?.publishedApiEffectiveVisibility?.publicApi == true
-    return publicApi && filters.includes(this) && filters.excludingPattern(this) == null && !hasInternalApiMarker()
+    return publicApi && filters.includes(this) && filters.excludingPattern(this) == null && !hasUnwatchedAnnotation()
 }
 
 /**
@@ -351,11 +352,15 @@ internal fun FirMemberDeclaration.isWatchedPublicSourceApi(): Boolean =
     isWatchedPublicApi() && !isPublishedApiOnly()
 
 context(context: CheckerContext)
-private fun FirMemberDeclaration.isMarkedAsInternalApi(): Boolean =
-    symbol.hasInternalApiMarker() || enclosingDeclarationsWithFile().any { it.hasInternalApiMarker() }
+private fun FirMemberDeclaration.isUnwatchedByAnnotation(): Boolean =
+    symbol.hasUnwatchedAnnotation() || enclosingDeclarationsWithFile().any { it.hasUnwatchedAnnotation() }
 
+/** An internal API annotation, or `@Deprecated` with the `ignoreDeprecatedApi` option. */
 context(context: CheckerContext)
-internal fun FirBasedSymbol<*>.hasInternalApiMarker(): Boolean = internalApiAnnotation() != null
+internal fun FirBasedSymbol<*>.hasUnwatchedAnnotation(): Boolean =
+    internalApiAnnotation() != null ||
+            context.session.ignoredDeprecatedApi != null &&
+            hasAnnotation(StandardClassIds.Annotations.Deprecated, context.session)
 
 /**
  * The annotation on this declaration whose class carries [WatchdogClassIds.InternalAnnotationMarker]
@@ -539,7 +544,7 @@ context(context: CheckerContext)
 internal fun FirCallableSymbol<*>.isWatchedPublicSourceApiSibling(): Boolean {
     if (source?.kind != KtRealSourceElementKind || !effectiveVisibility.publicApi) return false
     val chain = listOf(this) + enclosingDeclarationsOfSymbol()
-    return chain.none { it.hasInternalApiMarker() } &&
+    return chain.none { it.hasUnwatchedAnnotation() } &&
             context.session.configuredApiFilters?.watches(chain) != false
 }
 

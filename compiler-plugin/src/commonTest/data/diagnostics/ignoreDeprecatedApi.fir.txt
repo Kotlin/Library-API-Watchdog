@@ -1,0 +1,63 @@
+FILE: ignoreDeprecatedApi.kt
+    package foo.bar
+
+    @R|kotlin/Deprecated|(message = String(Use enable.) [evaluated = String(Use enable.)]) public final fun toggle(on: R|kotlin/Boolean|): R|kotlin/Unit| {
+    }
+    @R|kotlin/Deprecated|(message = String(Use enable.) [evaluated = String(Use enable.)], level = Q|kotlin/DeprecationLevel|.R|kotlin/DeprecationLevel.HIDDEN| [evaluated = Q|kotlin/DeprecationLevel|.R|kotlin/DeprecationLevel.HIDDEN|]) public final fun hiddenToggle(on: R|kotlin/Boolean|): R|kotlin/Unit| {
+    }
+    @R|kotlin/Deprecated|(message = String(Use names.) [evaluated = String(Use names.)]) public final val mutableNames: R|kotlin/collections/MutableList<kotlin/String>| = R|kotlin/collections/mutableListOf|<R|kotlin/String|>()
+        public get(): R|kotlin/collections/MutableList<kotlin/String>|
+    @R|kotlin/Deprecated|(message = String(Use Endpoint.) [evaluated = String(Use Endpoint.)]) public final data class LegacyEndpoint : R|kotlin/Any| {
+        public constructor(host: R|kotlin/String|): R|foo/bar/LegacyEndpoint| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val host: R|kotlin/String| = R|<local>/host|
+            public get(): R|kotlin/String|
+
+        public final fun connect(secure: R|kotlin/Boolean|): R|kotlin/Unit| {
+        }
+
+        public final data class Options : R|kotlin/Any| {
+            public constructor(port: R|kotlin/Int|): R|foo/bar/LegacyEndpoint.Options| {
+                super<R|kotlin/Any|>()
+            }
+
+            public final val port: R|kotlin/Int| = R|<local>/port|
+                public get(): R|kotlin/Int|
+
+            public final operator fun component1(): R|kotlin/Int|
+
+            public final fun copy(port: R|kotlin/Int| = this@R|foo/bar/LegacyEndpoint.Options|.R|foo/bar/LegacyEndpoint.Options.port|): R|foo/bar/LegacyEndpoint.Options|
+
+        }
+
+        public final operator fun component1(): R|kotlin/String|
+
+        public final fun copy(host: R|kotlin/String| = this@R|foo/bar/LegacyEndpoint|.R|foo/bar/LegacyEndpoint.host|): R|foo/bar/LegacyEndpoint|
+
+    }
+    public final class Server : R|kotlin/Any| {
+        public constructor(): R|foo/bar/Server| {
+            super<R|kotlin/Any|>()
+        }
+
+        @R|kotlin/Deprecated|(message = String(Use the constructor without parameters.) [evaluated = String(Use the constructor without parameters.)]) public constructor(names: R|kotlin/collections/MutableList<kotlin/String>|): R|foo/bar/Server| {
+            super<R|kotlin/Any|>()
+        }
+
+        @R|kotlin/Deprecated|(message = String(Use start.) [evaluated = String(Use start.)]) public final fun start(secure: R|kotlin/Boolean|): R|kotlin/Unit| {
+        }
+
+    }
+    public final fun enable(on: R|kotlin/Boolean|): R|kotlin/Unit| {
+    }
+    public final fun endpoint(): R|foo/bar/LegacyEndpoint| {
+        ^endpoint R|foo/bar/LegacyEndpoint.LegacyEndpoint|(String(localhost))
+    }
+    @R|kotlin/Deprecated|(message = String(Use move(x, y).) [evaluated = String(Use move(x, y).)]) public final fun move(scale: R|kotlin/Double|, x: R|kotlin/Int|, y: R|kotlin/Int|): R|kotlin/Unit| {
+    }
+    public final fun move(x: R|kotlin/Int|, y: R|kotlin/Int|): R|kotlin/Unit| {
+    }
+    @R|kotlin/Deprecated|(message = String(Use enable.) [evaluated = String(Use enable.)]) @R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.FOR_DEPRECATION| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.FOR_DEPRECATION|]) public final fun legacyToggle(on: R|kotlin/Boolean|): R|kotlin/Unit| {
+    }

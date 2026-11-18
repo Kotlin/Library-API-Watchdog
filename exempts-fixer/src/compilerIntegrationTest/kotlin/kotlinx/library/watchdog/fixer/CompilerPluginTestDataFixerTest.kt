@@ -317,6 +317,10 @@ private object WatchdogTestDirectives : SimpleDirectivesContainer() {
         description = "The checks run without explicit API mode (requireExplicitApi=false)",
     )
 
+    val IGNORE_DEPRECATED_API by directive(
+        description = "The public API checks skip `@Deprecated` declarations (ignoreDeprecatedApi=true)",
+    )
+
     val SOURCE_SETS_CHECKED_ELSEWHERE by stringDirective(
         description = "Common modules that another compilation checks (sourceSetsCheckedElsewhere option)",
     )
@@ -370,6 +374,9 @@ private class WatchdogOptionsConfigurator(testServices: TestServices) : Environm
         }
         if (WatchdogTestDirectives.REQUIRE_EXPLICIT_API_OFF in module.directives) {
             configuration.put(WatchdogConfigurationKeys.REQUIRE_EXPLICIT_API, false)
+        }
+        if (WatchdogTestDirectives.IGNORE_DEPRECATED_API in module.directives) {
+            configuration.put(WatchdogConfigurationKeys.IGNORE_DEPRECATED_API, true)
         }
         val checkedElsewhere = module.directives[WatchdogTestDirectives.SOURCE_SETS_CHECKED_ELSEWHERE]
         if (checkedElsewhere.isNotEmpty()) {

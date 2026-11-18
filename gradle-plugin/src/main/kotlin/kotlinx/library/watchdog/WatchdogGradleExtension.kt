@@ -210,6 +210,13 @@ public open class WatchdogGradleExtension @Inject internal constructor(
         objectFactory.setProperty(String::class.java).convention(emptySet())
 
     /**
+     * Whether the public API checks skip every `@Deprecated` declaration and the declarations nested
+     * in it. Default is `false`.
+     */
+    public val ignoreDeprecatedApi: Property<Boolean> =
+        objectFactory.property(Boolean::class.java).convention(false)
+
+    /**
      * Whether `PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY` runs. Default is `true`. A violation is
      * always an error. To accept the types of selected dependencies, declare them on the
      * `apiWatchdogExemptNonTransitive` configuration instead.
