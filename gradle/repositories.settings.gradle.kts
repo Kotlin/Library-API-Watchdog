@@ -1,6 +1,10 @@
-// The settings script of every build applies this script in `pluginManagement`. The two proxies are the only Maven
-// repositories of the plugins and of the dependencies. Gradle searches `build-deps` first. `build-deps-eap` has only the
-// development versions that the upstream repositories of `build-deps` don't have.
+// The settings script of every build applies this script in `pluginManagement`. The three proxies are the only Maven
+// repositories of the plugins and of the dependencies. Gradle searches them in this order:
+// - `build-deps`: the release versions.
+// - `build-deps-eap`: the compiler-plugin-dev-kit and the Kotlin development builds.
+// - `build-deps-ide`: the Kotlin builds of the IDEs.
+// A proxy takes a package from one upstream repository only, so the versions of one package that are in different
+// upstream repositories need different proxies.
 //
 // An anonymous request gets only the versions that a proxy already has. The first request of a new version needs the
 // token in `space.username.watchdog` and `space.password.watchdog` of the Gradle properties of the user home.
@@ -30,7 +34,7 @@ listOf(pluginManagement.repositories, dependencyResolutionManagement.repositorie
         }
         return@forEach
     }
-    for (proxy in listOf("build-deps", "build-deps-eap")) {
+    for (proxy in listOf("build-deps", "build-deps-eap", "build-deps-ide")) {
         repositories.maven("https://packages.jetbrains.team/maven/p/kt-lib/$proxy") {
             if (hasToken) {
                 credentials {

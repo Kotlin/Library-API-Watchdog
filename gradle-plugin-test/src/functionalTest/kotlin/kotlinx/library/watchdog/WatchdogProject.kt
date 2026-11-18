@@ -512,7 +512,7 @@ internal const val KOTLIN_MULTIPLATFORM_PLUGIN_ID = "org.jetbrains.kotlin.multip
 internal const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
 private val KOTLIN_PLUGIN_IDS = setOf(KOTLIN_JVM_PLUGIN_ID, KOTLIN_MULTIPLATFORM_PLUGIN_ID, KOTLIN_ANDROID_PLUGIN_ID)
 // The same repositories and credentials as in `gradle/repositories.settings.gradle.kts`.
-private val PROXY_REPOSITORIES: List<Repository> = listOf("build-deps", "build-deps-eap").map { proxy ->
+private val PROXY_REPOSITORIES: List<Repository> = listOf("build-deps", "build-deps-eap", "build-deps-ide").map { proxy ->
     Repository.ofMaven("https://packages.jetbrains.team/maven/p/kt-lib/$proxy").withConfigureAction(
         """
         val spaceUsername = providers.gradleProperty("space.username.watchdog").orNull

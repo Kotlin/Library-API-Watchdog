@@ -2,14 +2,18 @@
 
 ## Build
 
-The build gets every plugin and every Maven dependency from two Space proxies.
+The build gets every plugin and every Maven dependency from three Space proxies.
 [gradle/repositories.settings.gradle.kts](gradle/repositories.settings.gradle.kts) declares them for every build, and
 the functional tests use them in the test builds:
 
 | Proxy | Holds |
 |---|---|
 | [build-deps](https://packages.jetbrains.team/maven/p/kt-lib/build-deps) | The release versions. |
-| [build-deps-eap](https://packages.jetbrains.team/maven/p/kt-lib/build-deps-eap) | The development versions: the compiler-plugin-dev-kit, the Kotlin development builds, and the Kotlin builds of the IDEs. |
+| [build-deps-eap](https://packages.jetbrains.team/maven/p/kt-lib/build-deps-eap) | The compiler-plugin-dev-kit and the Kotlin development builds. |
+| [build-deps-ide](https://packages.jetbrains.team/maven/p/kt-lib/build-deps-ide) | The Kotlin builds of the IDEs. |
+
+A proxy takes a package from one upstream repository only. So a new upstream repository goes into the proxy where no
+other upstream repository has its packages.
 
 A proxy gives a version that it already has to every request. The first request of a new version needs a token. CI has
 no token. So after a change of a dependency version, run the build and the tests that use the dependency with the token
