@@ -62,6 +62,18 @@ FILE: inconsistentParameterOrderTrailingLambda.kt
         }
 
     }
+    public final class Fixture<Action : R|kotlin/Function<kotlin/Unit>|> : R|kotlin/Any| {
+        public constructor<Action : R|kotlin/Function<kotlin/Unit>|>(): R|foo/bar/Fixture<Action>| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final fun test(name: R|kotlin/String|, action: R|Action|): R|kotlin/Unit| {
+        }
+
+        public final fun test(name: R|kotlin/String|, type: R|kotlin/reflect/KClass<*>|, action: R|Action|): R|kotlin/Unit| {
+        }
+
+    }
     public final fun registerTyped(type: R|kotlin/reflect/KClass<*>|, name: R|kotlin/String|, configure: R|() -> kotlin/Unit|): R|kotlin/Unit| {
     }
     public final fun registerTyped(name: R|kotlin/String|, configure: R|() -> kotlin/Unit|): R|kotlin/Unit| {
@@ -77,6 +89,10 @@ FILE: inconsistentParameterOrderTrailingLambda.kt
     public final fun bind(name: R|kotlin/String|, handler: R|kotlin/reflect/KFunction0<kotlin/Unit>|): R|kotlin/Unit| {
     }
     public final fun bind(name: R|kotlin/String|, priority: R|kotlin/Int|, handler: R|kotlin/reflect/KFunction0<kotlin/Unit>|): R|kotlin/Unit| {
+    }
+    public final fun <Value> store(name: R|kotlin/String|, value: R|Value|): R|kotlin/Unit| {
+    }
+    public final fun <Value> store(name: R|kotlin/String|, priority: R|kotlin/Int|, value: R|Value|): R|kotlin/Unit| {
     }
     public abstract interface Listener : R|kotlin/Any| {
         public abstract fun onEvent(task: R|foo/bar/Task|): R|kotlin/Unit|

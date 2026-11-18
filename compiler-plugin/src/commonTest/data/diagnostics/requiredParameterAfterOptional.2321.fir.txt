@@ -48,6 +48,27 @@ FILE: requiredParameterAfterOptional.kt
     }
     public final fun listenMaybe(bufferSize: R|kotlin/Int| = Int(16), listener: R|foo/bar/Listener?|): R|kotlin/Unit| {
     }
+    public final class FixtureScope<Action : R|kotlin/Function<kotlin/Unit>|> : R|kotlin/Any| {
+        public constructor<Action : R|kotlin/Function<kotlin/Unit>|>(): R|foo/bar/FixtureScope<Action>| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final fun test(name: R|kotlin/String|, timeout: R|kotlin/Long| = Long(0), action: R|Action|): R|kotlin/Unit| {
+        }
+
+    }
+    public final fun <Block : R|() -> kotlin/Unit|> runBounded(delay: R|kotlin/Long| = Long(0), block: R|Block|): R|kotlin/Unit| {
+    }
+    public final fun <Block : R|kotlin/Function<kotlin/Unit>|> runMaybe(delay: R|kotlin/Long| = Long(0), block: R|Block?|): R|kotlin/Unit| {
+    }
+    public final fun <Outer : R|suspend () -> kotlin/Unit|, Inner : R|Outer|> runNested(delay: R|kotlin/Long| = Long(0), block: R|Inner|): R|kotlin/Unit| {
+    }
+    public final fun <Value> store(key: R|kotlin/String| = String(), value: R|Value|): R|kotlin/Unit| {
+    }
+    public final fun <Handler : R|kotlin/reflect/KFunction1<kotlin/Int, kotlin/Unit>|> bindBounded(priority: R|kotlin/Int| = Int(0), handler: R|Handler|): R|kotlin/Unit| {
+    }
+    public final fun <Action : R|kotlin/Function<kotlin/Unit>|, R|kotlin/Comparable<Action>|> runMarked(delay: R|kotlin/Long| = Long(0), action: R|Action|): R|kotlin/Unit| {
+    }
     public final fun wellOrdered(host: R|kotlin/String|, port: R|kotlin/Int| = Int(80), timeout: R|kotlin/Long| = Long(30)): R|kotlin/Unit| {
     }
     public final fun allRequired(host: R|kotlin/String|, port: R|kotlin/Int|): R|kotlin/Unit| {
