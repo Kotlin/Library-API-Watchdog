@@ -20,6 +20,9 @@ space.username.watchdog=<username>
 space.password.watchdog=<token>
 ```
 
+`-Pwatchdog.proxies=false` turns the proxies off for one run. The build and the test builds then use the original
+repositories.
+
 The `devkit` entry of [gradle/libs.versions.toml](gradle/libs.versions.toml) sets the version of the
 compiler-plugin-dev-kit. The dev kit settings plugin gives the plugin coordinates and the functional-test publishing.
 

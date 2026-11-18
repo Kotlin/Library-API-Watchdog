@@ -49,6 +49,7 @@ npm run build                       # the site build, fails on a broken link or 
   (`build-deps`, then `build-deps-eap`). Never add another Maven repository. The `devkit` settings plugin removes the
   repositories that the dev kit adds. The functional-test builds get the same proxies from `WatchdogFixture`. The
   first request of a new version needs the token of CONTRIBUTING.md ("Build"), and CI has none.
+  `-Pwatchdog.proxies=false` uses the original repositories for one run.
 - GitHub Actions doesn't publish a release. The Maven Central and Gradle Plugin Portal publications run outside this
   repository, between the `Pre-release` and `Post-publish` workflows. Space gets development versions only. RELEASE.md
   has the process.

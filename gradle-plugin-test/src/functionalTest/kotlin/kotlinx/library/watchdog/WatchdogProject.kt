@@ -257,13 +257,16 @@ internal class WatchdogFixture(
 ) : AbstractDevKitGradleProject(multiplatform = kind.multiplatform) {
     override val pluginUnderTest: Plugin = Plugin(WATCHDOG_PLUGIN_ID, pluginUnderTestVersion)
 
-    // The proxies of `gradle/repositories.settings.gradle.kts` replace the remote repositories of the dev kit defaults.
-    // The dev kit runtime artifacts come from mavenLocal.
-    override fun repositories(defaults: List<Repository>): Repositories =
-        Repositories(
-            (Repository.FUNC_TEST_INCLUDED_BUILDS + Repository.FUNC_TEST + PROXY_REPOSITORIES + Repository.MAVEN_LOCAL)
-                .toMutableList()
-        )
+    // The proxies of `gradle/repositories.settings.gradle.kts` replace the remote repositories of the dev kit defaults,
+    // unless `-Pwatchdog.proxies=false` turns the proxies off. The dev kit runtime artifacts come from mavenLocal.
+    override fun repositories(defaults: List<Repository>): Repositories {
+        val remote = if (testUseProxies) {
+            Repository.FUNC_TEST_INCLUDED_BUILDS + Repository.FUNC_TEST + PROXY_REPOSITORIES
+        } else {
+            defaults
+        }
+        return Repositories((remote + Repository.MAVEN_LOCAL).toMutableList())
+    }
 
     // AGP 8 refuses AndroidX dependencies without the opt-in.
     override val extraGradleProperties: List<String>
@@ -568,6 +571,7 @@ private fun packagePath(text: String): String =
 private val testAgp8Version: String? = System.getProperty("watchdog.test.agp8Version")
 private val testAgp9Version: String? = System.getProperty("watchdog.test.agp9Version")
 private val testBcvVersion: String? = System.getProperty("watchdog.test.bcvVersion")
+private val testUseProxies: Boolean = System.getProperty("watchdog.test.proxies") != "false"
 
 val binaryCompatibilityValidatorPlugin: Plugin
     get() = Plugin(BCV_PLUGIN_ID, requiredProperty(testBcvVersion))

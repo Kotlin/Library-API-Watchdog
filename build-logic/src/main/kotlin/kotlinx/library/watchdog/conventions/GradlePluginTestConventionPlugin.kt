@@ -53,7 +53,9 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
             // goes to the test builds through the environment.
             val proxyToken = listOf("space.username.watchdog", "space.password.watchdog")
                 .associateWith { providers.gradleProperty(it) }
+            val useProxies = providers.gradleProperty("watchdog.proxies").orNull != "false"
             tasks.withType(Test::class.java).configureEach {
+                systemProperty("watchdog.test.proxies", useProxies)
                 proxyToken.forEach { (name, value) ->
                     if (value.isPresent) environment("ORG_GRADLE_PROJECT_$name", value.get())
                 }

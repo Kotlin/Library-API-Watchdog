@@ -26,10 +26,14 @@ gradle.lifecycle.beforeProject {
 }
 
 // The dev kit adds the Kotlin development repositories when Gradle has evaluated the settings. The proxies of
-// `gradle/repositories.settings.gradle.kts` have their artifacts, so only the proxies stay.
-gradle.settingsEvaluated {
-    @Suppress("UnstableApiUsage")
-    dependencyResolutionManagement.repositories.removeIf {
-        it is MavenArtifactRepository && !it.url.toString().startsWith("https://packages.jetbrains.team/maven/p/kt-lib/")
+// `gradle/repositories.settings.gradle.kts` have their artifacts, so only the proxies stay. Without the removal, Gradle
+// gets a version that the proxies don't have from the development repositories.
+if (providers.gradleProperty("watchdog.proxies").orNull != "false") {
+    gradle.settingsEvaluated {
+        @Suppress("UnstableApiUsage")
+        dependencyResolutionManagement.repositories.removeIf {
+            it is MavenArtifactRepository &&
+                !it.url.toString().startsWith("https://packages.jetbrains.team/maven/p/kt-lib/")
+        }
     }
 }
