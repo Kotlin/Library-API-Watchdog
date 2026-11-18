@@ -23,6 +23,17 @@ The same fact can appear on the website, in the README, and in the KDoc
 of a public declaration. These are different entry points. Each one
 carries the facts its reader needs there.
 
+## Internal declarations
+
+An internal declaration has no KDoc and no comment. The code describes itself: before you write a comment, rename
+the declaration, extract a function, or change the structure.
+
+A declaration is internal when a user of a published artifact can't see it. This includes each declaration in the
+build logic and in the tests.
+
+Write a comment only when a reader does the wrong thing without it and the code can't show the fact. Such a fact is
+a workaround for a tool bug, a constraint from another tool, or a necessary order of calls.
+
 ## Text rules
 
 - Diagnostic names in public docs are the names users see in compiler

@@ -25,9 +25,7 @@ gradle.lifecycle.beforeProject {
         ?: libraryProperties.getProperty("version")
 }
 
-// The dev kit adds the Kotlin development repositories when Gradle has evaluated the settings. The proxies of
-// `gradle/repositories.settings.gradle.kts` have their artifacts, so only the proxies stay. Without the removal, Gradle
-// gets a version that the proxies don't have from the development repositories.
+// The dev kit adds the Kotlin development repositories in its own `settingsEvaluated` action.
 if (providers.gradleProperty("watchdog.proxies").orNull != "false") {
     gradle.settingsEvaluated {
         @Suppress("UnstableApiUsage")

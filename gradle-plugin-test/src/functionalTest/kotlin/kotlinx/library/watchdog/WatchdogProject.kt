@@ -257,8 +257,7 @@ internal class WatchdogFixture(
 ) : AbstractDevKitGradleProject(multiplatform = kind.multiplatform) {
     override val pluginUnderTest: Plugin = Plugin(WATCHDOG_PLUGIN_ID, pluginUnderTestVersion)
 
-    // The proxies of `gradle/repositories.settings.gradle.kts` replace the remote repositories of the dev kit defaults,
-    // unless `-Pwatchdog.proxies=false` turns the proxies off. The dev kit runtime artifacts come from mavenLocal.
+    // The dev kit runtime artifacts come from mavenLocal.
     override fun repositories(defaults: List<Repository>): Repositories {
         val remote = if (testUseProxies) {
             Repository.FUNC_TEST_INCLUDED_BUILDS + Repository.FUNC_TEST + PROXY_REPOSITORIES
@@ -511,7 +510,7 @@ internal const val KOTLIN_JVM_PLUGIN_ID = "org.jetbrains.kotlin.jvm"
 internal const val KOTLIN_MULTIPLATFORM_PLUGIN_ID = "org.jetbrains.kotlin.multiplatform"
 internal const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
 private val KOTLIN_PLUGIN_IDS = setOf(KOTLIN_JVM_PLUGIN_ID, KOTLIN_MULTIPLATFORM_PLUGIN_ID, KOTLIN_ANDROID_PLUGIN_ID)
-// The same repositories and credentials as in `gradle/repositories.settings.gradle.kts`.
+// Must match `gradle/repositories.settings.gradle.kts`.
 private val PROXY_REPOSITORIES: List<Repository> = listOf("build-deps", "build-deps-eap", "build-deps-ide").map { proxy ->
     Repository.ofMaven("https://packages.jetbrains.team/maven/p/kt-lib/$proxy").withConfigureAction(
         """

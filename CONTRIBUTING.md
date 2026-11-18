@@ -2,9 +2,8 @@
 
 ## Build
 
-The build gets every plugin and every Maven dependency from three Space proxies.
-[gradle/repositories.settings.gradle.kts](gradle/repositories.settings.gradle.kts) declares them for every build, and
-the functional tests use them in the test builds:
+The build and the functional-test builds get every plugin and every Maven dependency from three Space proxies
+([gradle/repositories.settings.gradle.kts](gradle/repositories.settings.gradle.kts)):
 
 | Proxy | Holds |
 |---|---|
@@ -24,8 +23,7 @@ space.username.watchdog=<username>
 space.password.watchdog=<token>
 ```
 
-`-Pwatchdog.proxies=false` turns the proxies off for one run. The build and the test builds then use the original
-repositories.
+`-Pwatchdog.proxies=false` replaces the proxies with the original repositories for one run.
 
 The `devkit` entry of [gradle/libs.versions.toml](gradle/libs.versions.toml) sets the version of the
 compiler-plugin-dev-kit. The dev kit settings plugin gives the plugin coordinates and the functional-test publishing.
