@@ -62,9 +62,21 @@ publication tasks of the included builds. The root `publishAllPublicationsToBuil
 ./gradlew :build-logic:test                                               # build logic tests
 ```
 
-CI runs one functional test task for each supported Kotlin version.
-`:gradle-plugin-test:printCiFunctionalTestMatrix` lists those versions.
-The compiler plugin tests also run every day at 9:00 Berlin time, against the newest Kotlin dev build only
+A push to `main`, the Pre-release workflow, and the Dev kit update workflow run every test against every supported
+Kotlin version. A pull request runs fewer tests:
+
+- Functional tests: every test against one Kotlin version of each release line, and only the tests with
+  `@Category(SmokeTest::class)` against the other versions. A release line is a feature release with its bug-fix
+  releases, for example `2.4.0` and `2.4.10`.
+- Fuzz tests of the compiler plugin (`*FuzzTest`): against that one version of each release line only.
+- The newest Kotlin dev build: no tests.
+
+`:gradle-plugin-test:printCiFunctionalTestMatrix` prints the versions of the functional tests, and with
+`-Pwatchdog.functionalTest.matrix=reduced` the versions of a pull request. With
+`-Pwatchdog.functionalTest.smokeOnly=true`, a functional test task runs the smoke tests only.
+
+CI runs the compiler plugin tests in four jobs. Each job runs `shardTest` with a part of the Kotlin versions. The
+compiler plugin tests also run every day at 9:00 Berlin time, against the newest Kotlin dev build only
 (`latestKotlinTest`).
 
 The report aggregation tests run the report scripts in the Chrome for Testing headless shell. The build downloads the

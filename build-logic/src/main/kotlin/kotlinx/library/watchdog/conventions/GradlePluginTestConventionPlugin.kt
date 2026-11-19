@@ -4,6 +4,8 @@ import java.io.File
 import java.util.Properties
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.compiler.plugin.devkit.GradlePluginConfigExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
@@ -35,13 +37,18 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
             val pluginDevKit = extensions.getByType(GradlePluginConfigExtension::class.java)
             tasks.register("printCiFunctionalTestMatrix") {
                 group = "help"
-                description = "Prints the Kotlin versions of the functional tests as a JSON array for CI."
+                description = "Prints the Kotlin versions of the functional tests as step outputs for CI."
 
-                val versions = pluginDevKit.testAgainst.map { it.version.toString() }.sorted()
-                val json = versions.joinToString(prefix = "[\"", separator = "\",\"", postfix = "\"]")
+                val versions = pluginDevKit.testAgainst.map { it.version }
+                val matrix = when (val kind = providers.gradleProperty(MATRIX_PROPERTY).getOrElse("full")) {
+                    "full" -> fullFunctionalTestMatrix(versions)
+                    "reduced" -> reducedFunctionalTestMatrix(versions)
+                    else -> error("The Gradle property '$MATRIX_PROPERTY' is '$kind'. Set it to 'full' or 'reduced'.")
+                }
+                val output = matrix.toGitHubOutput()
 
                 doLast {
-                    logger.quiet(json)
+                    logger.quiet(output)
                 }
             }
 
@@ -55,6 +62,11 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
                 "WATCHDOG_PROXY_PASSWORD" to providers.gradleProperty("space.password.watchdog"),
             )
             val useProxies = providers.gradleProperty("watchdog.proxies").orNull != "false"
+            val oneTestTaskAtATime =
+                gradle.sharedServices.registerIfAbsent("functionalTestTaskLock", FunctionalTestTaskLock::class.java) {
+                    maxParallelUsages.set(1)
+                }
+            val smokeOnly = providers.gradleProperty(SMOKE_ONLY_PROPERTY).map(String::toBoolean).getOrElse(false)
             tasks.withType(Test::class.java).configureEach {
                 systemProperty("watchdog.test.proxies", useProxies)
                 proxyToken.forEach { (variable, value) ->
@@ -66,13 +78,22 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
                 androidSdk?.let { sdk ->
                     systemProperty("watchdog.test.androidHome", sdk.absolutePath)
                 }
-                // Each test fork runs TestKit builds with their own daemons, so the 16 GB CI runners cannot fit
-                // one fork per CPU. See `ciSingleVersion` in devkit.kt.
+                // Each test fork runs TestKit builds with their own daemons. The 16 GB CI runners can't fit one
+                // fork for each CPU, or the forks of two test tasks. See `ciSingleVersion` in devkit.kt.
                 if (ciSingleVersion) {
                     maxParallelForks = 2
+                    usesService(oneTestTaskAtATime)
+                }
+                if (smokeOnly) {
+                    useJUnit { includeCategories("kotlinx.library.watchdog.SmokeTest") }
                 }
             }
         }
+    }
+
+    private companion object {
+        const val MATRIX_PROPERTY = "watchdog.functionalTest.matrix"
+        const val SMOKE_ONLY_PROPERTY = "watchdog.functionalTest.smokeOnly"
     }
 
     private fun androidSdkDirOrNull(project: Project): File? {
@@ -92,3 +113,5 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
         ).filterNotNull().firstOrNull(File::isDirectory)
     }
 }
+
+internal abstract class FunctionalTestTaskLock : BuildService<BuildServiceParameters.None>

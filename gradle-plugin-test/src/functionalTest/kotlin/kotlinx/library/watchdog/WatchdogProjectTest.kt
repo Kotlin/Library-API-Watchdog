@@ -46,9 +46,11 @@ import org.jetbrains.kotlin.compiler.plugin.devkit.test.pluginUnderTestVersion
 import org.jetbrains.kotlin.tooling.core.toKotlinVersion
 import org.junit.Assume.assumeTrue
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 class WatchdogProjectTest {
     @Test
+    @Category(SmokeTest::class)
     fun `fails with errors on unacknowledged API by default`() {
         val project = jvmProject {
             buildScript(REPORT_ALL_WARNINGS_FLAG)
@@ -596,6 +598,7 @@ class WatchdogProjectTest {
     }
 
     @Test
+    @Category(SmokeTest::class)
     fun `expect owns contract checks and exemptions`() {
         val project = kmpProject {
             kotlinFile(
@@ -978,6 +981,7 @@ class WatchdogProjectTest {
         publicTypeFromImplementationDependencyIsAnErrorInAndroidLibrariesCase(AGP8)
 
     @Test
+    @Category(SmokeTest::class)
     fun `public type from implementation dependency is an error in Android libraries with built-in Kotlin`() =
         publicTypeFromImplementationDependencyIsAnErrorInAndroidLibrariesCase(AGP9)
 

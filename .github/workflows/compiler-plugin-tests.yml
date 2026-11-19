@@ -40,16 +40,69 @@ env:
   WATCHDOG_PROXY_USERNAME: ${{ secrets.WATCHDOG_PROXY_USERNAME }}
   WATCHDOG_PROXY_PASSWORD: ${{ secrets.WATCHDOG_PROXY_PASSWORD }}
   DEVELOCITY_CACHE_PUSH: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
-  # The daily run of this workflow tests only the newest Kotlin dev build, because the other Kotlin versions don't
-  # change. In a called workflow, `github.workflow` is the name of the caller, so a call from a workflow on a schedule
-  # runs every test.
-  LATEST_KOTLIN_ONLY: ${{ github.event_name == 'schedule' && github.workflow == 'Compiler plugin tests' }}
 
+# A `pull_request` run of the Watchdog bot skips the tests. The Dev kit update and the Pre-release workflows call this
+# workflow on the commit of their pull request.
+#
+# The daily run of this workflow tests only the newest Kotlin dev build, because the other Kotlin versions don't
+# change. In a called workflow, `github.workflow` is the name of the caller, so a call from a workflow on a schedule
+# runs every test.
 jobs:
-  # A `pull_request` run of the Watchdog bot skips the tests. The Dev kit update and the Pre-release workflows call this
-  # workflow on the commit of their pull request.
   test:
-    if: github.event_name != 'pull_request' || github.actor != vars.WATCHDOG_BOT_LOGIN
+    name: Tests (shard ${{ matrix.shard }})
+    if: >-
+      (github.event_name != 'pull_request' || github.actor != vars.WATCHDOG_BOT_LOGIN)
+      && !(github.event_name == 'schedule' && github.workflow == 'Compiler plugin tests')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+
+      # A pull request runs the fuzz tests against one Kotlin release of each release line only, and it doesn't test
+      # the newest Kotlin dev build.
+      - name: Run compiler plugin tests
+        env:
+          SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
+          REDUCED: ${{ github.event_name == 'pull_request' }}
+        run: |
+          ./gradlew :library-api-watchdog-compiler-plugin:shardTest \
+            "-Pwatchdog.compilerTest.shard=$SHARD" "-Pwatchdog.compilerTest.reduced=$REDUCED" || {
+            echo "Tests failed; retrying once."
+            ./gradlew :library-api-watchdog-compiler-plugin:shardTest \
+              "-Pwatchdog.compilerTest.shard=$SHARD" "-Pwatchdog.compilerTest.reduced=$REDUCED"
+          }
+
+      - name: Save test reports
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-reports-${{ github.job }}-${{ matrix.shard }}
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  latest-kotlin-test:
+    name: Tests (newest Kotlin dev build)
+    if: github.event_name == 'schedule' && github.workflow == 'Compiler plugin tests'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -69,12 +122,10 @@ jobs:
           develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
       - name: Run compiler plugin tests
-        env:
-          TEST_TASK: ${{ env.LATEST_KOTLIN_ONLY == 'true' && 'latestKotlinTest' || 'allTests' }}
         run: |
-          ./gradlew ":library-api-watchdog-compiler-plugin:$TEST_TASK" || {
+          ./gradlew :library-api-watchdog-compiler-plugin:latestKotlinTest || {
             echo "Tests failed; retrying once."
-            ./gradlew ":library-api-watchdog-compiler-plugin:$TEST_TASK"
+            ./gradlew :library-api-watchdog-compiler-plugin:latestKotlinTest
           }
 
       - name: Save test reports
@@ -88,6 +139,28 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  benchmark-corpus-audit:
+    name: Benchmark corpus audit
+    if: >-
+      (github.event_name != 'pull_request' || github.actor != vars.WATCHDOG_BOT_LOGIN)
+      && !(github.event_name == 'schedule' && github.workflow == 'Compiler plugin tests')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+
       - name: Audit benchmark corpus
-        if: env.LATEST_KOTLIN_ONLY != 'true'
         run: ./gradlew :library-api-watchdog-compiler-plugin:benchmarkCorpusAudit

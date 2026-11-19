@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.compiler.plugin.devkit.test.KotlinPlugins
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.TEST_COMPILER_VERSION
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.pluginUnderTestVersion
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 class ExemptExistingApiTest {
     @Test
@@ -39,6 +40,7 @@ class ExemptExistingApiTest {
     }
 
     @Test
+    @Category(SmokeTest::class)
     fun `fixes every fixable diagnostic and the build passes`() {
         val project = jvmProject {
             buildScript(CONTEXT_PARAMETERS_BUILD_SCRIPT)

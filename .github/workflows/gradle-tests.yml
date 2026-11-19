@@ -49,6 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.matrix.outputs.versions }}
+      smoke-versions: ${{ steps.matrix.outputs.smoke-versions }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -68,11 +69,16 @@ jobs:
           # The matrix jobs wait for this job. A cache save at its end only delays them.
           cache-read-only: true
 
+      # A pull request runs every functional test against one Kotlin version of each release line, and the smoke
+      # tests against the other versions. Every other run has no smoke versions.
       - name: Discover Kotlin versions
         id: matrix
+        env:
+          MATRIX: ${{ github.event_name == 'pull_request' && 'reduced' || 'full' }}
         run: |
-          versions="$(./gradlew -q :gradle-plugin-test:printCiFunctionalTestMatrix)"
-          echo "versions=$versions" >> "$GITHUB_OUTPUT"
+          outputs="$(./gradlew -q :gradle-plugin-test:printCiFunctionalTestMatrix "-Pwatchdog.functionalTest.matrix=$MATRIX")"
+          echo "$outputs"
+          echo "$outputs" >> "$GITHUB_OUTPUT"
 
   library-checks:
     name: Unit tests and ABI checks
@@ -213,6 +219,65 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: test-reports-${{ github.job }}-${{ matrix.kotlin-version }}
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  gradle-plugin-smoke-tests:
+    name: Gradle plugin smoke tests
+    needs: functional-test-matrix
+    if: needs.functional-test-matrix.outputs.smoke-versions != ''
+    runs-on: ubuntu-latest
+    env:
+      # With this variable set, the dev kit registers only the Kotlin versions that
+      # `kotlin.compiler.plugin.devkit.testAgainst` requests.
+      WATCHDOG_CI_SINGLE_VERSION: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          # The default of the action also requests the obsolete 'tools' package, which sdkmanager doesn't find.
+          packages: 'platform-tools'
+
+      - name: Install Android SDK 36
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+
+      - name: Run Gradle plugin smoke tests
+        env:
+          KOTLIN_VERSIONS: ${{ needs.functional-test-matrix.outputs.smoke-versions }}
+        run: |
+          ./gradlew :gradle-plugin-test:allVersionedFunctionalTests \
+            "-Pkotlin.compiler.plugin.devkit.testAgainst=$KOTLIN_VERSIONS" \
+            -Pwatchdog.functionalTest.smokeOnly=true || {
+            echo "Tests failed; retrying once."
+            ./gradlew :gradle-plugin-test:allVersionedFunctionalTests \
+              "-Pkotlin.compiler.plugin.devkit.testAgainst=$KOTLIN_VERSIONS" \
+              -Pwatchdog.functionalTest.smokeOnly=true
+          }
+
+      - name: Save test reports
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-reports-${{ github.job }}
           path: |
             **/build/reports/tests/
             **/build/test-results/
