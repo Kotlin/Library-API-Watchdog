@@ -205,6 +205,8 @@ jobs:
         env:
           KOTLIN_VERSION: ${{ matrix.kotlin-version }}
         run: |
+          scripts/log-memory.sh &
+          trap "kill $!" EXIT
           ./gradlew :gradle-plugin-test:defaultFunctionalTest \
             "-Pkotlin.compiler.plugin.devkit.defaultTestVersion=$KOTLIN_VERSION" || {
             echo "Tests failed; retrying once."
@@ -259,6 +261,8 @@ jobs:
         env:
           KOTLIN_VERSIONS: ${{ needs.functional-test-matrix.outputs.smoke-versions }}
         run: |
+          scripts/log-memory.sh &
+          trap "kill $!" EXIT
           ./gradlew :gradle-plugin-test:allVersionedFunctionalTests \
             "-Pkotlin.compiler.plugin.devkit.testAgainst=$KOTLIN_VERSIONS" \
             -Pwatchdog.functionalTest.smokeOnly=true || {
