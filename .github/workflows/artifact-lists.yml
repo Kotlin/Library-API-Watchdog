@@ -15,18 +15,6 @@ on:
       - 'gradle/**'
       - 'gradlew'
       - '.github/workflows/artifact-lists.yml'
-  pull_request:
-    paths:
-      - '**/build.gradle.kts'
-      - '**/settings.gradle.kts'
-      - '**/artifacts/**'
-      - 'build-logic/**'
-      - 'build-logic-settings/**'
-      - 'gradle.properties'
-      - 'library.properties'
-      - 'gradle/**'
-      - 'gradlew'
-      - '.github/workflows/artifact-lists.yml'
   workflow_call:
     inputs:
       ref:

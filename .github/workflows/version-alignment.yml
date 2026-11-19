@@ -22,25 +22,6 @@ on:
       - 'scripts/lib/project-version.sh'
       - 'scripts/release-tooling.test.mjs'
       - '.github/workflows/version-alignment.yml'
-  pull_request:
-    paths:
-      - 'gradle.properties'
-      - 'library.properties'
-      - 'gradle/libs.versions.toml'
-      - 'README.md'
-      - 'docs/**'
-      - 'scripts/verify-version-alignment.sh'
-      - 'scripts/update-version.sh'
-      - 'scripts/bump-after-release.sh'
-      - 'scripts/changelog-section.sh'
-      - 'scripts/insert-changelog-section.sh'
-      - 'scripts/prepare-release.sh'
-      - 'scripts/release-plan.sh'
-      - 'scripts/release-notes.sh'
-      - 'scripts/push-signed-commit.sh'
-      - 'scripts/lib/project-version.sh'
-      - 'scripts/release-tooling.test.mjs'
-      - '.github/workflows/version-alignment.yml'
   workflow_call:
     inputs:
       ref:

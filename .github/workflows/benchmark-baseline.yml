@@ -18,19 +18,6 @@ on:
       - 'gradle.properties'
       - 'library.properties'
       - '.github/workflows/benchmark-baseline.yml'
-  pull_request:
-    paths:
-      - 'compiler-plugin/src/*Main/**'
-      - 'compiler-plugin/src/benchmark/**'
-      - 'compiler-plugin/build.gradle.kts'
-      - 'plugin-annotations/**'
-      - 'build-logic/**'
-      - 'build-logic-settings/**'
-      - 'diagnostics.json'
-      - 'gradle/**'
-      - 'gradle.properties'
-      - 'library.properties'
-      - '.github/workflows/benchmark-baseline.yml'
   workflow_dispatch:
     inputs:
       record:
@@ -44,8 +31,10 @@ on:
         type: string
         default: ''
 
+# In a called workflow, `github` is the context of the caller, so the group has the name of this file and the `ref`
+# input.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: benchmark-baseline-${{ github.event_name }}-${{ github.ref }}-${{ inputs.ref }}
   cancel-in-progress: true
 
 permissions:

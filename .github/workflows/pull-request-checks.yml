@@ -1,0 +1,220 @@
+name: Pull request checks
+
+# The ruleset of main requires one check, `all_green`. A required check of a workflow with a `paths` filter blocks every
+# pull request that the filter skips, because the check never reports. So this workflow runs on every pull request. It
+# calls each check workflow when the pull request changes a path of that workflow, and `all_green` has the result.
+on:
+  pull_request:
+
+concurrency:
+  group: pull-request-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Find the changed paths
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      compiler-plugin-tests: ${{ steps.filter.outputs.compiler-plugin-tests }}
+      gradle-tests: ${{ steps.filter.outputs.gradle-tests }}
+      docs-checks: ${{ steps.filter.outputs.docs-checks }}
+      version-alignment: ${{ steps.filter.outputs.version-alignment }}
+      supported-version-badges: ${{ steps.filter.outputs.supported-version-badges }}
+      artifact-lists: ${{ steps.filter.outputs.artifact-lists }}
+      benchmark-baseline: ${{ steps.filter.outputs.benchmark-baseline }}
+    steps:
+      # Each list is the `push` list of the workflow and this file. On a pull request, the action reads the changed
+      # files from the GitHub API, so the job has no checkout.
+      - name: Match the changed files
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            this-workflow: &this-workflow
+              - '.github/workflows/pull-request-checks.yml'
+            compiler-plugin-tests:
+              - *this-workflow
+              - 'compiler-plugin/**'
+              - 'plugin-annotations/**'
+              - 'build-logic/**'
+              - 'build-logic-settings/**'
+              - 'diagnostics.json'
+              - 'build.gradle.kts'
+              - 'settings.gradle.kts'
+              - 'gradle.properties'
+              - 'library.properties'
+              - 'gradle/**'
+              - 'gradlew'
+              - '.github/workflows/compiler-plugin-tests.yml'
+            gradle-tests:
+              - *this-workflow
+              - 'compiler-plugin/**'
+              - 'exempts-fixer/**'
+              - 'gradle-plugin/**'
+              - 'gradle-plugin-test/**'
+              - 'plugin-annotations/**'
+              - 'build-logic/**'
+              - 'build-logic-settings/**'
+              - 'diagnostics.json'
+              - 'build.gradle.kts'
+              - 'settings.gradle.kts'
+              - 'gradle.properties'
+              - 'library.properties'
+              - 'gradle/**'
+              - 'gradlew'
+              - '.github/workflows/gradle-tests.yml'
+            # The Build docs website workflow has no `paths` filter on main, so this list has no `push` list.
+            docs-checks:
+              - *this-workflow
+              - 'docs/**'
+              - 'diagnostics.json'
+              - 'CHANGELOG.md'
+              - 'gradle.properties'
+              - 'library.properties'
+              - 'scripts/lib/project-version.sh'
+              - 'scripts/update-version.sh'
+              - 'scripts/bump-after-release.sh'
+              - 'scripts/changelog-section.sh'
+              - 'scripts/insert-changelog-section.sh'
+              - 'scripts/prepare-release.sh'
+              - 'scripts/release-plan.sh'
+              - 'scripts/release-notes.sh'
+              - 'scripts/push-signed-commit.sh'
+              - 'scripts/release-tooling.test.mjs'
+              - '.github/workflows/docs.yml'
+              - '.github/workflows/docs-checks.yml'
+            version-alignment:
+              - *this-workflow
+              - 'gradle.properties'
+              - 'library.properties'
+              - 'gradle/libs.versions.toml'
+              - 'README.md'
+              - 'docs/**'
+              - 'scripts/verify-version-alignment.sh'
+              - 'scripts/update-version.sh'
+              - 'scripts/bump-after-release.sh'
+              - 'scripts/changelog-section.sh'
+              - 'scripts/insert-changelog-section.sh'
+              - 'scripts/prepare-release.sh'
+              - 'scripts/release-plan.sh'
+              - 'scripts/release-notes.sh'
+              - 'scripts/push-signed-commit.sh'
+              - 'scripts/lib/project-version.sh'
+              - 'scripts/release-tooling.test.mjs'
+              - '.github/workflows/version-alignment.yml'
+            supported-version-badges:
+              - *this-workflow
+              - 'gradle/libs.versions.toml'
+              - 'README.md'
+              - 'docs/pages/overview.md'
+              - 'scripts/verify-supported-version-badges.sh'
+              - '.github/workflows/supported-version-badges.yml'
+            artifact-lists:
+              - *this-workflow
+              - '**/build.gradle.kts'
+              - '**/settings.gradle.kts'
+              - '**/artifacts/**'
+              - 'build-logic/**'
+              - 'build-logic-settings/**'
+              - 'gradle.properties'
+              - 'library.properties'
+              - 'gradle/**'
+              - 'gradlew'
+              - '.github/workflows/artifact-lists.yml'
+            benchmark-baseline:
+              - *this-workflow
+              - 'compiler-plugin/src/*Main/**'
+              - 'compiler-plugin/src/benchmark/**'
+              - 'compiler-plugin/build.gradle.kts'
+              - 'plugin-annotations/**'
+              - 'build-logic/**'
+              - 'build-logic-settings/**'
+              - 'diagnostics.json'
+              - 'gradle/**'
+              - 'gradle.properties'
+              - 'library.properties'
+              - '.github/workflows/benchmark-baseline.yml'
+
+  compiler-plugin-tests:
+    name: Compiler plugin tests
+    needs: changes
+    if: needs.changes.outputs.compiler-plugin-tests == 'true'
+    uses: ./.github/workflows/compiler-plugin-tests.yml
+    secrets: inherit
+
+  gradle-tests:
+    name: Gradle tests
+    needs: changes
+    if: needs.changes.outputs.gradle-tests == 'true'
+    uses: ./.github/workflows/gradle-tests.yml
+    secrets: inherit
+
+  docs-checks:
+    name: Docs checks
+    needs: changes
+    if: needs.changes.outputs.docs-checks == 'true'
+    uses: ./.github/workflows/docs-checks.yml
+    secrets: inherit
+
+  version-alignment:
+    name: Version alignment
+    needs: changes
+    if: needs.changes.outputs.version-alignment == 'true'
+    uses: ./.github/workflows/version-alignment.yml
+
+  supported-version-badges:
+    name: Supported version badges
+    needs: changes
+    if: needs.changes.outputs.supported-version-badges == 'true'
+    uses: ./.github/workflows/supported-version-badges.yml
+
+  artifact-lists:
+    name: Artifact lists
+    needs: changes
+    if: needs.changes.outputs.artifact-lists == 'true'
+    uses: ./.github/workflows/artifact-lists.yml
+    secrets: inherit
+
+  benchmark:
+    name: Benchmark baseline
+    needs: changes
+    if: needs.changes.outputs.benchmark-baseline == 'true'
+    uses: ./.github/workflows/benchmark-baseline.yml
+    secrets: inherit
+
+  # The ruleset of main has the name of this job, so a rename needs a change of the ruleset. GitHub counts a skipped
+  # required check as passed, so `always()` runs the job after a failed job too. A check workflow has the result
+  # `skipped` in two cases: no path of its list changed, or each of its jobs skipped a pull request of the Watchdog bot.
+  all_green:
+    if: always()
+    needs:
+      - changes
+      - compiler-plugin-tests
+      - gradle-tests
+      - docs-checks
+      - version-alignment
+      - supported-version-badges
+      - artifact-lists
+      - benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the results of the other jobs
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          failed="$(jq -r '
+            to_entries[]
+            | select(.value.result != "success" and (.value.result != "skipped" or .key == "changes"))
+            | "\(.key): \(.value.result)"
+          ' <<< "$NEEDS")"
+          if [[ -n "$failed" ]]; then
+            echo "These jobs didn't pass:" >&2
+            echo "$failed" >&2
+            exit 1
+          fi
+          echo 'Every check of the changed paths passed.'
