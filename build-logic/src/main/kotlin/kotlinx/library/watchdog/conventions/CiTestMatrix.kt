@@ -2,23 +2,16 @@ package kotlinx.library.watchdog.conventions
 
 import org.jetbrains.kotlin.tooling.core.KotlinToolingVersion
 
-/**
- * One version for each release line. A release line is a feature release and its bug-fix releases: `2.4.0` with
- * `2.4.10`, `2.4.20` with `2.4.21`.
- *
- * The version of a line is its oldest version. The line of the newest stable version and each later line have their
- * newest version instead.
- */
 internal fun oneVersionOfEachReleaseLine(versions: Collection<KotlinToolingVersion>): List<KotlinToolingVersion> {
     val sorted = versions.sorted()
     val newestStable = sorted.lastOrNull { it.maturity == KotlinToolingVersion.Maturity.STABLE }
     return sorted
+        // `2.4.0` and `2.4.10` are one release line. `2.4.20` and `2.4.21` are the next one.
         .groupBy { Triple(it.major, it.minor, it.patch / 20) }
         .values
         .map { line -> if (newestStable != null && line.last() < newestStable) line.first() else line.last() }
 }
 
-/** A [full] version runs every functional test. A [smoke] version runs the `SmokeTest` category only. */
 internal class FunctionalTestMatrix(val full: List<KotlinToolingVersion>, val smoke: List<KotlinToolingVersion>) {
     fun toGitHubOutput(): String = listOf(
         "versions=" + full.joinToString(prefix = "[", separator = ",", postfix = "]") { "\"$it\"" },
@@ -36,7 +29,6 @@ internal fun reducedFunctionalTestMatrix(versions: Collection<KotlinToolingVersi
 
 internal const val SHARD_PROPERTY = "watchdog.compilerTest.shard"
 
-/** The items of one shard. [shard] has the form `<index>/<count>` with an index from 1. Each item is in one shard. */
 internal fun <T> List<T>.shard(shard: String): List<T> {
     val parts = shard.split('/').map(String::toIntOrNull)
     val index = parts.getOrNull(0)

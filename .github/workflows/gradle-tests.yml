@@ -69,8 +69,6 @@ jobs:
           # The matrix jobs wait for this job. A cache save at its end only delays them.
           cache-read-only: true
 
-      # A pull request runs every functional test against one Kotlin version of each release line, and the smoke
-      # tests against the other versions. Every other run has no smoke versions.
       - name: Discover Kotlin versions
         id: matrix
         env:
@@ -231,8 +229,6 @@ jobs:
     if: needs.functional-test-matrix.outputs.smoke-versions != ''
     runs-on: ubuntu-latest
     env:
-      # With this variable set, the dev kit registers only the Kotlin versions that
-      # `kotlin.compiler.plugin.devkit.testAgainst` requests.
       WATCHDOG_CI_SINGLE_VERSION: true
     steps:
       - name: Checkout repository
@@ -249,7 +245,6 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          # The default of the action also requests the obsolete 'tools' package, which sdkmanager doesn't find.
           packages: 'platform-tools'
 
       - name: Install Android SDK 36

@@ -20,20 +20,19 @@ pluginDevKit {
     }
 }
 
-// `useLatestDev` adds the newest Kotlin dev build as a CLI target, so the highest CLI version is this dev build.
 fun newestKotlinTarget(): DevKitTarget = pluginDevKit.testAgainst.filter { !it.forIde }.maxBy { it.version }
 
-// The daily CI run uses this task.
 tasks.register("latestKotlinTest") {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     description = "Runs tests against the newest Kotlin version of the CLI targets"
     dependsOn(provider { newestKotlinTarget().testTask })
 }
 
-// A pull request runs the fuzz tests against one release of each release line only. They take most of the test time.
 val fuzzTestVersions by lazy {
-    val releases = pluginDevKit.testAgainst.filter { !it.forIde && it.version.maturity != KotlinToolingVersion.Maturity.DEV }
-    oneVersionOfEachReleaseLine(releases.map { it.version }).toSet()
+    val releases = pluginDevKit.testAgainst
+        .filter { !it.forIde && it.version.maturity != KotlinToolingVersion.Maturity.DEV }
+        .map { it.version }
+    oneVersionOfEachReleaseLine(releases).toSet()
 }
 
 fun DevKitTarget.runsFuzzTests(): Boolean = !reducedCompilerTests || (!forIde && version in fuzzTestVersions)
@@ -47,11 +46,8 @@ pluginDevKit.testAgainst.configureEach {
     }
 }
 
-// Each job of the "Compiler plugin tests" workflow runs one shard. The order gives each shard the same number of
-// targets with fuzz tests, of CLI targets, and of IDE targets. Their tests take different times.
-//
-// A new Kotlin dev build can break the plugin, so a pull request doesn't test it. Its target stays, because the
-// `.fir.txt` dump without a version belongs to the highest version of the targets.
+// The filter leaves out the test task and not the target, because the `.fir.txt` dump without a version belongs to
+// the highest registered version. The order gives each shard the same number of fuzz, CLI, and IDE targets.
 tasks.register("shardTest") {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     description = "Runs the tests of one shard of the Kotlin versions, -P$SHARD_PROPERTY=<index>/<count>"

@@ -41,13 +41,13 @@ env:
   WATCHDOG_PROXY_PASSWORD: ${{ secrets.WATCHDOG_PROXY_PASSWORD }}
   DEVELOCITY_CACHE_PUSH: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
 
-# A `pull_request` run of the Watchdog bot skips the tests. The Dev kit update and the Pre-release workflows call this
-# workflow on the commit of their pull request.
-#
-# The daily run of this workflow tests only the newest Kotlin dev build, because the other Kotlin versions don't
-# change. In a called workflow, `github.workflow` is the name of the caller, so a call from a workflow on a schedule
-# runs every test.
 jobs:
+  # A `pull_request` run of the Watchdog bot skips the tests. The Dev kit update and the Pre-release workflows call this
+  # workflow on the commit of their pull request.
+  #
+  # The daily run of this workflow tests only the newest Kotlin dev build, because the other Kotlin versions don't
+  # change. In a called workflow, `github.workflow` is the name of the caller, so a call from a workflow on a schedule
+  # runs every test.
   test:
     name: Tests (shard ${{ matrix.shard }})
     if: >-
@@ -75,8 +75,6 @@ jobs:
         with:
           develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
-      # A pull request runs the fuzz tests against one Kotlin release of each release line only, and it doesn't test
-      # the newest Kotlin dev build.
       - name: Run compiler plugin tests
         env:
           SHARD: ${{ matrix.shard }}/${{ strategy.job-total }}
