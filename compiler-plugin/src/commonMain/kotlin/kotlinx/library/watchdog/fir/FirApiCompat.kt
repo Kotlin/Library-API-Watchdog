@@ -1,6 +1,7 @@
 package kotlinx.library.watchdog.fir
 
 import java.nio.file.Path
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.descriptors.SourceElement
 import org.jetbrains.kotlin.fir.SessionHolder
 import org.jetbrains.kotlin.fir.declarations.FirClassLikeDeclaration
@@ -25,6 +26,12 @@ internal expect val FirProperty.isLocalCompat: Boolean
 internal expect val FirClassLikeDeclaration.isLocalCompat: Boolean
 
 internal expect val KotlinJvmBinaryClass.containingLibraryPathCompat: String?
+
+internal enum class SourceToken { IDENTIFIER, CONSTRUCTOR_KEYWORD, KDOC }
+
+// The first direct child of the token type, from the light tree (CLI) or from PSI (Analysis API).
+context(c: SessionHolder)
+internal expect fun KtSourceElement.childToken(token: SourceToken): KtSourceElement?
 
 /** `renderReadable` shows a function type as `Function1<String, Boolean>` before Kotlin 2.3.20. */
 internal expect fun ConeKotlinType.renderReadableCompat(): String
