@@ -26,6 +26,9 @@ pluginDevKit {
         functionalTestProperties.addAll(
             "org.gradle.jvmargs=-Dfile.encoding=UTF-8 -Xmx1500m -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=1024m",
             "kotlin.daemon.jvmargs=-Xmx1g",
+            // The same download retries as in the root gradle.properties.
+            "systemProp.org.gradle.internal.repository.max.tentatives=8",
+            "systemProp.org.gradle.internal.repository.initial.backoff=1000",
         )
     }
 }
