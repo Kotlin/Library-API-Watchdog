@@ -11,15 +11,18 @@ plugins {
 }
 
 pluginDevKit {
-    // The IntelliJ 2027.1 nightly (271.1622) bundles a compiler from the window between Kotlin
-    // commit 5a87800b73, which moved `getChild` and `unsubstitutedScope` to other files, and its
-    // revert 642f8df9f6. Public dev builds 2285 to 2331 share that layout. The dev kit's IDE
-    // mapping table doesn't have the 271 builds yet. Remove the line when it has them:
+    // The dev kit's IDE mapping table has no IntelliJ 2027.1 (271) builds, so `ideaVersions` adds no build for the
+    // compiler of a nightly. Remove both lines when the table has them:
     // https://github.com/Kotlin/compiler-plugin-dev-kit/issues/111
-    // A nightly with a compiler after the revert loads this build too and fails:
-    // https://github.com/Kotlin/Library-API-Watchdog/issues/58
+    // A nightly compiler loads the newest 2.5.20 dev build of the plugin that isn't newer than the compiler.
     if (!ciSingleVersion) {
+        // The compiler of nightly 271.1622. Kotlin commit 5a87800b73 moved `getChild`, `unsubstitutedScope`, and
+        // `getTargetAnnotation` to other files, and 642f8df9f6 reverted the move. Dev builds 2285 to 2331 have the
+        // moved layout.
         testAgainst("2.5.20-dev-2285", forIde = true)
+        // The first nightly compiler after the revert. Without this build, a later nightly loads the `2285` build
+        // and fails: https://github.com/Kotlin/Library-API-Watchdog/issues/58
+        testAgainst("2.5.20-dev-2623", forIde = true)
     }
 
     pluginPackage = "kotlinx.library.watchdog"
