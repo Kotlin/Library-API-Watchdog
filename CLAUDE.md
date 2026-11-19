@@ -88,7 +88,7 @@ npm run build                       # the site build, fails on a broken link or 
   reference links in one of them only. `IntellijReferencesTest` fails on each one. A type argument is fine, because
   erasure removes it. So a custom positioning strategy is impossible: its `mark` override never binds in the
   embeddable compiler, and the default strategy marks the whole declaration. A checker reports on a child source
-  element from `KtSourceElement.getChild` with a `Set` of token types instead.
+  element from `KtSourceElement.childToken` of `FirApiCompat.kt` instead.
 - The compiler plugin compiles against every Kotlin version from `kotlinCliMin` (2.2.20). `FirApiCompat.kt` declares
   each API that differs between the versions as an `expect`. The `actual` declarations are in the source sets of
   `versionHierarchy` in `compiler-plugin/build.gradle.kts` (`pre2320DevMain`, `post24DevMain`, ...).

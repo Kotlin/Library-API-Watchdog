@@ -52,6 +52,10 @@ pluginDevKit {
         split("SourcelessDiagnostics") {
             it < KotlinToolingVersion("2.2.20-dev-6624") || it == KotlinToolingVersion("2.2.20-Beta1")
         }
+        // `pre`: `getChild` takes `IElementType` values. `post`: it takes syntax ids and a `FirSyntaxComponent` context.
+        split("SyntaxComponent") {
+            it < KotlinToolingVersion("2.5.20-dev-5318")
+        }
     }
 }
 

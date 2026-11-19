@@ -1,13 +1,11 @@
 package kotlinx.library.watchdog.fir
 
-import com.intellij.psi.tree.IElementType
 import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirBasicDeclarationChecker
-import org.jetbrains.kotlin.fir.analysis.getChild
 import org.jetbrains.kotlin.fir.declarations.FirConstructor
 import org.jetbrains.kotlin.fir.declarations.FirDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirMemberDeclaration
@@ -33,19 +31,6 @@ internal class UndocumentedApiChecker(
     override val pairSide: PairSide = PairSide.EXPECT
 
     private val factory = severities[WatchdogDiagnostics.UNDOCUMENTED_PUBLIC_API]
-
-    private companion object {
-        /**
-         * The jar runs in the CLI and in `kotlin-compiler-embeddable`, which relocates
-         * `com.intellij`. A direct reference to `KDocTokens.KDOC` puts the field type in the
-         * bytecode and fails to link in one of them. The generic signature erases to `java.util.Set`.
-         */
-        @Suppress("UNCHECKED_CAST")
-        private val kdocElementTypes: Set<IElementType> =
-            setOf(
-                Class.forName("org.jetbrains.kotlin.kdoc.lexer.KDocTokens").getField("KDOC").get(null)
-            ) as Set<IElementType>
-    }
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun check(declaration: FirDeclaration) {
@@ -111,7 +96,7 @@ internal class UndocumentedApiChecker(
         else -> null
     }
 
-    // KDoc isn't in FIR. `getChild` reads both the light tree (CLI) and PSI (Analysis API).
-    private fun KtSourceElement?.hasKdoc(): Boolean =
-        this?.getChild(kdocElementTypes, index = 0, depth = 1, reverse = false) != null
+    // KDoc isn't in FIR.
+    context(context: CheckerContext)
+    private fun KtSourceElement?.hasKdoc(): Boolean = this?.childToken(SourceToken.KDOC) != null
 }

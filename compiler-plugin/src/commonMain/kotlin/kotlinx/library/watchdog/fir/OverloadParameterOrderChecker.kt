@@ -7,7 +7,6 @@ import org.jetbrains.kotlin.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirFunctionChecker
-import org.jetbrains.kotlin.fir.analysis.getChild
 import org.jetbrains.kotlin.fir.analysis.checkers.unsubstitutedScope
 import org.jetbrains.kotlin.fir.declarations.FirConstructor
 import org.jetbrains.kotlin.fir.declarations.FirFunction
@@ -25,8 +24,6 @@ import org.jetbrains.kotlin.fir.symbols.impl.FirFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirValueParameterSymbol
 import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.unwrapFakeOverrides
-import org.jetbrains.kotlin.lexer.KtToken
-import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.ClassId
 
@@ -201,10 +198,10 @@ internal class OverloadParameterOrderChecker(
     private fun FirFunction.nameSource(): KtSourceElement? {
         val source = source ?: return null
         if (this !is FirConstructor) {
-            return source.getChild(IDENTIFIER_TOKENS, depth = 1) ?: source
+            return source.childToken(SourceToken.IDENTIFIER) ?: source
         }
-        return source.getChild(CONSTRUCTOR_KEYWORD_TOKENS, depth = 1)
-            ?: context.containingClassSymbol?.source?.getChild(IDENTIFIER_TOKENS, depth = 1)
+        return source.childToken(SourceToken.CONSTRUCTOR_KEYWORD)
+            ?: context.containingClassSymbol?.source?.childToken(SourceToken.IDENTIFIER)
             ?: source
     }
 
@@ -255,9 +252,4 @@ internal class OverloadParameterOrderChecker(
     context(context: CheckerContext)
     private fun FirBasedSymbol<*>.isExempt(): Boolean =
         hasAnnotationOnActualOrExpect(WatchdogClassIds.IntentionallyInconsistentParameterOrder)
-
-    private companion object {
-        private val IDENTIFIER_TOKENS: Set<KtToken> = setOf(KtTokens.IDENTIFIER)
-        private val CONSTRUCTOR_KEYWORD_TOKENS: Set<KtToken> = setOf(KtTokens.CONSTRUCTOR_KEYWORD)
-    }
 }
