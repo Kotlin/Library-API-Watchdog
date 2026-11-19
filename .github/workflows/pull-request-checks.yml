@@ -26,7 +26,6 @@ jobs:
       version-alignment: ${{ steps.filter.outputs.version-alignment }}
       supported-version-badges: ${{ steps.filter.outputs.supported-version-badges }}
       artifact-lists: ${{ steps.filter.outputs.artifact-lists }}
-      benchmark-baseline: ${{ steps.filter.outputs.benchmark-baseline }}
     steps:
       # Each list is the `push` list of the workflow and this file. On a pull request, the action reads the changed
       # files from the GitHub API, so the job has no checkout.
@@ -126,19 +125,6 @@ jobs:
               - 'gradle/**'
               - 'gradlew'
               - '.github/workflows/artifact-lists.yml'
-            benchmark-baseline:
-              - *this-workflow
-              - 'compiler-plugin/src/*Main/**'
-              - 'compiler-plugin/src/benchmark/**'
-              - 'compiler-plugin/build.gradle.kts'
-              - 'plugin-annotations/**'
-              - 'build-logic/**'
-              - 'build-logic-settings/**'
-              - 'diagnostics.json'
-              - 'gradle/**'
-              - 'gradle.properties'
-              - 'library.properties'
-              - '.github/workflows/benchmark-baseline.yml'
 
   compiler-plugin-tests:
     name: Compiler plugin tests
@@ -180,13 +166,6 @@ jobs:
     uses: ./.github/workflows/artifact-lists.yml
     secrets: inherit
 
-  benchmark:
-    name: Benchmark baseline
-    needs: changes
-    if: needs.changes.outputs.benchmark-baseline == 'true'
-    uses: ./.github/workflows/benchmark-baseline.yml
-    secrets: inherit
-
   # The ruleset of main has the name of this job, so a rename needs a change of the ruleset. GitHub counts a skipped
   # required check as passed, so `always()` runs the job after a failed job too. A check workflow has the result
   # `skipped` in two cases: no path of its list changed, or each of its jobs skipped a pull request of the Watchdog bot.
@@ -200,7 +179,6 @@ jobs:
       - version-alignment
       - supported-version-badges
       - artifact-lists
-      - benchmark
     runs-on: ubuntu-latest
     steps:
       - name: Check the results of the other jobs

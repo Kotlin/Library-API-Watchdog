@@ -201,6 +201,18 @@ jobs:
         with:
           develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
+      # The Gradle and Kotlin daemons of the build hold about 5 GB, and the tests need that memory. So the build runs
+      # first with the test task off, and its daemons stop.
+      - name: Build the plugins for the tests
+        env:
+          KOTLIN_VERSION: ${{ matrix.kotlin-version }}
+        run: |
+          ./gradlew :gradle-plugin-test:defaultFunctionalTest \
+            "-Pkotlin.compiler.plugin.devkit.defaultTestVersion=$KOTLIN_VERSION" \
+            -Pwatchdog.functionalTest.buildOnly=true
+          ./gradlew --stop
+          pkill -f KotlinCompileDaemon || true
+
       - name: Run Gradle plugin tests
         env:
           KOTLIN_VERSION: ${{ matrix.kotlin-version }}

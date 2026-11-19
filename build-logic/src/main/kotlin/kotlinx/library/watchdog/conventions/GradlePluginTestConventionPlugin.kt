@@ -67,6 +67,7 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
                     maxParallelUsages.set(1)
                 }
             val smokeOnly = providers.gradleProperty(SMOKE_ONLY_PROPERTY).map(String::toBoolean).getOrElse(false)
+            val buildOnly = providers.gradleProperty(BUILD_ONLY_PROPERTY).map(String::toBoolean).getOrElse(false)
             tasks.withType(Test::class.java).configureEach {
                 systemProperty("watchdog.test.proxies", useProxies)
                 proxyToken.forEach { (variable, value) ->
@@ -86,6 +87,7 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
                 if (smokeOnly) {
                     useJUnit { includeCategories("kotlinx.library.watchdog.SmokeTest") }
                 }
+                enabled = !buildOnly
             }
         }
     }
@@ -93,6 +95,7 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
     private companion object {
         const val MATRIX_PROPERTY = "watchdog.functionalTest.matrix"
         const val SMOKE_ONLY_PROPERTY = "watchdog.functionalTest.smokeOnly"
+        const val BUILD_ONLY_PROPERTY = "watchdog.functionalTest.buildOnly"
     }
 
     private fun androidSdkDirOrNull(project: Project): File? {

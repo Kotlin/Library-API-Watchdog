@@ -77,8 +77,9 @@ npm run build                       # the site build, fails on a broken link or 
   `docs.yml` has the deploy job, and `docs-checks.yml` has the checks.
 - A pull request runs every functional test and the `*FuzzTest` classes of the compiler plugin against one Kotlin
   version of each release line only (`2.4.0` of `2.4.0` and `2.4.10`). Against the other versions, it runs the
-  functional tests with `@Category(SmokeTest::class)`. It doesn't test the newest Kotlin dev build. A push to `main`,
-  `Pre-release`, and `Dev kit update` run every test against every version.
+  functional tests with `@Category(SmokeTest::class)`. It doesn't test the newest Kotlin dev build, and it doesn't
+  run the benchmark baseline check. A push to `main`, `Pre-release`, and `Dev kit update` run every test against
+  every version.
 - A project of an included build depends on the root build's projects, and the reverse, by coordinates
   (`"$group:<name>:$version"`), never with `project(...)`. Composite substitution resolves them.
 - `diagnostics.json` is the single source of truth for diagnostic texts. The build generates
