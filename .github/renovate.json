@@ -21,6 +21,11 @@
       "enabled": false
     },
     {
+      "description": "develocity.jetbrains.com (2026.1.4) rejects the build scans of a plugin newer than 4.4. Raise the limit after a server update.",
+      "matchPackageNames": ["com.gradle:develocity-gradle-plugin"],
+      "allowedVersions": "<4.5"
+    },
+    {
       "description": "The JDK, Node, and runner updates get separate pull requests. A JDK or runner update needs a new benchmark baseline.",
       "matchManagers": ["github-actions"],
       "matchDepTypes": ["action"],
