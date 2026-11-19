@@ -116,17 +116,21 @@ The metrics of each subject:
 | `ms` | Median time of one operation over all measurement iterations. | No. |
 
 The time of one operation changes by up to 50% between GitHub runners of the same machine profile,
-so the baseline file holds `bytes` only. The summary shows `ms` for information. The allocation of one
-operation is the same in every iteration of one JVM, and changes by up to 5% between JVMs.
+so the baseline file holds `bytes` only. The summary shows `ms` for information.
+
+The task runs its JVM with `-XX:-DoEscapeAnalysis`. With escape analysis, the JIT compiler removes a part
+of the allocation, and that part differs between JVMs. In one run of unchanged code, the allocation of a
+subject was 10% above the baseline. Without escape analysis, `bytes` is the same in every JVM, and it is
+about two times the value of a run with escape analysis. The baseline file has the setting
+(`settings.escapeAnalysis`).
 
 The check fails in two cases:
 
 - A measured allocation is above the baseline value plus the tolerance.
 - The baseline has a subject that the run didn't measure.
 
-When a subject regresses, the task measures it a second time in a new JVM and uses the lower value,
-because the allocation of one operation changes by up to 5% between JVMs. A subject
-without a baseline value passes. The task writes a Markdown summary to
+When a subject regresses, the task measures it a second time in a new JVM and uses the lower value.
+A subject without a baseline value passes. The task writes a Markdown summary to
 `build/reports/benchmark-baseline/summary.md`, and the workflow shows it on the job summary page.
 On GitHub Actions, the task also reports each regression as an error annotation of the run.
 

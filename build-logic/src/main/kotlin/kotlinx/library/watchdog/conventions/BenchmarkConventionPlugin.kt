@@ -275,7 +275,8 @@ class BenchmarkConventionPlugin : Plugin<Project> {
                 configureWatchdogBenchmarkInputs(this)
                 outputs.upToDateWhen { false }
                 // The measurement runs in this JVM. The fixed heap keeps the GC behavior the same between runs.
-                jvmArgs("-Xms2g", "-Xmx2g")
+                // With escape analysis, the JIT removes a part of the allocation that differs between JVMs.
+                jvmArgs("-Xms2g", "-Xmx2g", "-XX:-DoEscapeAnalysis")
 
                 val flags = mapOf(
                     "benchmark.baseline.record" to "--record",

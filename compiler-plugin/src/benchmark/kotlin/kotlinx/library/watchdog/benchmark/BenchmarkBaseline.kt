@@ -24,7 +24,13 @@ fun main(args: Array<String>) {
     val options = BaselineOptions.parse(args)
     val machine = MachineProfile.current()
     val baselineFile = options.baselineDirectory.resolve("${machine.id}.properties")
-    val settings = RunSettings(options.warmupIterations, options.measurementIterations, options.iterationSeconds, options.corpusFiles)
+    val settings = RunSettings(
+        options.warmupIterations,
+        options.measurementIterations,
+        options.iterationSeconds,
+        options.corpusFiles,
+        escapeAnalysis = "-XX:-DoEscapeAnalysis" !in ManagementFactory.getRuntimeMXBean().inputArguments,
+    )
     println("Machine profile: ${machine.id}")
     machine.details.forEach { (key, value) -> println("  $key = $value") }
     println("Baseline file: $baselineFile")
@@ -132,12 +138,14 @@ internal class RunSettings(
     val measurementIterations: Int,
     val iterationSeconds: Int,
     val corpusFiles: Int,
+    val escapeAnalysis: Boolean,
 ) {
     val asProperties: Map<String, String> = mapOf(
         "settings.warmupIterations" to warmupIterations.toString(),
         "settings.measurementIterations" to measurementIterations.toString(),
         "settings.iterationSeconds" to iterationSeconds.toString(),
         "settings.corpusFiles" to corpusFiles.toString(),
+        "settings.escapeAnalysis" to escapeAnalysis.toString(),
     )
 }
 
@@ -236,8 +244,8 @@ internal class Tolerances(val bytes: Double) {
 /**
  * Runs the isolated checker benchmark in this JVM, without JMH forks. The corpus compiles once, and
  * every checker sweeps the same FIR. Allocation per operation doesn't change between the iterations
- * of one JVM, so a fork for each checker adds a corpus compilation and no precision. It changes by up
- * to 5% between JVMs, so the second measurement of a regressed subject runs in a JMH fork.
+ * of one JVM, so a fork for each checker adds a corpus compilation and no precision. The second
+ * measurement of a regressed subject runs in a JMH fork with the JVM arguments of this JVM.
  */
 internal class BaselineRunner(private val settings: RunSettings) {
     private val isolatedSubjects: List<String> = listOf("none") + CheckerSubjects.all.map { it.name }
