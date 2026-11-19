@@ -16,7 +16,9 @@ pluginPublish = "2.2.1"
 # https://github.com/Kotlin/artifacts-validator-plugin
 artifactsValidator = "0.0.2"
 # https://plugins.gradle.org/plugin/com.gradle.develocity
-develocity = "4.6.0"
+# develocity.jetbrains.com (2026.1.4) rejects the build scans of a plugin newer than 4.4.
+# `.github/renovate.json` has the same limit.
+develocity = "4.4.3"
 # https://github.com/gmazzo/gradle-buildconfig-plugin, the version that the dev kit uses
 buildconfig = "6.0.10"
 # https://developer.android.com/build/releases/gradle-plugin
