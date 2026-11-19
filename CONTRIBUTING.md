@@ -2,11 +2,34 @@
 
 ## Build
 
-The build gets the compiler-plugin-dev-kit from its
-[Space EAP repository](https://packages.jetbrains.team/maven/p/compiler-plugin-dev-kit/eap).
-The `devkit` entry of [gradle/libs.versions.toml](gradle/libs.versions.toml) sets its version.
-The dev kit settings plugin gives the Kotlin development repositories, the plugin coordinates,
-and the functional-test publishing.
+The build and the functional-test builds get every plugin and every Maven dependency from three Space proxies
+([gradle/repositories.settings.gradle.kts](gradle/repositories.settings.gradle.kts)):
+
+| Proxy | Holds |
+|---|---|
+| [build-deps](https://packages.jetbrains.team/maven/p/kt-lib/build-deps) | The release versions. |
+| [build-deps-eap](https://packages.jetbrains.team/maven/p/kt-lib/build-deps-eap) | The compiler-plugin-dev-kit and the Kotlin development builds. |
+| [build-deps-ide](https://packages.jetbrains.team/maven/p/kt-lib/build-deps-ide) | The Kotlin builds of the IDEs. |
+
+A proxy takes a package from one upstream repository only. So a new upstream repository goes into the proxy where no
+other upstream repository has its packages.
+
+A proxy gives a version that it already has to every request. The first request of a new version needs a token. Put
+the token into the `gradle.properties` file of the Gradle user home:
+
+```properties
+space.username.watchdog=<username>
+space.password.watchdog=<token>
+```
+
+The workflows get the token from the `WATCHDOG_PROXY_USERNAME` and `WATCHDOG_PROXY_PASSWORD` secrets. A pull request
+from a fork has no secrets. So before such a pull request can pass, run the build and the tests that use its new
+dependency versions with the token.
+
+`-Pwatchdog.proxies=false` replaces the proxies with the original repositories for one run.
+
+The `devkit` entry of [gradle/libs.versions.toml](gradle/libs.versions.toml) sets the version of the
+compiler-plugin-dev-kit. The dev kit settings plugin gives the plugin coordinates and the functional-test publishing.
 
 The repository is a composite build:
 

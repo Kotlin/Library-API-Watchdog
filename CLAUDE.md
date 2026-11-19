@@ -45,6 +45,10 @@ npm run build                       # the site build, fails on a broken link or 
   compiler plugin, the fixer, and the functional tests (`:gradle-plugin-test`). `gradle-plugin` (with
   `report-aggregation`) and `plugin-annotations` are included builds. Address their tasks with the build name first:
   `:gradle-plugin:test`. The root `check` and publication tasks also run in the included builds.
+- Every plugin and Maven dependency comes from the Space proxies of `gradle/repositories.settings.gradle.kts`.
+  Never add another Maven repository. A proxy takes a package from one upstream repository only, and the first
+  request of a new version needs a token (CONTRIBUTING.md, "Build"). The workflows have it, a pull request from a fork
+  doesn't.
 - GitHub Actions doesn't publish a release. The Maven Central and Gradle Plugin Portal publications run outside this
   repository, between the `Pre-release` and `Post-publish` workflows. Space gets development versions only. RELEASE.md
   has the process.

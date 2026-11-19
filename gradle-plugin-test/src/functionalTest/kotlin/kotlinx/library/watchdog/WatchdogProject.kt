@@ -258,8 +258,14 @@ internal class WatchdogFixture(
     override val pluginUnderTest: Plugin = Plugin(WATCHDOG_PLUGIN_ID, pluginUnderTestVersion)
 
     // The dev kit runtime artifacts come from mavenLocal.
-    override fun repositories(defaults: List<Repository>): Repositories =
-        Repositories((defaults + Repository.MAVEN_LOCAL).toMutableList())
+    override fun repositories(defaults: List<Repository>): Repositories {
+        val remote = if (testUseProxies) {
+            Repository.FUNC_TEST_INCLUDED_BUILDS + Repository.FUNC_TEST + PROXY_REPOSITORIES
+        } else {
+            defaults
+        }
+        return Repositories((remote + Repository.MAVEN_LOCAL).toMutableList())
+    }
 
     // AGP 8 refuses AndroidX dependencies without the opt-in.
     override val extraGradleProperties: List<String>
@@ -504,6 +510,21 @@ internal const val KOTLIN_JVM_PLUGIN_ID = "org.jetbrains.kotlin.jvm"
 internal const val KOTLIN_MULTIPLATFORM_PLUGIN_ID = "org.jetbrains.kotlin.multiplatform"
 internal const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
 private val KOTLIN_PLUGIN_IDS = setOf(KOTLIN_JVM_PLUGIN_ID, KOTLIN_MULTIPLATFORM_PLUGIN_ID, KOTLIN_ANDROID_PLUGIN_ID)
+// Must match `gradle/repositories.settings.gradle.kts`.
+private val PROXY_REPOSITORIES: List<Repository> = listOf("build-deps", "build-deps-eap", "build-deps-ide").map { proxy ->
+    Repository.ofMaven("https://packages.jetbrains.team/maven/p/kt-lib/$proxy").withConfigureAction(
+        """
+        val spaceUsername = providers.environmentVariable("WATCHDOG_PROXY_USERNAME").orNull
+        val spacePassword = providers.environmentVariable("WATCHDOG_PROXY_PASSWORD").orNull
+        if (!spaceUsername.isNullOrEmpty() && !spacePassword.isNullOrEmpty()) {
+            credentials { username = spaceUsername; password = spacePassword }
+            authentication { create<BasicAuthentication>("basic") }
+        } else {
+            credentials { username = ""; password = "" }
+        }
+        """.trimIndent()
+    )
+}
 private const val JVM_TARGET_17 = "compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17 }"
 
 private val watchdogAnnotationImports: List<String> = listOf(
@@ -549,6 +570,7 @@ private fun packagePath(text: String): String =
 private val testAgp8Version: String? = System.getProperty("watchdog.test.agp8Version")
 private val testAgp9Version: String? = System.getProperty("watchdog.test.agp9Version")
 private val testBcvVersion: String? = System.getProperty("watchdog.test.bcvVersion")
+private val testUseProxies: Boolean = System.getProperty("watchdog.test.proxies") != "false"
 
 val binaryCompatibilityValidatorPlugin: Plugin
     get() = Plugin(BCV_PLUGIN_ID, requiredProperty(testBcvVersion))

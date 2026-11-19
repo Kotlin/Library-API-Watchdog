@@ -49,7 +49,17 @@ class GradlePluginTestConventionPlugin : Plugin<Project> {
             val agp9Version = catalogVersion("agp9")
             val bcvVersion = catalogVersion("bcv")
             val androidSdk = androidSdkDirOrNull(target)
+            // A TestKit build doesn't read the Gradle properties of the user home.
+            val proxyToken = mapOf(
+                "WATCHDOG_PROXY_USERNAME" to providers.gradleProperty("space.username.watchdog"),
+                "WATCHDOG_PROXY_PASSWORD" to providers.gradleProperty("space.password.watchdog"),
+            )
+            val useProxies = providers.gradleProperty("watchdog.proxies").orNull != "false"
             tasks.withType(Test::class.java).configureEach {
+                systemProperty("watchdog.test.proxies", useProxies)
+                proxyToken.forEach { (variable, value) ->
+                    if (value.isPresent) environment(variable, value.get())
+                }
                 systemProperty("watchdog.test.agp8Version", agp8Version)
                 systemProperty("watchdog.test.agp9Version", agp9Version)
                 systemProperty("watchdog.test.bcvVersion", bcvVersion)
