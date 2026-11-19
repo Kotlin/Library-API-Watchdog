@@ -21,10 +21,12 @@ pluginDevKit {
     // uses the JVM default heap of a quarter of the machine's RAM. The 16 GB CI runners can't fit several of those
     // heaps next to the other JVMs of a test lane.
     // The `org.gradle.jvmargs` value replaces the dev kit line with the same key, so it repeats that line's flags.
+    // With a metaspace limit of 512m, an Android or a Kotlin/Native build sometimes fails with
+    // `OutOfMemoryError: Metaspace`.
     // The dev kit joins the properties with commas, so a value can't contain one.
     if (ciSingleVersion) {
         functionalTestProperties.addAll(
-            "org.gradle.jvmargs=-Dfile.encoding=UTF-8 -Xmx1500m -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=512m",
+            "org.gradle.jvmargs=-Dfile.encoding=UTF-8 -Xmx1500m -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=1024m",
             "kotlin.daemon.jvmargs=-Xmx1g",
         )
     }
