@@ -475,7 +475,7 @@ private class ProgramBuilder(private val random: Random, private val packageName
         raw("$visibility ${kind.keyword} $className")
         val memberForbidden = forbidden + own.filter { it in Pools.enclosing }
         val typeParameter = kind in listOf(ClassKind.FINAL, ClassKind.OPEN, ClassKind.ABSTRACT, ClassKind.INTERFACE) && chance(20)
-        if (typeParameter) typeParameters(memberForbidden)
+        if (typeParameter) typeParameters(forbidden + own)
         var hasPrimaryConstructor = false
         val constructorStart = length
         inClass(className) {
@@ -527,13 +527,15 @@ private class ProgramBuilder(private val random: Random, private val packageName
                 ClassKind.VALUE -> Scope.VALUE_CLASS
                 else -> Scope.CLASS
             }
+            // Two secondary constructors can have the same parameter types.
+            var constructorAllowed = !hasPrimaryConstructor && memberScope == Scope.CLASS && kind != ClassKind.ENUM && kind != ClassKind.SEALED
             repeat(random.nextInt(4)) {
                 line()
                 when (random.nextInt(10)) {
                     in 0..4 -> function(memberScope, memberForbidden, abstractAllowed = kind == ClassKind.ABSTRACT || kind == ClassKind.INTERFACE)
                     in 5..7 -> if (kind != ClassKind.VALUE) property(memberScope, memberForbidden) else function(memberScope, memberForbidden)
                     8 -> if (depth < 2 && kind != ClassKind.VALUE && kind != ClassKind.INTERFACE) classDeclaration(memberScope, depth + 1, memberForbidden) else function(memberScope, memberForbidden)
-                    else -> if (!hasPrimaryConstructor && memberScope == Scope.CLASS && kind != ClassKind.ENUM && kind != ClassKind.SEALED) secondaryConstructor(memberForbidden) else function(memberScope, memberForbidden)
+                    else -> if (constructorAllowed) { secondaryConstructor(memberForbidden); constructorAllowed = false } else function(memberScope, memberForbidden)
                 }
             }
             if (kind in listOf(ClassKind.FINAL, ClassKind.OPEN, ClassKind.ABSTRACT, ClassKind.ENUM, ClassKind.SEALED, ClassKind.INTERFACE) && chance(30)) {
