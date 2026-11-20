@@ -52,9 +52,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # `gh pr list --head` matches by branch name only, so the query drops the pull requests of forks.
           pr="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$RELEASE_BRANCH" --state all \
-            --json number,state,baseRefName \
-            --jq 'map(select(.state != "CLOSED")) | first | if . then "\(.number) \(.baseRefName)" else empty end')"
+            --json number,state,baseRefName,isCrossRepository \
+            --jq 'map(select(.state != "CLOSED" and .isCrossRepository == false)) | first
+              | if . then "\(.number) \(.baseRefName)" else empty end')"
           if [[ -z "$pr" ]]; then
             echo "No open or merged pull request is from $RELEASE_BRANCH. Run the Pre-publish workflow first." >&2
             exit 1
@@ -219,8 +221,8 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.bot.outputs.token }}
         run: |
-          pr="$(gh pr list --head "$CHANGELOG_BRANCH" --base main --state all --json number,state \
-            --jq 'map(select(.state != "CLOSED")) | first | .number // empty')"
+          pr="$(gh pr list --head "$CHANGELOG_BRANCH" --base main --state all --json number,state,isCrossRepository \
+            --jq 'map(select(.state != "CLOSED" and .isCrossRepository == false)) | first | .number // empty')"
           if [[ -z "$pr" ]]; then
             git show "v$LIBRARY_VERSION:CHANGELOG.md" > "$RUNNER_TEMP/released-changelog.md"
             ./scripts/insert-changelog-section.sh "$LIBRARY_VERSION" "$RUNNER_TEMP/released-changelog.md"

@@ -114,8 +114,10 @@ jobs:
           GH_TOKEN: ${{ steps.bot.outputs.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          pr="$(gh pr list --head "$RELEASE_BRANCH" --base "$GITHUB_REF_NAME" --state open --json number \
-            --jq 'first | .number // empty')"
+          # `gh pr list --head` matches by branch name only, so the query drops the pull requests of forks.
+          pr="$(gh pr list --head "$RELEASE_BRANCH" --base "$GITHUB_REF_NAME" --state open \
+            --json number,isCrossRepository \
+            --jq 'map(select(.isCrossRepository == false)) | first | .number // empty')"
           if [[ -z "$pr" ]]; then
             gh label create release --color 5319e7 --force \
               --description 'A pull request of the release workflows. The release notes skip it.'

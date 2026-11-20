@@ -80,7 +80,9 @@ jobs:
           BOT: ${{ steps.bot.outputs.app-slug }}[bot]
           LATEST: ${{ steps.versions.outputs.latest }}
         run: |
-          pr="$(gh pr list --head "$UPDATE_BRANCH" --base main --state open --json number --jq 'first | .number // empty')"
+          # `gh pr list --head` matches by branch name only, so the query drops the pull requests of forks.
+          pr="$(gh pr list --head "$UPDATE_BRANCH" --base main --state open --json number,isCrossRepository \
+            --jq 'map(select(.isCrossRepository == false)) | first | .number // empty')"
           if [[ -n "$pr" ]]; then
             others="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$UPDATE_BRANCH" \
               --jq '.commits[] | .author.login // "an unknown user"' | grep -vxF "$BOT" || true)"
