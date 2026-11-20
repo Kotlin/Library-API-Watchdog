@@ -1,0 +1,46 @@
+FILE: annotationIgnoreRulesParameters.kt
+    package foo.bar
+
+    @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.FUNCTION|, Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.VALUE_PARAMETER|, Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.TYPE_PARAMETER|)) public final annotation class Flag : R|kotlin/Annotation| {
+        public constructor(): R|foo/bar/Flag| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final fun setLogging(@R|foo/bar/Flag|() enabled: R|kotlin/Boolean|): R|kotlin/Unit| {
+    }
+    public final fun setBoth(@R|foo/bar/Flag|() enabled: R|kotlin/Boolean|, verbose: R|kotlin/Boolean|): R|kotlin/Unit| {
+    }
+    context(@R|foo/bar/Flag|() enabled: R|kotlin/Boolean|)
+    public final fun setInContext(): R|kotlin/Unit| {
+    }
+    public final fun consume(@R|foo/bar/Flag|() items: R|kotlin/collections/MutableList<kotlin/Int>|, others: R|kotlin/collections/MutableList<kotlin/Int>|): R|kotlin/Unit| {
+    }
+    public final class Sink : R|kotlin/Any| {
+        public constructor(@R|foo/bar/Flag|() items: R|kotlin/collections/MutableList<kotlin/Int>|, others: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/Sink| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class Holder : R|kotlin/Any| {
+        public constructor(@R|foo/bar/Flag|() items: R|kotlin/collections/MutableList<kotlin/Int>|, others: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/Holder| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+        public final val others: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/others|
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final fun connect(host: R|kotlin/String| = String(), @R|foo/bar/Flag|() port: R|kotlin/Int|, retries: R|kotlin/Int|): R|kotlin/Unit| {
+    }
+    @R|foo/bar/Flag|() public final fun connectAnnotated(host: R|kotlin/String| = String(), port: R|kotlin/Int|): R|kotlin/Unit| {
+    }
+    public final fun <@R|foo/bar/Flag|() T : R|kotlin/collections/MutableList<kotlin/Int>|, R : R|kotlin/collections/MutableList<kotlin/Int>|> convert(items: R|T|): R|R| {
+        ^convert R|kotlin/TODO|()
+    }
+    public final fun toggle(@R|foo/bar/Flag|() enabled: R|kotlin/Boolean|): R|kotlin/Boolean?| {
+        ^toggle R|<local>/enabled|
+    }

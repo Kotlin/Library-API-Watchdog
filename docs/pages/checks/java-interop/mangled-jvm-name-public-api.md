@@ -139,8 +139,11 @@ public class Ledger {
 - Open and abstract members don't support `@JvmName` or boxed variants.
   If Java callers need access, remove the value class from the signature.
 - Value classes in type arguments, such as `List<UserId>`, don't cause JVM name mangling.
+- A parameter, extension receiver, or context parameter of type `kotlin.Result` doesn't cause JVM name mangling.
+  A member with the return type `Result` has a mangled JVM name.
 - If a top-level function or getter uses a value class only as its return type, its JVM name doesn't change.
 - The check skips members and constructors of the value class itself.
+- The check skips `const val` properties, annotation classes, and private or internal setters.
 - The plugin checks `suspend` functions with [Kotlin-only API without JvmSynthetic](./kotlin-only-api-without-jvm-synthetic.md).
 - The check skips overrides, `@JvmSynthetic` functions and accessors, and `@PublishedApi internal` declarations.
 

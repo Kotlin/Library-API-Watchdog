@@ -72,7 +72,7 @@ The check skips:
 
 - The array of a `vararg` parameter. The check still reports mutable element types.
 - Extension receivers, including function-type receivers such as `MutableList<Int>.() -> Unit`.
-- Overrides.
+- Overrides. The check reports an `override val` constructor parameter as a parameter of the constructor.
 - `@PublishedApi internal` declarations.
 
 A read-only type can still refer to a mutable collection. Copy input collections when callers must not change stored values.

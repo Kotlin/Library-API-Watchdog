@@ -1,0 +1,72 @@
+FILE: sealedClassConstructor.kt
+    package foo.bar
+
+    @R|kotlin/jvm/JvmInline|() public final value class UserId : R|kotlin/Any| {
+        public constructor(raw: R|kotlin/String|): R|foo/bar/UserId| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val raw: R|kotlin/String| = R|<local>/raw|
+            public get(): R|kotlin/String|
+
+    }
+    public sealed class Shape : R|kotlin/Any| {
+        protected constructor(label: R|kotlin/String| = String()): R|foo/bar/Shape| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public sealed class Event : R|kotlin/Any| {
+        protected constructor(id: R|foo/bar/UserId|): R|foo/bar/Event| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public sealed class Command : R|kotlin/Any| {
+        protected constructor(tags: R|kotlin/collections/MutableList<kotlin/String>|, enabled: R|kotlin/Boolean| = Boolean(true), name: R|kotlin/String|, flag: R|kotlin/Boolean?|): R|foo/bar/Command| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public sealed class Message : R|kotlin/Any| {
+        protected constructor(x: R|kotlin/Int|, y: R|kotlin/Int|): R|foo/bar/Message| {
+            super<R|kotlin/Any|>()
+        }
+
+        protected constructor(y: R|kotlin/Int|, x: R|kotlin/Int|, scale: R|kotlin/Long|): R|foo/bar/Message| {
+            super<R|kotlin/Any|>()
+        }
+
+        private constructor(text: R|kotlin/String| = String()): R|foo/bar/Message| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public sealed class Tagged : R|kotlin/Any| {
+        protected constructor(tags: R|kotlin/collections/MutableList<kotlin/String>|, owner: R|foo/bar/UserId|): R|foo/bar/Tagged| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val tags: R|kotlin/collections/MutableList<kotlin/String>| = R|<local>/tags|
+            public get(): R|kotlin/collections/MutableList<kotlin/String>|
+
+        public final val owner: R|foo/bar/UserId| = R|<local>/owner|
+            public get(): R|foo/bar/UserId|
+
+    }
+    public sealed class Exempt : R|kotlin/Any| {
+        @R|kotlinx/library/watchdog/IntentionallyWithoutJvmOverloads|() protected constructor(label: R|kotlin/String| = String()): R|foo/bar/Exempt| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public abstract class Base : R|kotlin/Any| {
+        public constructor(label: R|kotlin/String| = String()): R|foo/bar/Base| {
+            super<R|kotlin/Any|>()
+        }
+
+        protected constructor(id: R|foo/bar/UserId|): R|foo/bar/Base| {
+            this<R|foo/bar/Base|>(String())
+        }
+
+    }

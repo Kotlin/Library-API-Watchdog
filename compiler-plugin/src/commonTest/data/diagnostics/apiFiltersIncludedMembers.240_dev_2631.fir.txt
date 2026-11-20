@@ -102,3 +102,24 @@ FILE: members.kt
             public get(): R|kotlin/enums/EnumEntries<test/api/Levels>|
 
     }
+FILE: sealed.kt
+    package test.sealed
+
+    @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CONSTRUCTOR|) [evaluated = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CONSTRUCTOR|)]) public final annotation class PublicConstructor : R|kotlin/Annotation| {
+        public constructor(): R|test/sealed/PublicConstructor| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public abstract class Abstract : R|kotlin/Any| {
+        @R|test/sealed/PublicConstructor|() public constructor(tags: R|kotlin/collections/MutableList<kotlin/String>|): R|test/sealed/Abstract| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public sealed class Sealed : R|kotlin/Any| {
+        @R|test/sealed/PublicConstructor|() protected constructor(tags: R|kotlin/collections/MutableList<kotlin/String>|): R|test/sealed/Sealed| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
