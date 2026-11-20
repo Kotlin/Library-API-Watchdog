@@ -2,7 +2,9 @@
 
 package kotlinx.library.watchdog.fixer
 
+import java.io.IOException
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 
@@ -31,7 +33,7 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
     }
 
     KotlinFileParser().use { parser ->
-        val copies = ExpectActualCopies(parser) { path -> Paths.get(path).takeIf { Files.isRegularFile(it) }?.let(Files::readString) }
+        val copies = ExpectActualCopies(parser) { path -> Paths.get(path).takeIf { Files.isRegularFile(it) }?.let { SourceFile.read(it).text } }
             .copies(diagnostics, pairs, request::fixes)
         val diagnosticsByFile = (diagnostics + copies).groupBy { it.filePath }
         val fixer = ExemptionFixer(parser)
@@ -45,27 +47,53 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
                 }
                 continue
             }
-            val fixResult = fixer.fix(
+            val source = SourceFile.read(file)
+            fun fix(skipReason: String?): FileFixResult = fixer.fix(
                 filePath,
-                Files.readString(file),
+                source.text,
                 diagnostics,
                 rewriteLocations = request.updateSources,
                 fixes = request::fixes,
+                skipReason = skipReason,
             )
+
+            var fixResult = fix(
+                when {
+                    !source.isValidUtf8 -> "The file isn't valid UTF-8. Save the file as UTF-8"
+                    request.updateSources && !Files.isWritable(file) -> "The file is read-only"
+                    else -> null
+                }
+            )
+            val newText = fixResult.newText
+            if (request.updateSources && newText != null) {
+                try {
+                    Files.writeString(file, newText)
+                    response.modifiedFiles += filePath
+                } catch (e: IOException) {
+                    fixResult = fix("`exemptExistingApi` can't write the file: $e")
+                }
+            }
             response.applied += fixResult.applied
             response.skipped += fixResult.skipped
             response.warnings += fixResult.warnings
-            if (request.updateSources && fixResult.newText != null) {
-                Files.writeString(file, fixResult.newText)
-                response.modifiedFiles += filePath
-            }
         }
 
         val scanner = ExemptionScanner(parser)
         request.sourceFiles.distinct().sorted().forEach { file ->
             if (Files.isRegularFile(file)) {
-                response.exemptions += scanner.scan(file.toString(), Files.readString(file))
+                response.exemptions += scanner.scan(file.toString(), SourceFile.read(file).text)
             }
+        }
+    }
+}
+
+private class SourceFile(val text: String, val isValidUtf8: Boolean) {
+    companion object {
+        fun read(file: Path): SourceFile {
+            val bytes = Files.readAllBytes(file)
+            // The decoder of the compiler, so a malformed byte sequence gives the same count of replacement characters.
+            val text = bytes.inputStream().reader(Charsets.UTF_8).readText()
+            return SourceFile(text, bytes.contentEquals(text.toByteArray(Charsets.UTF_8)))
         }
     }
 }

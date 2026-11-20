@@ -45,6 +45,8 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
     /**
      * @param fixes whether the fixer fixes the named diagnostic. A diagnostic it doesn't fix goes
      *   into [FileFixResult.warnings].
+     * @param skipReason when it isn't null, the fixer doesn't edit the file. Each diagnostic that it
+     *   fixes goes into [FileFixResult.skipped] with this reason.
      */
     fun fix(
         filePath: String,
@@ -52,6 +54,7 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
         diagnostics: List<RecordedDiagnostic>,
         rewriteLocations: Boolean = true,
         fixes: (String) -> Boolean = { true },
+        skipReason: String? = null,
     ): FileFixResult {
         val mapping = LineEndingMapping.of(originalText)
         val text = mapping.normalizedText
@@ -71,6 +74,10 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
 
             if (!fixes(name)) {
                 warnings += PlannedWarning(diagnostic, startOffset)
+                continue
+            }
+            if (skipReason != null) {
+                skip(skipReason)
                 continue
             }
 

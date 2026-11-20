@@ -56,6 +56,56 @@ class ExemptsFixerMainTest {
         assertEquals(emptyList(), response.skipped)
     }
 
+    @Test
+    fun `a file that isn't valid UTF-8 is skipped and the other files are fixed`() {
+        val valid = source("A.kt")
+        val invalidBytes = "package p\n\n// caf".toByteArray() + 0xE9.toByte() + "\npublic open class Legacy\n".toByteArray()
+        val invalid = source("B.kt", invalidBytes)
+        reportOpenClass(valid)
+        reportOpenClass(invalid, "package p\n\n// caf" + REPLACEMENT_CHARACTER + "\npublic open class Legacy\n")
+
+        val response = runFixer(sourceFiles = listOf(valid, invalid))
+
+        assertEquals(EXEMPTED_API, Files.readString(valid))
+        assertContentEquals(invalidBytes, Files.readAllBytes(invalid))
+        assertEquals(listOf(valid.toString()), response.modifiedFiles)
+        val skipped = response.skipped.single()
+        assertEquals(invalid.toString(), skipped.filePath)
+        assertEquals(4, skipped.line)
+        assertContains(skipped.reason, "UTF-8")
+    }
+
+    @Test
+    fun `the exemptions of a file that isn't valid UTF-8 are listed`() {
+        val bytes = "package p\n\nimport kotlinx.library.watchdog.*\n\n// caf".toByteArray() + 0xE9.toByte() +
+                "\n@IntentionallyOpen(reason = ExemptionReason.API_DESIGN)\npublic open class Legacy\n".toByteArray()
+        val file = source("Legacy.kt", bytes)
+
+        val response = runFixer(sourceFiles = listOf(file))
+
+        assertEquals(listOf(AppliedExemption("IntentionallyOpen", file.toString(), 6)), response.exemptions)
+    }
+
+    @Test
+    fun `a read-only file is skipped and the other files are fixed`() {
+        val writable = source("A.kt")
+        val readOnly = source("B.kt")
+        reportOpenClass(writable)
+        reportOpenClass(readOnly)
+        assertTrue(readOnly.toFile().setWritable(false))
+
+        val response = runFixer()
+
+        assertEquals(EXEMPTED_API, Files.readString(writable))
+        assertEquals(API, Files.readString(readOnly))
+        assertEquals(listOf(writable.toString()), response.modifiedFiles)
+        assertEquals(listOf(writable.toString()), response.applied.map { it.filePath })
+        val skipped = response.skipped.single()
+        assertEquals(readOnly.toString(), skipped.filePath)
+        assertEquals(3, skipped.line)
+        assertContains(skipped.reason, "read-only")
+    }
+
     private companion object {
         val BYTE_ORDER_MARK = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
 

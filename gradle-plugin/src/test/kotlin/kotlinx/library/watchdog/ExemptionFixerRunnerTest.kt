@@ -46,6 +46,17 @@ class ExemptionFixerRunnerTest {
     }
 
     @Test
+    fun `a reported error lists the files that the fixer changed`() {
+        val failure = assertFailsWith<GradleException> {
+            runFixer("modifiedFile=/tmp/A.kt\nmodifiedFile=/tmp/B.kt\nerror=first line\\nsecond line\n", exitValue = 1)
+        }
+        assertEquals(
+            "The exempts fixer failed after it changed these files:\n/tmp/A.kt\n/tmp/B.kt\n\nfirst line\nsecond line",
+            failure.message,
+        )
+    }
+
+    @Test
     fun `nonzero exit without an error record fails`() {
         val failure = assertFailsWith<GradleException> {
             runFixer("modifiedFile=/tmp/Api.kt\n", exitValue = 7)
