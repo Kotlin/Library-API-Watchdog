@@ -9,6 +9,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.library.watchdog.Diagnostic.OPEN_API_WITHOUT_SUBCLASS_OPT_IN
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
+import org.jetbrains.kotlin.compiler.plugin.devkit.test.TEST_COMPILER_VERSION
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.pluginUnderTestVersion
 import org.junit.Test
 
@@ -160,6 +161,62 @@ class GradleCompatibilityTest {
         }
 
         project.buildAndFail("compileKotlin").assertErrors(OPEN_API_WITHOUT_SUBCLASS_OPT_IN)
+    }
+
+    @Test
+    fun `a convention plugin in Java configures the reports`() {
+        val project = jvmProject {
+            plugins(Plugin(KOTLIN_JVM_PLUGIN_ID), Plugin("test.conventions"))
+            buildSrc {
+                plugins(Plugin.javaGradle)
+                buildScript(
+                    """
+                        gradlePlugin {
+                            plugins {
+                                create("conventions") {
+                                    id = "test.conventions"
+                                    implementationClass = "test.ConventionPlugin"
+                                }
+                            }
+                        }
+                        dependencies {
+                            implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$TEST_COMPILER_VERSION")
+                            implementation("org.jetbrains.kotlinx:library-api-watchdog-gradle-plugin:$pluginUnderTestVersion")
+                        }
+                    """
+                )
+                javaFile(
+                    "ConventionPlugin",
+                    """
+                        package test;
+
+                        import kotlinx.library.watchdog.WatchdogGradleExtension;
+                        import org.gradle.api.Plugin;
+                        import org.gradle.api.Project;
+
+                        public class ConventionPlugin implements Plugin<Project> {
+                            @Override
+                            public void apply(Project project) {
+                                project.getPluginManager().apply("org.jetbrains.kotlin.library.api-watchdog");
+                                project.getExtensions().configure(
+                                    WatchdogGradleExtension.class,
+                                    watchdog -> watchdog.reports(reports -> reports.getSarif().set(false))
+                                );
+                            }
+                        }
+                    """,
+                )
+            }
+            buildScript("kotlin { explicitApi() }")
+            source("/** An open API. */\npublic open class OpenApi", "OpenApi")
+        }
+        // buildSrc resolves the plugin from the repositories of the root build.
+        project.file("settings.gradle.kts").copyTo(project.file("buildSrc/settings.gradle.kts"))
+
+        project.build("generateApiWatchdogReport")
+
+        assertTrue(project.file("build/reports/api-watchdog/report.html").isFile)
+        assertFalse(project.file("build/reports/api-watchdog/report.sarif").exists())
     }
 
     private companion object {
