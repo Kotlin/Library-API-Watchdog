@@ -5,6 +5,7 @@ import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -94,6 +95,9 @@ public abstract class ApiWatchdogReportTask internal constructor() : DefaultTask
     @get:Inject
     internal abstract val execOperations: ExecOperations
 
+    @get:Inject
+    internal abstract val layout: ProjectLayout
+
     @get:Internal
     internal abstract val updatesSources: Boolean
 
@@ -112,6 +116,7 @@ public abstract class ApiWatchdogReportTask internal constructor() : DefaultTask
                 temporaryDirectory = temporaryDir,
                 diagnosticReports = diagnosticReports.files,
                 sourceFiles = sourceFiles.files,
+                buildDirectory = layout.buildDirectory.get().asFile,
                 fixerArtifact = fixerArtifact,
                 fixerClasspath = fixerClasspath,
                 diagnosticSeverities = diagnosticSeverities.get(),

@@ -17,6 +17,8 @@ whose configured severity is `ERROR`. Each declaration gets the `@Intentionally*
 diagnostic with `ExemptionReason.FOR_BACKWARDS_COMPATIBILITY`. The annotation goes below the KDoc
 and above the other annotations of the declaration. The task adds the imports.
 
+The task doesn't edit a generated file in the build directory, so add its exemptions in the generator.
+
 A diagnostic with the `WARNING` severity stays in the sources. The console prints the count, and
 the [report](./report.md) lists each one. To exempt a check that is a warning, set it to
 `WatchdogSeverity.ERROR` in `apiWatchdog` for the run. [`UNDOCUMENTED_PUBLIC_API`](./checks/undocumented-public-api.md)

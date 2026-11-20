@@ -15,6 +15,7 @@ internal object ExemptionFixerRunner {
         temporaryDirectory: File,
         diagnosticReports: Collection<File>,
         sourceFiles: Collection<File>,
+        buildDirectory: File,
         fixerArtifact: FileCollection,
         fixerClasspath: FileCollection,
         diagnosticSeverities: Map<String, WatchdogSeverity>,
@@ -46,6 +47,7 @@ internal object ExemptionFixerRunner {
                 .forEach { (diagnostic, severity) ->
                     appendLine("diagnosticSeverity=$diagnostic:${severity.name.lowercase()}")
                 }
+            appendLine("buildDirectory=${buildDirectory.absolutePath}")
             appendLine("updateSources=$updateSources")
             appendLine("responseFile=${responseFile.absolutePath}")
         })

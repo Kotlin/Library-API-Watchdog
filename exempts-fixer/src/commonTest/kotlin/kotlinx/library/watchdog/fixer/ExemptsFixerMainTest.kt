@@ -40,6 +40,7 @@ class ExemptsFixerMainTest {
         Files.write(reportFile, reportLines)
         val request = FixerRequest(
             listOf(reportFile), sourceFiles, emptyMap(), updateSources = true, tempDir.resolve("response.txt"),
+            buildDirectory = tempDir.resolve("build"),
         )
         return FixerResponse().also { run(request, it) }
     }
@@ -146,6 +147,24 @@ class ExemptsFixerMainTest {
 
         assertEquals(EXEMPTED_API, Files.readString(file))
         assertEquals(listOf(file.toString()), response.modifiedFiles)
+    }
+
+    @Test
+    fun `a file in the build directory is skipped`() {
+        val generated = source("Generated.kt", directory = "build/generated")
+        val written = source("Api.kt")
+        reportOpenClass(generated)
+        reportOpenClass(written)
+
+        val response = runFixer()
+
+        assertEquals(API, Files.readString(generated))
+        assertEquals(EXEMPTED_API, Files.readString(written))
+        assertEquals(listOf(written.toString()), response.modifiedFiles)
+        val skipped = response.skipped.single()
+        assertEquals(generated.toString(), skipped.filePath)
+        assertEquals(3, skipped.line)
+        assertContains(skipped.reason, "build directory")
     }
 
     private companion object {

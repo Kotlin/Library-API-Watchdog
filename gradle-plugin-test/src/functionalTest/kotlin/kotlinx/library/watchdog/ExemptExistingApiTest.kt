@@ -388,6 +388,31 @@ class ExemptExistingApiTest {
     }
 
     @Test
+    fun `generated sources in the build directory aren't edited`() {
+        val generated = "package test\n\n/** A generated open API. */\npublic open class GeneratedApi\n"
+        val project = jvmProject {
+            buildScript(
+                """
+                    val generateApi = tasks.register("generateApi") {
+                        val output = layout.buildDirectory.dir("generated/api")
+                        outputs.dir(output)
+                        doLast { output.get().file("generated.kt").asFile.writeText("${generated.replace("\n", "\\n")}") }
+                    }
+                    kotlin.sourceSets.getByName("main").kotlin.srcDir(generateApi)
+                """
+            )
+            source(openClass("MainApi"), "mainApi")
+        }
+
+        val result = project.build(EXEMPT_TASK)
+
+        project.assertExempted("src/main/kotlin/test/mainApi.kt", "MainApi")
+        assertEquals(generated, project.file("build/generated/api/generated.kt").readText())
+        result.assertOutputHas("1 backwards-compatibility exemption(s) in 1 file(s). 1 diagnostic(s) need manual attention.")
+        result.assertOutputHas("needs manual attention: `exemptExistingApi` doesn't edit a file in the build directory.")
+    }
+
+    @Test
     fun `unfixable diagnostics are reported for manual attention`() {
         val project = jvmProject { source(unfixableFile, "manual") }
 

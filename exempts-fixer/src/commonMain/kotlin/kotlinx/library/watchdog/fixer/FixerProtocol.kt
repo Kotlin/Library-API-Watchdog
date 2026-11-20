@@ -47,10 +47,15 @@ internal class FixerRequest(
     val diagnosticSeverities: Map<String, String>,
     val updateSources: Boolean,
     val responseFile: Path,
+    /** The fixer doesn't edit a file in this directory, because a build task generates the file. */
+    val buildDirectory: Path? = null,
 ) {
     fun fixes(diagnostic: String): Boolean =
         diagnostic == WatchdogChecks.REDUNDANT_EXEMPTION.name ||
                 (diagnosticSeverities[diagnostic] ?: ERROR_SEVERITY) == ERROR_SEVERITY
+
+    fun isGenerated(file: Path): Boolean =
+        buildDirectory != null && file.toAbsolutePath().normalize().startsWith(buildDirectory.toAbsolutePath().normalize())
 
     companion object {
         const val REPORT_FILE = "reportFile"
@@ -58,6 +63,7 @@ internal class FixerRequest(
         const val DIAGNOSTIC_SEVERITY = "diagnosticSeverity"
         const val UPDATE_SOURCES = "updateSources"
         const val RESPONSE_FILE = "responseFile"
+        const val BUILD_DIRECTORY = "buildDirectory"
         const val ERROR_SEVERITY = "error"
 
         fun parse(file: Path): FixerRequest {
@@ -85,6 +91,7 @@ internal class FixerRequest(
                 },
                 updateSources = single(UPDATE_SOURCES).toBooleanStrict(),
                 responseFile = Paths.get(single(RESPONSE_FILE)),
+                buildDirectory = values[BUILD_DIRECTORY]?.let { Paths.get(single(BUILD_DIRECTORY)) },
             )
         }
     }
