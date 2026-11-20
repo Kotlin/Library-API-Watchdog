@@ -263,7 +263,7 @@ internal class EnclosingExemptionProbes(
                                 context(inner, reporter) { membersNeed(member, ignored, probes, actual) }
                             }
                 }
-                is FirConstructor, is FirNamedFunction, is FirProperty -> {
+                is FirConstructor, is FirNamedFunction, is FirProperty, is FirTypeAlias -> {
                     member.symbol.lazyResolveToPhase(FirResolvePhase.BODY_RESOLVE)
                     probes.any { it.reportsNew(member, ignored, actual) }
                 }
