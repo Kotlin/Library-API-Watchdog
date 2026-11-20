@@ -235,8 +235,8 @@ Renovate skips the compiler-plugin-dev-kit. [Dev kit update](.github/workflows/d
 day at 6:00 Berlin time, or when you run the workflow:
 
 1. The workflow compares the `devkit` entry of the version catalog on `main` with the newest version in the Space
-   repository. When they differ, it commits the newest version to the `devkit-update` branch and opens a pull request
-   as the [Watchdog bot](#watchdog-bot).
+   repository, the highest of the form `MAJOR.MINOR.PATCH-dev-BUILD`. When the newest version is later, it commits
+   that version to the `devkit-update` branch and opens a pull request as the [Watchdog bot](#watchdog-bot).
 2. The workflow runs the compiler plugin tests, the Gradle tests, the artifact list check, and the benchmark check on
    that commit.
 3. When all of them pass, the workflow squash-merges the pull request. When one fails, the pull request stays open.

@@ -1,7 +1,7 @@
 name: Dev kit update
 
 # Every day the workflow compares the `devkit` entry of the version catalog on main with the newest dev kit in the Space
-# repository. When the repository has a different version, the workflow:
+# repository, the highest version of the form MAJOR.MINOR.PATCH-dev-BUILD. When that version is later, the workflow:
 #
 # 1. Commits the version to the update branch and opens a pull request, or updates the open one.
 # 2. Runs every test, the version alignment check, and the benchmark check on the commit.
@@ -52,18 +52,28 @@ jobs:
         id: versions
         run: |
           current="$(sed -nE 's/^devkit = "([^"]+)"$/\1/p' gradle/libs.versions.toml)"
-          latest="$(curl --fail --silent --show-error --retry 3 "$METADATA_URL" \
-            | sed -nE 's|.*<latest>([^<]+)</latest>.*|\1|p')"
+          metadata="$(curl --fail --silent --show-error --retry 3 "$METADATA_URL")"
+          # `<latest>` of the metadata is the last published version, not the highest.
+          latest="$(grep -Eo '<version>[0-9]+\.[0-9]+\.[0-9]+-dev-[0-9]+</version>' <<< "$metadata" \
+            | sed -E 's|</?version>||g' | sort -V | tail -n 1)"
           if [[ -z "$current" ]]; then
             echo 'gradle/libs.versions.toml has no line devkit = "<version>".' >&2
             exit 1
           fi
-          if [[ ! "$latest" =~ ^[0-9A-Za-z.+-]+$ ]]; then
-            echo "The dev kit metadata at $METADATA_URL has no valid latest version. Got '$latest'." >&2
+          if [[ ! "$current" =~ ^[0-9]+\.[0-9]+\.[0-9]+-dev-[0-9]+$ ]]; then
+            echo "The devkit entry of gradle/libs.versions.toml is '$current'. The workflow updates only a version of the form MAJOR.MINOR.PATCH-dev-BUILD." >&2
+            exit 1
+          fi
+          if [[ -z "$latest" ]]; then
+            echo "The dev kit metadata at $METADATA_URL has no version of the form MAJOR.MINOR.PATCH-dev-BUILD." >&2
             exit 1
           fi
           if [[ "$latest" == "$current" ]]; then
             echo "The version catalog has the newest dev kit, $current."
+            exit 0
+          fi
+          if [[ "$(printf '%s\n' "$current" "$latest" | sort -V | tail -n 1)" != "$latest" ]]; then
+            echo "The version catalog has the dev kit $current. The newest dev kit, $latest, isn't later."
             exit 0
           fi
           echo "The version catalog has the dev kit $current. The newest dev kit is $latest."
