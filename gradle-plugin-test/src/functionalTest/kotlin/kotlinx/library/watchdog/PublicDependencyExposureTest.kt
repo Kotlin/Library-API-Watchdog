@@ -5,6 +5,7 @@ package kotlinx.library.watchdog
 import com.autonomousapps.kit.gradle.Dependency.Companion.api
 import com.autonomousapps.kit.gradle.Dependency.Companion.compileOnly
 import com.autonomousapps.kit.gradle.Dependency.Companion.implementation
+import com.autonomousapps.kit.gradle.Plugin
 import kotlinx.library.watchdog.AgpVersion.AGP8
 import kotlinx.library.watchdog.AgpVersion.AGP9
 import kotlinx.library.watchdog.Diagnostic.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY
@@ -14,6 +15,9 @@ import kotlinx.library.watchdog.KmpAndroidTarget.LIBRARY_AGP9
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome.FAILED
 import org.intellij.lang.annotations.Language
+import org.jetbrains.kotlin.compiler.plugin.devkit.test.KotlinPlugins
+import org.jetbrains.kotlin.compiler.plugin.devkit.test.TEST_COMPILER_VERSION
+import org.jetbrains.kotlin.compiler.plugin.devkit.test.pluginUnderTestVersion
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
@@ -537,6 +541,48 @@ class PublicDependencyExposureTest {
     }
 
     @Test
+    fun `test fixtures can expose the main classes and their own API dependencies`() {
+        val project = testFixturesProject(modelConfiguration = "testFixturesApi")
+
+        project.build("compileTestFixturesKotlin").assertNoNonTransitiveExposureReported()
+    }
+
+    @Test
+    fun `public type from implementation dependency is an error in test fixtures`() {
+        val project = testFixturesProject(modelConfiguration = "testFixturesImplementation")
+
+        val result = project.buildAndFail("compileTestFixturesKotlin")
+        result.assertNonTransitiveExposureReported("test.model.ExternalModel")
+        result.assertOutputLacks("publicly exposes `test.Settled`")
+    }
+
+    /** The raw flag turns explicit API mode on in the test fixtures, so the watchdog checks them. */
+    private fun testFixturesProject(modelConfiguration: String): WatchdogBuild = jvmProject {
+        plugins(
+            KotlinPlugins.jvm("$TEST_COMPILER_VERSION"),
+            Plugin("java-test-fixtures"),
+            Plugin(WATCHDOG_PLUGIN_ID, pluginUnderTestVersion),
+        )
+        buildScript(EXPLICIT_API_FLAG)
+        buildScript("""dependencies { "$modelConfiguration"(project(":model")) }""")
+        source(cleanMainFile)
+        source(
+            """
+                /** Sample values for the tests of consumers. */
+                public object Samples {
+                    /** A sample of a main class. */
+                    public fun settled(): Settled = Settled()
+
+                    /** A sample of a dependency class. */
+                    public fun model(): test.model.ExternalModel = test.model.ExternalModel()
+                }
+            """,
+            sourceSet = "testFixtures",
+        )
+        modelSubproject()
+    }
+
+    @Test
     fun `public dependency exposure check is disabled by the module switch`() {
         val project = jvmProject {
             apiWatchdog { publicTypesMustBeTransitiveDependencies = false }
@@ -709,6 +755,8 @@ class PublicDependencyExposureTest {
 }
 
 private const val JVM_AND_JS_TARGETS = "jvm()\njs { nodejs() }"
+
+private const val EXPLICIT_API_FLAG = """kotlin { compilerOptions { freeCompilerArgs.add("-Xexplicit-api=warning") } }"""
 
 private const val EXEMPT_COMPILE_ONLY_SCRIPT =
     "configurations.apiWatchdogExemptNonTransitive { extendsFrom(configurations.compileOnly.get()) }"
