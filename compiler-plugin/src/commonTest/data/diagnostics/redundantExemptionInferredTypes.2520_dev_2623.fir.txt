@@ -1,0 +1,60 @@
+FILE: declarations.kt
+    package foo.bar
+
+    public final fun buffer(): R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>| {
+        ^buffer R|kotlin/collections/mutableListOf|<R|kotlin/Int|>()
+    }
+    public final fun buffers(): R|kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>>| {
+        ^buffers R|kotlin/collections/emptyList|<R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>|>()
+    }
+    public final fun view(): R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/List<kotlin/Int>| {
+        ^view R|kotlin/collections/emptyList|<R|kotlin/Int|>()
+    }
+    internal final fun fill(): R|kotlin/Unit| {
+        lval target: R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>| = R|foo/bar/buffer|()
+        R|<local>/target|.R|SubstitutionOverride<kotlin/collections/MutableList.add: R|kotlin/Boolean|>|(Int(1))
+    }
+    private final val shared: R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>| = R|foo/bar/buffer|()
+        private get(): R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|
+    internal final val computed: R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|
+        internal get(): R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>| {
+            ^ R|foo/bar/buffer|()
+        }
+    internal final val delegated: R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|by R|kotlin/lazy|<R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|>(<L> = lazy@fun <anonymous>(): R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>| <inline=NoInline>  {
+        ^ R|foo/bar/buffer|()
+    }
+    )
+        internal get(): R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>| {
+            ^ D|foo/bar/delegated|.R|kotlin/getValue|<R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|>(Null(null), ::R|foo/bar/delegated|)
+        }
+    internal final fun inferred(): R|kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>>| {
+        ^inferred R|foo/bar/buffers|()
+    }
+    internal final fun inferredView(): R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/List<kotlin/Int>| {
+        ^inferredView R|foo/bar/view|()
+    }
+    internal final class Holder : R|kotlin/Any| {
+        public constructor(): R|foo/bar/Holder| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val items: R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>| = R|foo/bar/buffer|()
+            public get(): R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final typealias Buffer = R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|
+    internal final fun aliased(): R|{foo/bar/Buffer=} @R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>| {
+        ^aliased R|kotlin/collections/mutableListOf|<R|kotlin/Int|>()
+    }
+    public final fun <T> definitelyNotNull(value: R|T & Any|): R|kotlin/Unit| {
+    }
+FILE: uses.kt
+    package foo.bar
+
+    private final val elsewhere: R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>| = R|foo/bar/buffer|()
+        private get(): R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|
+    internal final fun fillElsewhere(): R|kotlin/Unit| {
+        lval target: R|kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>>| = R|foo/bar/buffers|()
+        lval copy: R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/List<kotlin/Int>| = R|foo/bar/view|()
+        lval alias: R|{foo/bar/Buffer=} @R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>| = R|foo/bar/aliased|()
+    }

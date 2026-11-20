@@ -54,6 +54,7 @@ import org.jetbrains.kotlin.fir.symbols.impl.FirTypeAliasSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirValueParameterSymbol
 import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
 import org.jetbrains.kotlin.fir.types.FirFunctionTypeRef
+import org.jetbrains.kotlin.fir.types.FirIntersectionTypeRef
 import org.jetbrains.kotlin.fir.types.FirResolvedTypeRef
 import org.jetbrains.kotlin.fir.types.FirTypeProjectionWithVariance
 import org.jetbrains.kotlin.fir.types.FirTypeRef
@@ -742,22 +743,26 @@ private class ExemptionCandidateCollector(
     }
 
     /**
-     * `vararg x: Boolean` resolves to `BooleanArray` without a type argument, so the cone type has no
-     * annotations of the element type. The written type reference still has them.
+     * A source declaration gives the annotations of its written type reference only. Its cone type also
+     * has the annotations of the declaration that an inferred type comes from, and of an expanded type alias.
      *
      * All annotations in [typeRef] get one position, because one type rarely has the same exemption twice.
      */
     fun types(typeRef: FirTypeRef?, group: Any? = null, position: String) {
-        typeRef?.coneTypeOrNull?.forEachType { type ->
-            for (annotation in type.customAnnotations) {
-                add(annotation, "typeUsage", rank = 2, group = group, position = "$position/type")
+        if (fromLibrary) {
+            typeRef?.coneTypeOrNull?.forEachType { type ->
+                for (annotation in type.customAnnotations) {
+                    add(annotation, "typeUsage", rank = 2, group = group, position = "$position/type")
+                }
             }
         }
         writtenTypes(typeRef, group, "$position/type")
     }
 
     private fun writtenTypes(typeRef: FirTypeRef?, group: Any?, position: String) {
-        val written = (typeRef as? FirResolvedTypeRef)?.delegatedTypeRef ?: typeRef ?: return
+        // The type of a `vararg` parameter delegates to the resolved element type. An inferred type has no delegate.
+        var written = typeRef ?: return
+        while (written is FirResolvedTypeRef) written = written.delegatedTypeRef ?: return
         for (annotation in written.annotations) {
             add(annotation, "typeUsage", rank = 2, group = group, position = position)
         }
@@ -772,6 +777,10 @@ private class ExemptionCandidateCollector(
                 written.contextParameterTypeRefs.forEach { writtenTypes(it, group, position) }
                 written.parameters.forEach { writtenTypes(it.returnTypeRef, group, position) }
                 writtenTypes(written.returnTypeRef, group, position)
+            }
+            is FirIntersectionTypeRef -> {
+                writtenTypes(written.leftType, group, position)
+                writtenTypes(written.rightType, group, position)
             }
             else -> {}
         }
