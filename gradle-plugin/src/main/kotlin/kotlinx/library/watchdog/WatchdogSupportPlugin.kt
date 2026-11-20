@@ -27,6 +27,7 @@ import org.gradle.api.attributes.java.TargetJvmEnvironment.TARGET_JVM_ENVIRONMEN
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.compiler.plugin.devkit.DevKitSupportPlugin
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
@@ -35,6 +36,8 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinBaseExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinCommonCompilerOptions
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
+import org.jetbrains.kotlin.gradle.plugin.FilesOptionKind
+import org.jetbrains.kotlin.gradle.plugin.FilesSubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
@@ -344,6 +347,32 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         // lazy. The compiler plugin ignores a blank value.
         val checkDependencyExposure = extension.publicTypesMustBeTransitiveDependencies.map { it && !collect.get() }
         val compilesForAndroid = compileDependencies.map { kotlinCompilation.compilesForAndroid(it) }
+        // The compiler plugin doesn't have an option for exempt dependencies, so they go into the
+        // transitive paths.
+        val transitiveFiles = files(providers.provider {
+            if (!checkDependencyExposure.get()) return@provider emptyList<FileCollection>()
+            val android = compilesForAndroid.get()
+            listOf(
+                dependencyFiles(transitiveDependencies.get(), android),
+                dependencyFiles(exemptNonTransitiveDependencies.get(), android),
+            )
+        })
+        val declarations = providers.provider {
+            if (!checkDependencyExposure.get()) return@provider emptyList<DeclaredArtifact>()
+            declaredArtifacts(compileDependencies.get(), compilesForAndroid.get())
+        }
+        // A path option isn't a task input, because a path is different in each checkout directory. The
+        // compile classpath is an input of the task already.
+        kotlinCompilation.compileTaskProvider.configure { task ->
+            task.inputs.property("apiWatchdog.checkDependencyExposure", checkDependencyExposure)
+            task.inputs.files(transitiveFiles)
+                .withPropertyName("apiWatchdog.transitiveDependencies")
+                .withNormalizer(ClasspathNormalizer::class.java)
+            task.inputs.property(
+                "apiWatchdog.dependencyDeclarations",
+                declarations.map { artifacts -> artifacts.map { "${it.component}\t${it.declaration}" } },
+            )
+        }
         return providers.provider {
             buildList {
                 extension.diagnosticSeverities.forEach { (diagnostic, severity) ->
@@ -404,36 +433,20 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 )
                 add(SubpluginOption("ignoreDeprecatedApi", lazy { extension.ignoreDeprecatedApi.get().toString() }))
                 add(
-                    SubpluginOption(
-                        "compileDependencyPaths",
-                        lazy {
-                            if (!checkDependencyExposure.get()) return@lazy ""
-                            escapeCommas(dependencyFiles(compileDependencies.get(), compilesForAndroid.get()).asPath)
-                        },
-                    ),
-                )
-                // The compiler plugin doesn't have an option for exempt dependencies, so they go into the
-                // transitive paths.
-                add(
-                    SubpluginOption(
-                        "transitiveDependencyPaths",
-                        lazy {
-                            if (!checkDependencyExposure.get()) return@lazy ""
-                            val android = compilesForAndroid.get()
-                            val files = dependencyFiles(transitiveDependencies.get(), android).files +
-                                    dependencyFiles(exemptNonTransitiveDependencies.get(), android).files
-                            escapeCommas(files.joinToString(File.pathSeparator, transform = File::getPath))
-                        },
-                    ),
+                    pathsOption("compileDependencyPaths") {
+                        if (!checkDependencyExposure.get()) return@pathsOption ""
+                        dependencyFiles(compileDependencies.get(), compilesForAndroid.get()).asPath
+                    },
                 )
                 add(
-                    SubpluginOption(
-                        "dependencyDeclarations",
-                        lazy {
-                            if (!checkDependencyExposure.get()) return@lazy ""
-                            escapeCommas(dependencyDeclarations(compileDependencies.get(), compilesForAndroid.get()))
-                        },
-                    ),
+                    pathsOption("transitiveDependencyPaths") {
+                        transitiveFiles.files.joinToString(File.pathSeparator, transform = File::getPath)
+                    },
+                )
+                add(
+                    pathsOption("dependencyDeclarations") {
+                        declarations.get().joinToString("\t") { "${it.path}\t${it.declaration}" }
+                    },
                 )
                 add(
                     SubpluginOption(
@@ -452,11 +465,10 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
     }
 
     /**
-     * The build script declaration of each artifact of [configuration], as tab-separated
-     * `path`, `configuration`, `notation` triples. The declaration is the direct dependency with
-     * the shortest resolution path to the component of the artifact.
+     * The build script declaration of each artifact of [configuration]. The declaration is the direct
+     * dependency with the shortest resolution path to the component of the artifact.
      */
-    private fun dependencyDeclarations(configuration: Configuration, android: Boolean): String {
+    private fun declaredArtifacts(configuration: Configuration, android: Boolean): List<DeclaredArtifact> {
         val declarations = HashMap<ComponentIdentifier, String>()
         val queue = ArrayDeque<Pair<ResolvedComponentResult, String>>()
         for (dependency in configuration.incoming.resolutionResult.root.dependencies) {
@@ -471,12 +483,14 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 if (dependency is ResolvedDependencyResult) queue.add(dependency.selected to declaration)
             }
         }
-        return dependencyArtifacts(configuration, android).artifacts.asSequence()
-            .mapNotNull { artifact ->
-                declarations[artifact.id.componentIdentifier]?.let { "${artifact.file.path}\t$it" }
-            }
-            .joinToString("\t")
+        return dependencyArtifacts(configuration, android).artifacts.mapNotNull { artifact ->
+            val component = artifact.id.componentIdentifier
+            declarations[component]?.let { DeclaredArtifact(artifact.file.path, component.displayName, it) }
+        }
     }
+
+    /** [declaration] is a tab-separated configuration name and notation. */
+    private class DeclaredArtifact(val path: String, val component: String, val declaration: String)
 
     /** The declaration of [requested] as a tab-separated configuration name and notation. */
     private fun declarationOf(requested: ComponentSelector, configuration: Configuration): String? {
@@ -724,6 +738,10 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
 
         /** A comma splits a `-P` compiler argument. The compiler plugin restores the value. */
         private fun escapeCommas(value: String): String = value.replace("%", "%25").replace(",", "%2C")
+
+        /** KGP doesn't add a [FilesSubpluginOption] to the task inputs. */
+        private fun pathsOption(key: String, paths: () -> String): SubpluginOption =
+            FilesSubpluginOption(key, emptyList(), FilesOptionKind.INTERNAL, lazy { escapeCommas(paths()) })
 
         private fun Project.kotlinPluginVersion(): String =
             plugins.withType(KotlinBasePlugin::class.java)

@@ -2,12 +2,16 @@
 
 package kotlinx.library.watchdog
 
+import com.autonomousapps.kit.gradle.Dependency.Companion.api
 import com.autonomousapps.kit.gradle.Plugin
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.library.watchdog.Diagnostic.OPEN_API_WITHOUT_SUBCLASS_OPT_IN
+import kotlinx.library.watchdog.Diagnostic.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY
+import org.gradle.testkit.runner.TaskOutcome.FAILED
+import org.gradle.testkit.runner.TaskOutcome.FROM_CACHE
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.TEST_COMPILER_VERSION
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.pluginUnderTestVersion
@@ -162,6 +166,62 @@ class GradleCompatibilityTest {
         }
 
         project.buildAndFail("compileKotlin").assertErrors(OPEN_API_WITHOUT_SUBCLASS_OPT_IN)
+    }
+
+    @Test
+    fun `compile task is cached for a checkout in another directory`() {
+        val project = jvmProject {
+            consumerSource()
+            dependencies(api(":model"))
+            modelSubproject()
+        }
+        project.useLocalBuildCache()
+        val relocated = project.copyTo("${project.rootDir.name}-relocated")
+
+        project.build("compileKotlin", "--build-cache")
+
+        relocated.build("compileKotlin", "--build-cache").assertTaskOutcome(":compileKotlin", FROM_CACHE)
+    }
+
+    @Test
+    fun `multiplatform compile tasks are cached for a checkout in another directory`() {
+        val project = kmpProject("jvm()\njs { nodejs() }") {
+            consumerSource()
+            dependencies(api(":model"))
+            modelSubproject()
+        }
+        project.useLocalBuildCache()
+        val relocated = project.copyTo("${project.rootDir.name}-relocated")
+        val tasks = arrayOf("compileKotlinJvm", "compileKotlinJs", "compileCommonMainKotlinMetadata")
+
+        project.build(*tasks, "--build-cache")
+
+        val result = relocated.build(*tasks, "--build-cache")
+        tasks.forEach { result.assertTaskOutcome(":$it", FROM_CACHE) }
+    }
+
+    @Test
+    fun `cached compile task isn't reused after a dependency leaves the API`() {
+        val project = jvmProject {
+            consumerSource()
+            dependencies(api(":model"))
+            modelSubproject()
+        }
+        project.useLocalBuildCache()
+        project.build("compileKotlin", "--build-cache")
+        val script = project.file("build.gradle.kts")
+        script.writeText(script.readText().replace("api(project(\":model\"))", "implementation(project(\":model\"))"))
+
+        val result = project.buildAndFail("clean", "compileKotlin", "--build-cache")
+
+        result.assertTaskOutcome(":compileKotlin", FAILED)
+        result.assertErrors(PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY)
+    }
+
+    /** The cache is outside the build, so a copy of the build in another directory has the same cache. */
+    private fun WatchdogBuild.useLocalBuildCache() {
+        val cache = rootDir.resolveSibling("${rootDir.name}-build-cache").invariantSeparatorsPath
+        file("settings.gradle.kts").appendText("\nbuildCache { local { directory = file(\"$cache\") } }\n")
     }
 
     @Test
