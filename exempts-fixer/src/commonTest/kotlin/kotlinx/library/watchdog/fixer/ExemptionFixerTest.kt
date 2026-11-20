@@ -2078,6 +2078,24 @@ class ExemptionFixerTest {
     }
 
     @Test
+    fun `placeholder KDoc of an inline constructor property goes before its annotation`() {
+        val text = "package test\n\npublic class A(public val x: MutableList<Int>)\n"
+
+        val result = fix(
+            text,
+            diagnostic("UNDOCUMENTED_PUBLIC_API", text, "x: MutableList"),
+            diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "x: MutableList"),
+        )
+
+        assertContains(
+            result.newText!!,
+            "public class A($PLACEHOLDER_KDOC " +
+                    "@IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY) " +
+                    "public val x: MutableList<Int>)\n",
+        )
+    }
+
+    @Test
     fun `a removed annotation keeps the import that a KDoc link uses`() {
         val text = """
             package test
