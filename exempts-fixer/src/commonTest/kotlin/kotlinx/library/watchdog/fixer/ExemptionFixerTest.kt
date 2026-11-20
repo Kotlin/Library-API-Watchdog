@@ -2033,6 +2033,26 @@ class ExemptionFixerTest {
         )
     }
 
+    @Test
+    fun `a trailing comment stays on the line of the package or of the last import`() {
+        val declaration = "public data class Point(val x: Int)\n"
+        val added = "import kotlinx.library.watchdog.ExemptionReason\n" +
+                "import kotlinx.library.watchdog.IntentionallyDataClass\n\n" +
+                "@IntentionallyDataClass(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n"
+        for (header in listOf(
+            "package p // The package\n\n",
+            "package p /* The package */\n\n",
+            "package p\n\nimport kotlin.math.abs // The import\n",
+        )) {
+            val separator = if ("import" in header) "\n" else ""
+            val text = header + separator + declaration
+
+            val result = fix(text, diagnostic("DATA_CLASS_PUBLIC_API", text, "Point"))
+
+            assertEquals(header + added + declaration, result.newText)
+        }
+    }
+
     private companion object {
         const val FILE_PATH = "/project/src/main/kotlin/com/example/Sample.kt"
         const val PLACEHOLDER_KDOC = "/** TODO: Document this declaration */"

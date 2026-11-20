@@ -1,5 +1,9 @@
 package kotlinx.library.watchdog.fixer
 
+import com.intellij.psi.PsiComment
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtImportDirective
 
@@ -57,13 +61,13 @@ internal class ImportResolver(private val ktFile: KtFile) {
         if (importsToAdd.isNotEmpty()) {
             val importLines = importsToAdd.joinToString("\n") { "import $it" }
             edits += when {
-                remaining.isNotEmpty() -> TextEdit(remaining.last().textRange.endOffset, "\n$importLines", EditOrder.IMPORT)
+                remaining.isNotEmpty() -> TextEdit(remaining.last().endWithTrailingComment(), "\n$importLines", EditOrder.IMPORT)
                 // The insertion at the offset of the removal goes in front of it.
                 unused.isNotEmpty() -> TextEdit(unused.first().textRange.startOffset, "$importLines\n", EditOrder.IMPORT)
                 else -> {
                     val packageDirective = ktFile.packageDirective?.takeIf { it.textLength > 0 }
                     if (packageDirective != null) {
-                        TextEdit(packageDirective.textRange.endOffset, "\n\n$importLines", EditOrder.IMPORT)
+                        TextEdit(packageDirective.endWithTrailingComment(), "\n\n$importLines", EditOrder.IMPORT)
                     } else {
                         val offset = ktFile.declarations.firstOrNull()?.textRange?.startOffset ?: 0
                         TextEdit(offset, "$importLines\n\n", EditOrder.IMPORT)
@@ -72,6 +76,17 @@ internal class ImportResolver(private val ktFile: KtFile) {
             }
         }
         return edits
+    }
+
+    private fun PsiElement.endWithTrailingComment(): Int {
+        var end = textRange.endOffset
+        var next = PsiTreeUtil.nextLeaf(this)
+        // An empty import list follows the package directive.
+        while (next != null && (next.textLength == 0 || (next is PsiWhiteSpace || next is PsiComment) && '\n' !in next.text)) {
+            if (next is PsiComment) end = next.textRange.endOffset
+            next = PsiTreeUtil.nextLeaf(next)
+        }
+        return end
     }
 
     private fun String.lineEndAfter(offset: Int): Int = indexOf('\n', offset).let { if (it < 0) length else it + 1 }
