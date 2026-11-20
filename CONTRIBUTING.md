@@ -108,7 +108,7 @@ each Maven Central module with a list in the `artifacts` directory of its build:
 `plugin-annotations`. `./gradlew checkArtifacts` fails when a publication doesn't match its list. The
 [artifact lists](.github/workflows/artifact-lists.yml) workflow runs the task.
 
-After a change of a publication, run `./gradlew dumpArtifacts` and commit the lists. A change of `kotlinCliMin` in the
+After a change of a publication, run `./gradlew dumpArtifacts` and commit the lists. A change of `kotlin` in the
 version catalog is such a change, because the lists of the compiler plugin and the fixer have that version in an
 artifact name, for example `-k240`. `dumpArtifacts` and `checkArtifacts` fail in the same Gradle invocation, so run
 them separately.
