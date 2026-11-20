@@ -4,6 +4,7 @@ import java.io.File
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -31,6 +32,10 @@ public abstract class AggregateApiWatchdogReportsTask internal constructor() : D
     internal val projectDirectoryPrefixes: MapProperty<String, String> =
         project.objects.mapProperty(String::class.java, String::class.java).convention(emptyMap())
 
+    @get:Input
+    internal val unmatchedCoordinates: ListProperty<String> =
+        project.objects.listProperty(String::class.java).convention(emptyList())
+
     /**
      * The IDE project of the build root. Without it, the HTML report has no **Open in IDE** buttons. The task finds the
      * running IDEs for the buttons when it runs.
@@ -54,6 +59,12 @@ public abstract class AggregateApiWatchdogReportsTask internal constructor() : D
 
     @TaskAction
     internal fun generateReport() {
+        unmatchedCoordinates.get().forEach { coordinates ->
+            logger.warn(
+                "apiWatchdogReports(\"$coordinates\") doesn't match a project of an included build, " +
+                    "so the aggregate reports don't have it. Use the group and the name of the project."
+            )
+        }
         val prefixes = projectDirectoryPrefixes.getOrElse(emptyMap())
         val reports = reportDataFiles.files
             .sortedBy { it.absolutePath }

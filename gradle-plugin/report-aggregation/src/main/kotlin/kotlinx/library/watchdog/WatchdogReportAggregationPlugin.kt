@@ -3,7 +3,9 @@ package kotlinx.library.watchdog
 import java.io.File
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.result.UnresolvedDependencyResult
 import org.gradle.api.attributes.Category
 import org.gradle.api.attributes.Usage
 
@@ -76,6 +78,13 @@ public class WatchdogReportAggregationPlugin : Plugin<Project> {
                         ?: return@mapNotNull null
                     project.buildTreePath to File(directory).relativeToOrSelf(rootDirectory).invariantSeparatorsPath
                 }.toMap()
+            })
+            // Composite substitution gives a project selector to the coordinates of an included project.
+            task.unmatchedCoordinates.set(reportFiles.flatMap { it.incoming.resolutionResult.rootComponent }.map { root ->
+                root.dependencies.filterIsInstance<UnresolvedDependencyResult>()
+                    .mapNotNull { it.attempted as? ModuleComponentSelector }
+                    .map { "${it.group}:${it.module}" }
+                    .distinct()
             })
             task.reports.html.convention(true)
             task.ideLinkSetup.set(ApiWatchdogHtmlReport.ideLinkSetup(target.providers, task.reports.html))

@@ -371,11 +371,45 @@ class IncludedBuildReportsTest {
         result.assertTaskOutcome(":tools:kotlin:compileKotlin", null)
         result.assertTaskOutcome(":tools:generateApiWatchdogReport", null)
         result.assertTaskOutcome(":tools:kotlin:generateApiWatchdogReport", null)
+        result.assertOutputLacks("doesn't match a project of an included build")
         val html = project.file("build/reports/api-watchdog/aggregate-report.html").readText()
         assertContains(html, "Aggregate report for 0 projects")
         assertFalse(html.contains("ToolApi"), html)
         val sarif = project.file("build/reports/api-watchdog/aggregate-report.sarif").readText()
         assertContains(sarif, "\"results\": []")
+    }
+
+    @Test
+    fun `coordinates that match no included project give a warning`() {
+        val included = jvmProject {
+            buildScript("group = \"sample.included\"")
+            source("/** An included API. */\npublic open class IncludedApi", "Api")
+        }
+        val project = aggregateProject {
+            buildScript(
+                """
+                    dependencies {
+                        apiWatchdogReports("sample.included:the-project")
+                        apiWatchdogReports("sample.included:the-projec")
+                    }
+                """
+            )
+        }
+        included.rootDir.copyRecursively(project.file("components"))
+        project.file("settings.gradle.kts").appendText("\nincludeBuild(\"components\") { name = \"included-api\" }\n")
+        val arguments = arrayOf("aggregateApiWatchdogReports", *PROJECT_ISOLATION)
+        val warning = "apiWatchdogReports(\"sample.included:the-projec\") doesn't match a project of an included build"
+
+        val result = project.build(*arguments)
+
+        result.assertOutputHas("Configuration cache entry stored.")
+        result.assertOutputHas(warning)
+        result.assertOutputLacks("apiWatchdogReports(\"sample.included:the-project\")")
+        val html = project.file("build/reports/api-watchdog/aggregate-report.html").readText()
+        assertContains(html, "Aggregate report for 1 project")
+        val cached = project.build(*arguments)
+        cached.assertOutputHas("Configuration cache entry reused.")
+        cached.assertOutputHas(warning)
     }
 
     @Test
