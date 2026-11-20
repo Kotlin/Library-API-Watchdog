@@ -5,6 +5,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.result.ComponentSelectionCause
 import org.gradle.api.artifacts.result.UnresolvedDependencyResult
 import org.gradle.api.attributes.Category
 import org.gradle.api.attributes.Usage
@@ -79,10 +80,12 @@ public class WatchdogReportAggregationPlugin : Plugin<Project> {
                     project.buildTreePath to File(directory).relativeToOrSelf(rootDirectory).invariantSeparatorsPath
                 }.toMap()
             })
-            // Composite substitution gives a project selector to the coordinates of an included project.
+            // The reason has `COMPOSITE_BUILD` for the coordinates of an included project. Before Gradle 9.8.0,
+            // `attempted` is the module selector for these coordinates too.
             task.unmatchedCoordinates.set(reportFiles.flatMap { it.incoming.resolutionResult.rootComponent }.map { root ->
                 root.dependencies.filterIsInstance<UnresolvedDependencyResult>()
-                    .mapNotNull { it.attempted as? ModuleComponentSelector }
+                    .filter { result -> result.attemptedReason.descriptions.none { it.cause == ComponentSelectionCause.COMPOSITE_BUILD } }
+                    .mapNotNull { it.requested as? ModuleComponentSelector }
                     .map { "${it.group}:${it.module}" }
                     .distinct()
             })

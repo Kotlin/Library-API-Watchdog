@@ -2,12 +2,14 @@
 
 package kotlinx.library.watchdog
 
+import com.autonomousapps.kit.GradleBuilder
 import com.autonomousapps.kit.gradle.Plugin
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import org.gradle.testkit.runner.TaskOutcome.FAILED
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
+import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.pluginUnderTestVersion
 import org.junit.Test
 
@@ -342,7 +344,14 @@ class IncludedBuildReportsTest {
     }
 
     @Test
-    fun `selected included projects without the watchdog produce an empty aggregate`() {
+    fun `selected included projects without the watchdog produce an empty aggregate`() =
+        includedProjectsWithoutTheWatchdogCase(GradleVersion.current())
+
+    @Test
+    fun `selected included projects without the watchdog produce an empty aggregate on the Gradle of AGP 8`() =
+        includedProjectsWithoutTheWatchdogCase(AgpVersion.AGP8.gradleVersion)
+
+    private fun includedProjectsWithoutTheWatchdogCase(gradle: GradleVersion) {
         val included = jvmProject {
             plugins(Plugin("base"))
             buildScript("group = \"sample.tools\"")
@@ -365,7 +374,7 @@ class IncludedBuildReportsTest {
         included.rootDir.copyRecursively(project.file("components"))
         project.file("settings.gradle.kts").appendText("\nincludeBuild(\"components\") { name = \"tools\" }\n")
 
-        val result = project.build("aggregateApiWatchdogReports", *PROJECT_ISOLATION)
+        val result = GradleBuilder.build(gradle, project.rootDir, "aggregateApiWatchdogReports", *PROJECT_ISOLATION)
 
         result.assertTaskOutcome(":aggregateApiWatchdogReports", SUCCESS)
         result.assertTaskOutcome(":tools:kotlin:compileKotlin", null)
@@ -380,7 +389,13 @@ class IncludedBuildReportsTest {
     }
 
     @Test
-    fun `coordinates that match no included project give a warning`() {
+    fun `coordinates that match no included project give a warning`() = unmatchedCoordinatesCase(GradleVersion.current())
+
+    @Test
+    fun `coordinates that match no included project give a warning on the Gradle of AGP 8`() =
+        unmatchedCoordinatesCase(AgpVersion.AGP8.gradleVersion)
+
+    private fun unmatchedCoordinatesCase(gradle: GradleVersion) {
         val included = jvmProject {
             buildScript("group = \"sample.included\"")
             source("/** An included API. */\npublic open class IncludedApi", "Api")
@@ -400,14 +415,14 @@ class IncludedBuildReportsTest {
         val arguments = arrayOf("aggregateApiWatchdogReports", *PROJECT_ISOLATION)
         val warning = "apiWatchdogReports(\"sample.included:the-projec\") doesn't match a project of an included build"
 
-        val result = project.build(*arguments)
+        val result = GradleBuilder.build(gradle, project.rootDir, *arguments)
 
         result.assertOutputHas("Configuration cache entry stored.")
         result.assertOutputHas(warning)
         result.assertOutputLacks("apiWatchdogReports(\"sample.included:the-project\")")
         val html = project.file("build/reports/api-watchdog/aggregate-report.html").readText()
         assertContains(html, "Aggregate report for 1 project")
-        val cached = project.build(*arguments)
+        val cached = GradleBuilder.build(gradle, project.rootDir, *arguments)
         cached.assertOutputHas("Configuration cache entry reused.")
         cached.assertOutputHas(warning)
     }
