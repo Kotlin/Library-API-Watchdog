@@ -1,0 +1,64 @@
+Module: common
+FILE: common.kt
+    package foo.bar
+
+    @R|kotlinx/library/watchdog/InternalAnnotationMarker|() @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|) [evaluated = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|)]) public final annotation class LibInternal : R|kotlin/Annotation| {
+        public constructor(): R|foo/bar/LibInternal| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    @R|foo/bar/LibInternal|() public open class HiddenBase : R|kotlin/Any| {
+        public constructor(): R|foo/bar/HiddenBase| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    @R|foo/bar/LibInternal|() public abstract interface HiddenContract : R|kotlin/Any| {
+    }
+    public abstract interface Contract : R|kotlin/Any| {
+    }
+    public final expect class Client : R|kotlin/Any| {
+    }
+    public final expect class Service : R|foo/bar/HiddenContract| {
+    }
+    public final expect class Plain : R|foo/bar/Contract| {
+    }
+    public final expect class Exempt : R|kotlin/Any| {
+    }
+    public final expect class ExemptSupertype : R|kotlin/Any| {
+    }
+Module: jvm
+FILE: jvm.kt
+    package foo.bar
+
+    public final actual class Client : R|foo/bar/HiddenBase| {
+        public constructor(): R|foo/bar/Client| {
+            super<R|foo/bar/HiddenBase|>()
+        }
+
+    }
+    public final actual class Service : R|foo/bar/HiddenBase|, R|foo/bar/HiddenContract| {
+        public constructor(): R|foo/bar/Service| {
+            super<R|foo/bar/HiddenBase|>()
+        }
+
+    }
+    public final actual class Plain : R|foo/bar/Contract| {
+        public constructor(): R|foo/bar/Plain| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final actual class Exempt : R|foo/bar/HiddenBase| {
+        public constructor(): R|foo/bar/Exempt| {
+            super<R|foo/bar/HiddenBase|>()
+        }
+
+    }
+    public final actual class ExemptSupertype : R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/HiddenBase| {
+        public constructor(): R|foo/bar/ExemptSupertype| {
+            super<R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/HiddenBase|>()
+        }
+
+    }
