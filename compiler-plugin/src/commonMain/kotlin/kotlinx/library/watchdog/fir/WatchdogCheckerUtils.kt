@@ -407,6 +407,10 @@ internal fun FirBasedSymbol<*>.apiAnnotations(): List<FirAnnotation> =
 /** Valid only for a declaration that passed [isWatchedPublicApi]. */
 internal fun FirMemberDeclaration.isPublishedApiOnly(): Boolean = !effectiveVisibility.publicApi
 
+/** Valid only for a property that passed [isWatchedPublicApi]. */
+internal fun FirProperty.hasApiAccessor(accessor: FirPropertyAccessor?): Boolean =
+    accessor != null && (accessor.visibility == visibility || accessor.effectiveVisibility.publicApi)
+
 /** `isInline` covers the legacy `inline class`. */
 internal fun FirClassSymbol<*>.isValueClass(): Boolean =
     resolvedStatus.let { it.isValue || it.isInline }
@@ -547,7 +551,8 @@ internal fun FirCallableDeclaration.isHiddenFromJavaWithJvmSynthetic(): Boolean 
         return hasFieldAnnotation(jvmSynthetic)
     }
     return hasAccessorAnnotation(getter, AnnotationUseSiteTarget.PROPERTY_GETTER, jvmSynthetic) &&
-            (!isVar || hasAccessorAnnotation(setter, AnnotationUseSiteTarget.PROPERTY_SETTER, jvmSynthetic))
+            (!hasApiAccessor(setter) ||
+                    hasAccessorAnnotation(setter, AnnotationUseSiteTarget.PROPERTY_SETTER, jvmSynthetic))
 }
 
 /** Resolution moves the annotation to the backing field, so both carriers count. */
