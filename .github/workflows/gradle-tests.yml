@@ -19,6 +19,8 @@ on:
       - 'library.properties'
       - 'gradle/**'
       - 'gradlew'
+      - 'assets/logo.svg'
+      - 'scripts/log-memory.sh'
       - '.github/workflows/gradle-tests.yml'
   workflow_call:
     inputs:

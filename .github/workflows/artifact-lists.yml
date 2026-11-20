@@ -10,7 +10,7 @@ on:
       - '**/artifacts/**'
       - 'build-logic/**'
       - 'build-logic-settings/**'
-      - 'gradle.properties'
+      - '**/gradle.properties'
       - 'library.properties'
       - 'gradle/**'
       - 'gradlew'
