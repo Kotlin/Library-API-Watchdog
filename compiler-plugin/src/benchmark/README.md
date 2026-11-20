@@ -187,14 +187,15 @@ After changing the templates, verify the corpus still exercises every benchmark-
 ./gradlew :library-api-watchdog-compiler-plugin:benchmarkCorpusAudit
 ```
 
-It compiles the corpus with everything enabled and prints how often each diagnostic fired.
+It compiles the corpus with everything enabled and prints how often each diagnostic fired. It fails
+when the corpus doesn't trigger a diagnostic that can be a warning.
 
 ## Adding a checker
 
 For a checker that can safely report warnings, add a `CheckerSubject` to `CheckerSubjects`, the
-checker name to the `@Param` lists of both benchmarks, and a triggering (or at least scannable)
-shape to a corpus template, then run `benchmarkCorpusAudit`. An always-error diagnostic gets an
-isolated-only subject, no whole-compilation mode, and a corpus shape only under its exemption.
+checker name to the `@Param` lists of both benchmarks, and a triggering shape to a corpus
+template, then run `benchmarkCorpusAudit`. An always-error diagnostic gets an isolated-only
+subject, no whole-compilation mode, and a corpus shape only under its exemption.
 The new checker is a new metric of the baseline check until the baseline is recorded again.
 
 ## Caveats

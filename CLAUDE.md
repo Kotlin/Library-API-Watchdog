@@ -53,10 +53,10 @@ npm run build                       # the site build, fails on a broken link or 
   repository, between the `Pre-publish` and `Post-publish` workflows. Space gets development versions only. RELEASE.md
   has the process.
 - The `artifacts/` lists of the root build and `plugin-annotations` hold the published files of the Maven Central
-  modules. After a change of a publication, run `./gradlew dumpArtifacts` and commit the lists. A change of
-  `kotlinCliMin` is such a change, because the lists of the compiler plugin and the fixer have that version in an
-  artifact name (`-k240`). The Gradle plugin and the report aggregation plugin go to the Gradle Plugin Portal only, so
-  they have no list, and the root `publishAllPublicationsToBuildRepository` task leaves them out.
+  modules. After a change of a publication, run `./gradlew dumpArtifacts` and commit the lists. A change of the
+  `kotlin` version of the catalog is such a change, because the lists of the compiler plugin and the fixer have that
+  version in an artifact name (`-k240`). The Gradle plugin and the report aggregation plugin go to the Gradle Plugin
+  Portal only, so they have no list, and the root `publishAllPublicationsToBuildRepository` task leaves them out.
 - `library.properties` holds `group` and `version`, not `gradle.properties`, because an included build doesn't read
   the root `gradle.properties`. The `devkit` settings plugin in `build-logic-settings` sets both in every build. The dev
   kit version is the `devkit` entry of the version catalog. The daily `Dev kit update` workflow updates it, not

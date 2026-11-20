@@ -1,6 +1,7 @@
 package kotlinx.library.watchdog.conventions
 
 import groovy.json.JsonOutput
+import java.io.File
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -8,6 +9,7 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class DiagnosticsGeneratorsTest {
     @get:Rule
@@ -120,12 +122,32 @@ class DiagnosticsGeneratorsTest {
         assertContains(generate<GenerateCheckNames>(input), "public enum class WatchdogChecks {\n}")
     }
 
+    @Test
+    fun `a generator deletes the file of another package from its output directory`() {
+        val outputDirectory = temporaryDirectory.newFolder()
+        val stale = outputDirectory.resolve("renamed/WatchdogChecks.kt")
+        runGenerator<GenerateCheckNames>(outputDirectory) { packageName.set("renamed") }
+        assertTrue(stale.exists())
+        runGenerator<GenerateCheckNames>(outputDirectory)
+        assertFalse(stale.exists())
+        assertTrue(outputDirectory.resolve("fixtures/WatchdogChecks.kt").exists())
+    }
+
     private inline fun <reified T : DiagnosticsJsonGeneratorTask> generate(
         input: Map<String, Any> = fixture(),
         configure: T.() -> Unit = {},
     ): String {
-        val metadata = temporaryDirectory.newFile().apply { writeText(JsonOutput.toJson(input)) }
         val outputDirectory = temporaryDirectory.newFolder()
+        runGenerator<T>(outputDirectory, input, configure)
+        return outputDirectory.walkTopDown().single { it.extension == "kt" }.readText()
+    }
+
+    private inline fun <reified T : DiagnosticsJsonGeneratorTask> runGenerator(
+        outputDirectory: File,
+        input: Map<String, Any> = fixture(),
+        configure: T.() -> Unit = {},
+    ) {
+        val metadata = temporaryDirectory.newFile().apply { writeText(JsonOutput.toJson(input)) }
         project.tasks.register("generate${taskIndex++}", T::class.java).get().apply {
             diagnostics.set(metadata)
             packageName.set("fixtures")
@@ -133,7 +155,6 @@ class DiagnosticsGeneratorsTest {
             configure()
             generate()
         }
-        return outputDirectory.walkTopDown().single { it.extension == "kt" }.readText()
     }
 
     private fun fixture(): Map<String, Any> = mapOf(

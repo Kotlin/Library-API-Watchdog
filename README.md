@@ -62,8 +62,9 @@ more details about the `explicitApiRequirement` setting.
 The Gradle plugin registers the compiler plugin for every compilation except test compilations
 and adds the dependency with the `@Intentionally*` exemption annotations.
 
-Every check reports a compilation error by default, except `UNDOCUMENTED_PUBLIC_API`, which
-reports a warning. The `apiWatchdog` extension changes the severity of a check or turns it off:
+Every check reports a compilation error by default, except `UNDOCUMENTED_PUBLIC_API` and
+`REDUNDANT_EXEMPTION`, which report a warning. The `apiWatchdog` extension changes the severity of
+a check or turns it off:
 
 ```kotlin
 import kotlinx.library.watchdog.WatchdogSeverity
@@ -246,8 +247,8 @@ run only in JVM compilations. A Kotlin-only library turns off the group with
 ### Exemption hygiene
 
 - [`EXEMPTION_WITHOUT_EXPLANATION`](https://kotlin.github.io/Library-API-Watchdog/checks/special/exemption-without-explanation) -
-  `@Intentionally*` annotations with the default `OTHER` reason and a blank description. They
-  don't explain anything.
+  `@Intentionally*` annotations with a blank description and a reason that needs one. They don't
+  explain anything.
 - [`REDUNDANT_EXEMPTION`](https://kotlin.github.io/Library-API-Watchdog/checks/special/redundant-exemption) -
   `@Intentionally*` annotations on declarations their check doesn't report.
 

@@ -8,12 +8,13 @@ const destination = path.join(repositoryDirectory, 'docs/pages/changelog.md');
 const diagnosticsFile = path.join(repositoryDirectory, 'diagnostics.json');
 const args = process.argv.slice(2);
 const websiteUrl = 'https://kotlin.github.io/Library-API-Watchdog/';
+const notDocsPage = /^api(\/|$)|\/$|\.\w+$/;
 
-// A link to the website becomes a link to the page file, so the docs build checks that the page exists.
+// A link to a docs page of the website becomes a link to the page file, so the docs build checks that the page exists.
 function websiteLinks(markdown) {
   return markdown.replaceAll(
     new RegExp(`\\]\\(${websiteUrl.replaceAll('.', '\\.')}([^)#]+)(#[^)]*)?\\)`, 'g'),
-    (_, page, anchor = '') => `](${page}.md${anchor})`,
+    (link, page, anchor = '') => (notDocsPage.test(page) ? link : `](${page}.md${anchor})`),
   );
 }
 

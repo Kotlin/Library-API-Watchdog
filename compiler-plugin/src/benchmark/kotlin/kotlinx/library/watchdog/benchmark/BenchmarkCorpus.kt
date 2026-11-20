@@ -28,6 +28,8 @@ internal object BenchmarkCorpus {
         return path
     }
 
+    val templateCount: Int get() = TEMPLATES.size
+
     private val TEMPLATES: List<(Int) -> String> = listOf(
         ::modelsFile,
         ::servicesFile,

@@ -64,10 +64,10 @@ fun main(args: Array<String>) {
 
     var comparison = Comparison(baseline, measured)
     var retriesLeft = options.retries
-    while (comparison.regressions.isNotEmpty() && retriesLeft > 0) {
+    while (comparison.regressedSubjects.isNotEmpty() && retriesLeft > 0) {
         retriesLeft--
         println()
-        val regressed = comparison.regressions.mapTo(linkedSetOf()) { it.subject }
+        val regressed = comparison.regressedSubjects
         println("Regressions in $regressed. Measuring them again in a new JVM.")
         val again = runner.measureSubjects(regressed, newJvm = true)
         measured = measured.lowerOf(again)
@@ -391,6 +391,8 @@ internal class Comparison(baseline: Baseline, measured: Measured) {
 
     /** A metric that the baseline has but the run didn't measure is a regression too, because a renamed subject hides a slowdown. */
     val regressions: List<MetricComparison> = metrics.filter { it.isRegression || it.isMissing }
+
+    val regressedSubjects: Set<String> = metrics.filter { it.isRegression }.mapTo(linkedSetOf()) { it.subject }
 }
 
 internal object Summary {
