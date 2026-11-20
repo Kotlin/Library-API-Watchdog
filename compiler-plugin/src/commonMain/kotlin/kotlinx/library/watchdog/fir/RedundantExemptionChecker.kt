@@ -2,6 +2,7 @@ package kotlinx.library.watchdog.fir
 
 import org.jetbrains.kotlin.KtFakeSourceElementKind
 import org.jetbrains.kotlin.KtRealSourceElementKind
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.KtDiagnostic
 import org.jetbrains.kotlin.diagnostics.KtDiagnosticWithSource
@@ -24,11 +25,13 @@ import org.jetbrains.kotlin.fir.declarations.FirClass
 import org.jetbrains.kotlin.fir.declarations.FirClassLikeDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirConstructor
 import org.jetbrains.kotlin.fir.declarations.FirDeclaration
+import org.jetbrains.kotlin.fir.declarations.FirEnumEntry
 import org.jetbrains.kotlin.fir.declarations.FirFile
 import org.jetbrains.kotlin.fir.declarations.FirFunction
 import org.jetbrains.kotlin.fir.declarations.FirMemberDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirNamedFunction
 import org.jetbrains.kotlin.fir.declarations.FirProperty
+import org.jetbrains.kotlin.fir.declarations.FirPropertyAccessor
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.declarations.FirTypeAlias
@@ -167,8 +170,16 @@ private fun FirDeclaration.expectOrigins(): List<ExpectOrigin> = buildList {
 }
 
 /** Null for an `actual typealias`, because the compiler compares the `expect` annotations with the expanded class. */
-@OptIn(SymbolInternals::class)
+@OptIn(SymbolInternals::class, DirectDeclarationsAccess::class)
 private fun FirDeclaration.matchedExpect(): FirDeclaration? {
+    if (this is FirPropertyAccessor) {
+        val property = propertySymbol.fir.matchedExpect() as? FirProperty ?: return null
+        return if (isSetter) property.setter else property.getter
+    }
+    if (this is FirEnumEntry) {
+        val enumClass = (getContainingClassSymbol() as? FirRegularClassSymbol)?.fir?.matchedExpect() as? FirRegularClass ?: return null
+        return enumClass.declarations.firstOrNull { it is FirEnumEntry && it.name == name }
+    }
     if ((this as? FirMemberDeclaration)?.isActual != true) return null
     val expect = symbol.getSingleMatchedExpectForActualOrNull() ?: return null
     expect.lazyResolveToPhase(FirResolvePhase.BODY_RESOLVE)
@@ -521,6 +532,16 @@ internal class ExpectExemptionRedundancyChecker(
     @OptIn(DirectDeclarationsAccess::class, SymbolInternals::class)
     context(context: CheckerContext)
     private fun FirMemberDeclaration.findActuals(): List<FirDeclaration>? {
+        if (this is FirPropertyAccessor) {
+            val properties = propertySymbol.fir.findActuals() ?: return null
+            return properties.mapNotNull { (it as? FirProperty)?.let { property -> if (isSetter) property.setter else property.getter } }
+        }
+        if (this is FirEnumEntry) {
+            val enumClasses = (getContainingClassSymbol() as? FirRegularClassSymbol)?.fir?.findActuals() ?: return null
+            return enumClasses.mapNotNull { enumClass ->
+                (enumClass as? FirRegularClass)?.declarations?.firstOrNull { it is FirEnumEntry && it.name == name }
+            }
+        }
         val provider = context.session.symbolProvider
         val outerClassId = when (this) {
             is FirClassLikeDeclaration -> symbol.classId.outerClassId
@@ -631,8 +652,10 @@ private fun reportRedundantExemption(annotation: FirAnnotation, kind: String) {
 
 private fun FirDeclaration.hasProbedShape(): Boolean {
     if (this is FirFile) return true
+    // A default setter has a fake source.
+    if (this is FirPropertyAccessor) return valueParameters.any { it.annotations.isNotEmpty() }
     if (this !is FirRegularClass && this !is FirNamedFunction && this !is FirConstructor &&
-        this !is FirProperty && this !is FirTypeAlias
+        this !is FirProperty && this !is FirTypeAlias && this !is FirEnumEntry
     ) {
         return false
     }
@@ -668,6 +691,9 @@ private val allExemptions: Set<ClassId> =
             WatchdogClassIds.IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility +
             WatchdogClassIds.IntentionallyExposedInternalApiForBackwardsCompatibility
 
+/** No checker of a property reads these exemptions, so the constructor judges them on a `val` parameter. */
+private val constructorParameterExemptions: Set<ClassId> = setOf(WatchdogClassIds.IntentionallyBooleanParameter)
+
 context(context: CheckerContext)
 private fun FirDeclaration.exemptionCandidates(exemptions: Set<ClassId>): List<ExemptionCandidate> {
     val collector = ExemptionCandidateCollector(context.session, exemptions, fromLibrary = source == null)
@@ -696,8 +722,18 @@ private fun FirDeclaration.exemptionCandidates(exemptions: Set<ClassId>): List<E
             collector.annotations(this, "declaration")
             collector.parameters(contextParameters, "context")
             val propertyParameters = if (isPrimary) propertyParameterSymbols(this) else emptySet()
-            collector.parameters(valueParameters, "parameter") { it.symbol !in propertyParameters }
+            collector.parameters(valueParameters, "parameter", propertyParameters)
         }
+        // The type of the parameter of a default setter is a copy of the property type, so the property judges it.
+        // `@all:` copies a property annotation to the setter parameter, so the property judges the copy.
+        is FirPropertyAccessor -> {
+            val constructorParameter = propertySymbol.correspondingValueParameterFromPrimaryConstructor
+            val owners = propertySymbol.resolvedAnnotationsWithClassIds + constructorParameter?.resolvedAnnotationsWithClassIds.orEmpty()
+            valueParameters.forEachIndexed { index, parameter ->
+                collector.parameterAnnotations(parameter, "parameter:$index", copiesOf = owners)
+            }
+        }
+        is FirEnumEntry -> collector.annotations(this, "declaration")
         is FirProperty -> {
             collector.annotations(this, "declaration")
             collector.typeParameters(typeParameters)
@@ -786,19 +822,34 @@ private class ExemptionCandidateCollector(
         }
     }
 
-    /** [included] filters without a change to the indices, so the positions match an `expect`. */
-    fun parameters(parameters: List<FirValueParameter>, prefix: String, included: (FirValueParameter) -> Boolean = { true }) {
+    /** The indices don't change, so the positions match an `expect`. */
+    fun parameters(parameters: List<FirValueParameter>, prefix: String, properties: Set<FirValueParameterSymbol> = emptySet()) {
         parameters.forEachIndexed { index, parameter ->
-            if (!included(parameter)) return@forEachIndexed
-            for (annotation in parameter.annotations) {
-                add(annotation, "parameter", rank = 1, group = parameter.symbol, position = "$prefix:$index")
+            if (parameter.symbol in properties) {
+                parameterAnnotations(parameter, "$prefix:$index", constructorParameterExemptions)
+            } else {
+                parameterAnnotations(parameter, "$prefix:$index")
+                types(parameter.returnTypeRef, group = parameter.symbol, position = "$prefix:$index")
             }
-            types(parameter.returnTypeRef, group = parameter.symbol, position = "$prefix:$index")
+        }
+    }
+
+    fun parameterAnnotations(
+        parameter: FirValueParameter,
+        position: String,
+        only: Set<ClassId>? = null,
+        copiesOf: List<FirAnnotation> = emptyList(),
+    ) {
+        for (annotation in parameter.annotations) {
+            if (only != null && annotation.toAnnotationClassIdSafe(session) !in only) continue
+            if (copiesOf.any { it.useSiteTarget != AnnotationUseSiteTarget.SETTER_PARAMETER && it.sameSourceAs(annotation) }) continue
+            add(annotation, "parameter", rank = 1, group = parameter.symbol, position = position)
         }
     }
 
     fun parameter(parameter: FirValueParameterSymbol) {
         for (annotation in parameter.resolvedAnnotationsWithClassIds) {
+            if (annotation.toAnnotationClassIdSafe(session) in constructorParameterExemptions) continue
             add(annotation, "parameter", rank = 1, group = parameter, position = "declaration")
         }
         types(parameter.resolvedReturnTypeRef, group = parameter, position = "return")
@@ -823,7 +874,8 @@ private class ExemptionCandidateCollector(
             if (fromLibrary) candidates += ExemptionCandidate(annotation, classId, kind, rank, group, position)
             return
         }
-        if (source.kind != KtRealSourceElementKind) return
+        // A `@setparam:` annotation of a default setter is a copy with a fake source.
+        if (source.kind != KtRealSourceElementKind && source.kind != KtFakeSourceElementKind.FromUseSiteTarget) return
         if (seenOffsets.add(source.startOffset to source.endOffset)) {
             candidates += ExemptionCandidate(annotation, classId, kind, rank, group, position)
         }
