@@ -50,7 +50,8 @@ It holds the **Not applied** diagnostics only:
   message names the check, the exemption annotation when one exists, and the reason the task didn't
   apply it.
 - One location for each result: the source path relative to the root directory of the build, with
-  the line. A code scanning service resolves it against the repository checkout.
+  the line. A code scanning service resolves it against the repository checkout. The location of a
+  source on another drive is a `file` URI.
 
 Upload the file to GitHub code scanning with the `github/codeql-action/upload-sarif` action, or to any
 service that accepts SARIF.

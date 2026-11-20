@@ -6,7 +6,7 @@ import java.io.File
  * Writes the diagnostics without an exemption as a
  * [SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) log. A location
  * is relative to the root directory of the build, so a code scanning service resolves it against
- * the repository checkout.
+ * the repository checkout. The location of a source on another drive is a `file` URI.
  */
 @InternalWatchdogApi
 public object ApiWatchdogSarifReport {
