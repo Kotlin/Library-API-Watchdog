@@ -12,6 +12,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assume.assumeTrue
 import org.junit.Test
+import org.junit.experimental.categories.Category
 
 /** The filters of the ABI validation of the Kotlin Gradle plugin, and `useAbiValidationFilters`. */
 class ApiFiltersTest : ApiFiltersTestBase() {
@@ -44,6 +45,7 @@ class ApiFiltersTest : ApiFiltersTestBase() {
     }
 
     @Test
+    @Category(SmokeTest::class)
     fun `Kotlin ABI validation exclusion filters apply`() {
         val project = jvmProject {
             buildScript(

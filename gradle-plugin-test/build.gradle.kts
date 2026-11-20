@@ -17,15 +17,18 @@ pluginDevKit {
     companionLibrary("library-api-watchdog-plugin-annotations")
     compilerPlugin = ProjectOrGav.LocalProject(project(":library-api-watchdog-compiler-plugin").isolated)
 
-    // In the single-version CI lanes, every TestKit build gets these Gradle properties. A TestKit daemon otherwise
-    // uses the JVM default heap of a quarter of the machine's RAM. The 16 GB CI runners can't fit several of those
-    // heaps next to the other JVMs of a test lane.
-    // The `org.gradle.jvmargs` value replaces the dev kit line with the same key, so it repeats that line's flags.
+    // A TestKit daemon without a heap limit uses a quarter of the machine's RAM, and the 16 GB CI runners can't fit
+    // several of them.
+    // The `org.gradle.jvmargs` value replaces the dev kit line, so it repeats the flags of that line.
+    // A metaspace limit of 512m fails some builds with `OutOfMemoryError: Metaspace`.
     // The dev kit joins the properties with commas, so a value can't contain one.
     if (ciSingleVersion) {
         functionalTestProperties.addAll(
-            "org.gradle.jvmargs=-Dfile.encoding=UTF-8 -Xmx1500m -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=512m",
+            "org.gradle.jvmargs=-Dfile.encoding=UTF-8 -Xmx1500m -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=1024m",
             "kotlin.daemon.jvmargs=-Xmx1g",
+            // The same download retries as in the root gradle.properties.
+            "systemProp.org.gradle.internal.repository.max.tentatives=8",
+            "systemProp.org.gradle.internal.repository.initial.backoff=1000",
         )
     }
 }
