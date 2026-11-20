@@ -128,8 +128,8 @@ private class SourceFile(val text: String, val isValidUtf8: Boolean) {
     companion object {
         fun read(file: Path): SourceFile {
             val bytes = Files.readAllBytes(file)
-            // The decoder of the compiler, so a malformed byte sequence gives the same count of replacement characters.
-            val text = bytes.inputStream().reader(Charsets.UTF_8).readText()
+            // Replaces a malformed byte sequence as the compiler does.
+            val text = String(bytes, Charsets.UTF_8)
             return SourceFile(text, bytes.contentEquals(text.toByteArray(Charsets.UTF_8)))
         }
     }
