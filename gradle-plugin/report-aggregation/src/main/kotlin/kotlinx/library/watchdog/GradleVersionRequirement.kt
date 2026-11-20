@@ -3,7 +3,7 @@ package kotlinx.library.watchdog
 import org.gradle.api.GradleException
 import org.gradle.util.GradleVersion
 
-/** The first version with `ProjectDependency.getPath`. */
+/** The Gradle plugin calls `ProjectDependency.getPath`, which Gradle 8.11 added. */
 private val MINIMUM_GRADLE_VERSION = GradleVersion.version("8.11")
 
 @InternalWatchdogApi
