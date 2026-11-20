@@ -5,6 +5,7 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.kdoc.psi.impl.KDocName
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotation
@@ -196,6 +197,7 @@ private fun unusedImports(
                     removedEntries.none { PsiTreeUtil.isAncestor(it, reference, false) }
         }
         .mapTo(hashSetOf()) { it.getReferencedName() }
+    ktFile.collectDescendantsOfType<KDocName>().mapTo(remainingNames) { it.text.substringBefore('.') }
     // The entry references its annotation class and, in the `reason` argument, `ExemptionReason`.
     val removedNames = removedEntries.flatMapTo(linkedSetOf()) { entry ->
         entry.collectDescendantsOfType<KtSimpleNameExpression>().map { it.getReferencedName() }

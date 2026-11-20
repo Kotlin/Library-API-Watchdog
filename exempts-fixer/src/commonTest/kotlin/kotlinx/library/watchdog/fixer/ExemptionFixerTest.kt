@@ -2034,6 +2034,38 @@ class ExemptionFixerTest {
     }
 
     @Test
+    fun `a removed annotation keeps the import that a KDoc link uses`() {
+        val text = """
+            package test
+
+            import kotlinx.library.watchdog.ExemptionReason
+            import kotlinx.library.watchdog.IntentionallyOpen
+
+            /** A final class. [IntentionallyOpen] doesn't apply. */
+            @IntentionallyOpen(reason = ExemptionReason.API_DESIGN)
+            public class Settled
+        """.trimIndent()
+
+        val result = fix(
+            text,
+            diagnostic("REDUNDANT_EXEMPTION", text, "@IntentionallyOpen(reason = ExemptionReason.API_DESIGN)")
+                .copy(messageParameters = listOf("IntentionallyOpen", "declaration")),
+        )
+
+        assertEquals(
+            """
+                package test
+
+                import kotlinx.library.watchdog.IntentionallyOpen
+
+                /** A final class. [IntentionallyOpen] doesn't apply. */
+                public class Settled
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
     fun `a trailing comment stays on the line of the package or of the last import`() {
         val declaration = "public data class Point(val x: Int)\n"
         val added = "import kotlinx.library.watchdog.ExemptionReason\n" +
