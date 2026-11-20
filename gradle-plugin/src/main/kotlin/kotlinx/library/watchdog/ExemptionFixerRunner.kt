@@ -15,6 +15,7 @@ internal object ExemptionFixerRunner {
         temporaryDirectory: File,
         diagnosticReports: Collection<File>,
         sourceFiles: Collection<File>,
+        buildDirectory: File,
         fixerArtifact: FileCollection,
         fixerClasspath: FileCollection,
         diagnosticSeverities: Map<String, WatchdogSeverity>,
@@ -46,6 +47,7 @@ internal object ExemptionFixerRunner {
                 .forEach { (diagnostic, severity) ->
                     appendLine("diagnosticSeverity=$diagnostic:${severity.name.lowercase()}")
                 }
+            appendLine("buildDirectory=${buildDirectory.absolutePath}")
             appendLine("updateSources=$updateSources")
             appendLine("responseFile=${responseFile.absolutePath}")
         })
@@ -57,8 +59,16 @@ internal object ExemptionFixerRunner {
             spec.isIgnoreExitValue = true
         }
         val response = readResponse(responseFile, execResult.exitValue)
-        response["error"]?.forEach {
-            throw GradleException("The exempts fixer failed:\n${it.unescapeFixerNewlines()}")
+        response["error"]?.forEach { error ->
+            val changedFiles = response["modifiedFile"].orEmpty().distinct()
+            throw GradleException(
+                if (changedFiles.isEmpty()) {
+                    "The exempts fixer failed:\n${error.unescapeFixerNewlines()}"
+                } else {
+                    "The exempts fixer failed after it changed these files:\n" +
+                            "${changedFiles.joinToString("\n")}\n\n${error.unescapeFixerNewlines()}"
+                }
+            )
         }
         if (execResult.exitValue != 0) {
             throw GradleException(

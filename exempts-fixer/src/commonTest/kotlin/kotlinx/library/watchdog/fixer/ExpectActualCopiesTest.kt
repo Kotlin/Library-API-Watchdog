@@ -199,6 +199,17 @@ class ExpectActualCopiesTest {
         assertEquals(emptyList(), copies(onCommon("BOOLEAN_PARAMETER_PUBLIC_API", "package")))
     }
 
+    @Test
+    fun `recorded offsets are positions in the text without carriage returns`() {
+        val diagnostic = onCommon("BOOLEAN_PARAMETER_PUBLIC_API", "fast")
+
+        val copies = ExpectActualCopies(parser) { path -> texts[path]?.replace("\n", "\r\n") }
+            .copies(listOf(diagnostic), pairs()) { true }
+
+        assertEquals(copies(diagnostic), copies)
+        assertEquals(1, copies.size)
+    }
+
     private companion object {
         const val COMMON = "/project/src/commonMain/kotlin/com/example/Api.kt"
         const val JVM = "/project/src/jvmMain/kotlin/com/example/Api.jvm.kt"

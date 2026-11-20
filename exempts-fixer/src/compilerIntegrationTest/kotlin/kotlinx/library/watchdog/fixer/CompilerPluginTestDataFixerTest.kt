@@ -26,10 +26,12 @@ import org.jetbrains.kotlin.test.directives.JvmEnvironmentConfigurationDirective
 import org.jetbrains.kotlin.test.directives.LanguageSettingsDirectives.LANGUAGE
 import org.jetbrains.kotlin.test.directives.model.DirectivesContainer
 import org.jetbrains.kotlin.test.directives.model.SimpleDirectivesContainer
+import org.jetbrains.kotlin.test.model.TestFile
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.runners.AbstractFirPhasedDiagnosticTest
 import org.jetbrains.kotlin.test.services.EnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.KotlinTestInfo
+import org.jetbrains.kotlin.test.services.ReversibleSourceFilePreprocessor
 import org.jetbrains.kotlin.test.services.TestServices
 import org.opentest4j.AssertionFailedError
 
@@ -103,6 +105,10 @@ class CompilerPluginTestDataFixerTest {
         }
         val result = fixer.fix(filePath, source.text, diagnostics)
         val fixedText = result.newText ?: source.text
+        val crlfResult = fixer.fix(filePath, source.text.replace("\n", "\r\n"), diagnostics)
+        assertEquals(result.newText?.replace("\n", "\r\n"), crlfResult.newText, "CRLF line endings change the fix of $fixtureName/$fileName")
+        assertEquals(result.applied, crlfResult.applied, "CRLF line endings change the applied fixes of $fixtureName/$fileName")
+        assertEquals(result.skipped, crlfResult.skipped, "CRLF line endings change the skipped diagnostics of $fixtureName/$fileName")
 
         result.skipped.forEach { skipped ->
             val resolution = ExemptionRegistry.resolutionFor(skipped.diagnostic)
@@ -166,7 +172,8 @@ class CompilerPluginTestDataFixerTest {
 
     /**
      * [KotlinFileParser] already set up a standalone PSI application in this JVM, so the
-     * diagnostics framework runs in a child JVM.
+     * diagnostics framework runs in a child JVM. The child JVM compiles each file with LF and then with CRLF
+     * line endings.
      */
     private fun validateWithCompilerPlugin(generatedFiles: List<Path>) {
         val runtimeClasspath = System.getProperty("java.class.path")
@@ -233,8 +240,13 @@ class CompilerPluginTestDataFixerTest {
 object FixedOutputCompilerTestMain {
     @JvmStatic
     fun main(args: Array<String>) {
-        val runner = FixedOutputDiagnosticRunner()
-        args.forEach { filePath ->
+        run(FixedOutputDiagnosticRunner(), args)
+        run(FixedOutputDiagnosticRunner(crlf = true), args)
+        check(CrlfSourcePreprocessor.movedMarkers > 0) { "The compiler didn't report a diagnostic on a source with CRLF line endings" }
+    }
+
+    private fun run(runner: FixedOutputDiagnosticRunner, filePaths: Array<String>) {
+        filePaths.forEach { filePath ->
             runner.initTestInfo(
                 KotlinTestInfo(
                     className = CompilerPluginTestDataFixerTest::class.java.name,
@@ -253,7 +265,7 @@ object FixedOutputCompilerTestMain {
     }
 }
 
-private class FixedOutputDiagnosticRunner : DevKitTest(
+private class FixedOutputDiagnosticRunner(crlf: Boolean = false) : DevKitTest(
     object : AbstractFirPhasedDiagnosticTest(FirParser.LightTree) {},
     {
         defaultDirectives {
@@ -270,9 +282,45 @@ private class FixedOutputDiagnosticRunner : DevKitTest(
     {
         configurePlugin(WatchdogComponentRegistrar())
         useConfigurators(::WatchdogOptionsConfigurator)
+        if (crlf) useSourcePreprocessor(::CrlfSourcePreprocessor)
     },
 ) {
     fun run(filePath: String) = runTest(filePath)
+}
+
+/**
+ * Gives the compiler the source with CRLF line endings. The framework puts each diagnostic marker into
+ * that text at the offset from the compiler. [revert] moves the marker to the same offset of the LF
+ * text, so the test passes only when the compiler reports the offsets of the LF text.
+ */
+private class CrlfSourcePreprocessor(testServices: TestServices) : ReversibleSourceFilePreprocessor(testServices) {
+    // The framework removes the leading line feeds of a `// FILE:` section as a prefix.
+    override fun process(file: TestFile, content: String): String {
+        val padding = content.takeWhile { it == '\n' }
+        return padding + content.substring(padding.length).replace("\n", "\r\n")
+    }
+
+    override fun revert(file: TestFile, actualContent: String): String {
+        val text = StringBuilder()
+        val markers = mutableListOf<Pair<Int, String>>()
+        var end = 0
+        for (marker in MARKER.findAll(actualContent)) {
+            text.append(actualContent, end, marker.range.first)
+            markers += text.length to marker.value
+            end = marker.range.last + 1
+        }
+        text.append(actualContent, end, actualContent.length)
+        if ("\r\n" in text) movedMarkers += markers.size
+        val result = StringBuilder(text.toString().replace("\r\n", "\n"))
+        markers.asReversed().forEach { (offset, marker) -> result.insert(offset, marker) }
+        return result.toString()
+    }
+
+    companion object {
+        private val MARKER = Regex("<!>|<![A-Z].*?!>")
+
+        var movedMarkers = 0
+    }
 }
 
 /** A copy of the directives of the compiler plugin, whose test fixtures aren't on this classpath. */

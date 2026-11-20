@@ -33,9 +33,7 @@ internal class ExpectActualCopies(
     private val parser: KotlinFileParser,
     private val readText: (String) -> String?,
 ) {
-    private val files = mutableMapOf<String, ParsedFile?>()
-
-    private class ParsedFile(val mapping: LineEndingMapping, val ktFile: KtFile)
+    private val files = mutableMapOf<String, KtFile?>()
 
     private class ExpectSide(val path: String, val start: Int, val end: Int)
 
@@ -55,10 +53,8 @@ internal class ExpectActualCopies(
             val expectFile = parsed(diagnostic.filePath) ?: return@flatMap emptyList()
             val place = expectFile.placeOf(diagnostic, fix) ?: return@flatMap emptyList()
             val range = place.declaration.textRange
-            filePairs.filter { (expect, _) ->
-                expectFile.mapping.toNormalizedOffset(expect.start) == range.startOffset &&
-                        expectFile.mapping.toNormalizedOffset(expect.end) == range.endOffset
-            }.mapNotNull { (_, actual) -> copy(diagnostic, place, actual) }
+            filePairs.filter { (expect, _) -> expect.start == range.startOffset && expect.end == range.endOffset }
+                .mapNotNull { (_, actual) -> copy(diagnostic, place, actual) }
         }
     }
 
@@ -76,9 +72,9 @@ internal class ExpectActualCopies(
         }
     }
 
-    private fun ParsedFile.placeOf(diagnostic: RecordedDiagnostic, fix: ExemptionFix): Place? {
-        val element = ktFile.findElementAt(mapping.toNormalizedOffset(diagnostic.startOffset)) ?: return null
-        return when (val target = resolveTarget(element, fix, ktFile)) {
+    private fun KtFile.placeOf(diagnostic: RecordedDiagnostic, fix: ExemptionFix): Place? {
+        val element = findElementAt(diagnostic.startOffset) ?: return null
+        return when (val target = resolveTarget(element, fix, this)) {
             is FixTarget.BeforeDeclaration -> Place(target.declaration, null)
             is FixTarget.ImplicitPrimaryConstructor -> Place(target.constructor, null)
             is FixTarget.InlineBefore -> when (val inline = target.element) {
@@ -102,21 +98,17 @@ internal class ExpectActualCopies(
         } else {
             declaration.anchor()
         }
-        val rawOffset = actualFile.mapping.toRawOffset(offset)
-        return RecordedDiagnostic(diagnostic.name, actual.filePath, rawOffset, rawOffset, diagnostic.messageParameters)
+        return RecordedDiagnostic(diagnostic.name, actual.filePath, offset, offset, diagnostic.messageParameters)
     }
 
-    private fun parsed(path: String): ParsedFile? = files.getOrPut(path) {
+    private fun parsed(path: String): KtFile? = files.getOrPut(path) {
         val text = readText(path) ?: return@getOrPut null
-        val mapping = LineEndingMapping.of(text)
-        ParsedFile(mapping, parser.parse(Paths.get(path).fileName.toString(), mapping.normalizedText))
+        parser.parse(Paths.get(path).fileName.toString(), LineEndingMapping.of(text).normalizedText)
     }
 
     /** A recorded range starts at the KDoc or the first modifier of the declaration. */
-    private fun ParsedFile.declarationAt(rawStart: Int, rawEnd: Int): KtDeclaration? {
-        val start = mapping.toNormalizedOffset(rawStart)
-        val end = mapping.toNormalizedOffset(rawEnd)
-        val leaf = ktFile.findElementAt(start) ?: return null
+    private fun KtFile.declarationAt(start: Int, end: Int): KtDeclaration? {
+        val leaf = findElementAt(start) ?: return null
         val declarations = generateSequence(leaf) { it.parent }.filterIsInstance<KtDeclaration>()
             .filter { it.textRange.startOffset == start }
             .toList()
