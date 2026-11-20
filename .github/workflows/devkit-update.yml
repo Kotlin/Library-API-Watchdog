@@ -184,4 +184,5 @@ jobs:
         run: |
           gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --match-head-commit "$SHA" \
             --subject "Update the dev kit to $VERSION (#$PR)" --body ''
-          gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$UPDATE_BRANCH" --silent
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$UPDATE_BRANCH" --silent 2> /dev/null \
+            || echo "$UPDATE_BRANCH is deleted."
