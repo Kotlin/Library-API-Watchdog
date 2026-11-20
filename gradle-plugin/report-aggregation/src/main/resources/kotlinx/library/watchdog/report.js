@@ -215,7 +215,9 @@ Prism.hooks.add("after-highlight", function (environment) {
         refreshCode();
     }
 
+    let appliedView = "diagnostic";
     function updateView() {
+        appliedView = view.value;
         const directory = view.value === "directory";
         sections.forEach(section => {
             if (!section.tree) return;
@@ -230,6 +232,12 @@ Prism.hooks.add("after-highlight", function (environment) {
             section.tree.hidden = !directory;
         });
         updateFilter();
+    }
+
+    // A browser restores the values of the controls on a reload or a history navigation without a `change` event.
+    function applyControls() {
+        if (view.value === appliedView) updateFilter();
+        else updateView();
     }
 
     view.addEventListener("change", updateView);
@@ -289,5 +297,7 @@ Prism.hooks.add("after-highlight", function (environment) {
         }
         updateIdeLinks();
     }
+    applyControls();
+    window.addEventListener("pageshow", applyControls);
     controls.hidden = false;
 })();
