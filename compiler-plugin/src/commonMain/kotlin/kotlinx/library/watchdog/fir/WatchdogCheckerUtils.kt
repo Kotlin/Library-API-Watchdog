@@ -483,18 +483,20 @@ private fun FirTypeParameterSymbol.hasFunctionBounds(visited: MutableSet<FirType
 
 /**
  * The name of the value class that mangles a JVM signature with this type, or null. The JVM
- * boxes a value class in a type argument, so it doesn't count.
+ * boxes a value class in a type argument, so it doesn't count. `kotlin.Result` mangles a
+ * signature only as a return type ([returned]).
  */
 context(context: CheckerContext)
-internal fun ConeKotlinType.mangledValueClass(): Name? {
+internal fun ConeKotlinType.mangledValueClass(returned: Boolean = false): Name? {
     val symbol = erasedClassSymbol() ?: return null
-    return symbol.classId.shortClassName.takeIf { symbol.isValueClass() }
+    if (!symbol.isValueClass() || !returned && symbol.classId == StandardClassIds.Result) return null
+    return symbol.classId.shortClassName
 }
 
 /** A return type mangles the JVM name of a member only. */
 context(context: CheckerContext)
 internal fun FirCallableDeclaration.returnValueClassIfMember(): Name? =
-    if (dispatchReceiverType != null) returnTypeRef.coneType.mangledValueClass() else null
+    if (dispatchReceiverType != null) returnTypeRef.coneType.mangledValueClass(returned = true) else null
 
 context(context: CheckerContext)
 internal fun FirNamedFunction.mangledValueClassInSignature(): Name? =

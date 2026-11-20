@@ -27,7 +27,7 @@ public fun <T : UserId> <!MANGLED_JVM_NAME_PUBLIC_API!>locate<!>(t: T) {}
 
 public fun <T : U, U : UserId> <!MANGLED_JVM_NAME_PUBLIC_API!>locateChained<!>(t: T) {}
 
-public fun <!MANGLED_JVM_NAME_PUBLIC_API!>handle<!>(result: Result<String>) {}
+public fun handle(result: Result<String>) {}
 
 public fun <!MANGLED_JVM_NAME_PUBLIC_API!>pad<!>(width: UInt) {}
 
