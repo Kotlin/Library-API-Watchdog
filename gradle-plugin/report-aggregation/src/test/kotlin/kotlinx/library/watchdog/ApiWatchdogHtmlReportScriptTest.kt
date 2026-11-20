@@ -141,6 +141,17 @@ class ApiWatchdogHtmlReportScriptTest {
         assertRestoredControls()
     }
 
+    @Test
+    fun `the buttons open the IDE that the browser restores in the selector`() = openReport("ide-select") {
+        js("localStorage.clear()")
+        reload()
+        js(
+            """document.getElementById("ide-target").value = "studio";
+                window.dispatchEvent(new PageTransitionEvent("pageshow", {persisted: true}));""",
+        )
+        assertTrue(ideLinks().all { it.startsWith("jetbrains://studio/") }, ideLinks().toString())
+    }
+
     private fun ReportPage.assertRestoredControls() {
         assertEquals("directory", value("view-mode"))
         assertEquals("DATA_CLASS_PUBLIC_API", value("diagnostic-filter"))
