@@ -1,5 +1,6 @@
 package kotlinx.library.watchdog
 
+import java.net.URI
 import java.nio.file.Files
 import kotlin.io.path.deleteIfExists
 import kotlin.test.Test
@@ -7,6 +8,7 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.assertAll
 
 class ApiWatchdogReportTest {
     @Test
@@ -393,6 +395,25 @@ class ApiWatchdogReportTest {
         )
         val uri = "modules/shared/src/A.kt"
         assertEquals(listOf(uri, uri), locations.map { it.uri })
+    }
+
+    @Test
+    fun `SARIF gives a valid URI for a path with a colon, a space, or a non-ASCII character`() {
+        class Case(val directory: String, val location: String, val uri: String, val path: String)
+        val cases = listOf(
+            Case("D:/libs/core", "src/A.kt:3", "file:///D:/libs/core/src/A.kt", "/D:/libs/core/src/A.kt"),
+            Case("", "gen:kotlin/Foo.kt:3", "gen%3Akotlin/Foo.kt", "gen:kotlin/Foo.kt"),
+            Case("", "my dir:x/A.kt:3", "my%20dir%3Ax/A.kt", "my dir:x/A.kt"),
+            Case("modules/my lib", "src/Öl 日本.kt:3", "modules/my%20lib/src/%C3%96l%20%E6%97%A5%E6%9C%AC.kt", "modules/my lib/src/Öl 日本.kt"),
+        )
+        assertAll(cases.map { case ->
+            {
+                val location = sarifLocations(sarifReport(case.directory, case.location)).single()
+                assertEquals(case.uri, location.uri)
+                assertEquals(case.path, URI(location.uri).path)
+                assertEquals(if (URI(location.uri).isAbsolute) null else "%SRCROOT%", location.uriBaseId)
+            }
+        })
     }
 
     private class SarifLocation(val uri: String, val uriBaseId: String?, val startLine: Int?)

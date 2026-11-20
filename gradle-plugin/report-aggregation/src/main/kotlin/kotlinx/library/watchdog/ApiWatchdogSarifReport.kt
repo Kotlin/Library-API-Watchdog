@@ -1,7 +1,6 @@
 package kotlinx.library.watchdog
 
 import java.io.File
-import java.net.URI
 
 /**
  * Writes the diagnostics without an exemption as a
@@ -26,7 +25,7 @@ public object ApiWatchdogSarifReport {
         }
         val results = entries.map { (report, entry) ->
             val (path, line) = entry.location.splitLocation()
-            val uri = normalizedSourcePath(report.projectDirectory, path)
+            val uri = normalizedSourcePath(report.projectDirectory, path).toUri()
             linkedMapOf<String, Any?>(
                 "ruleId" to entry.diagnostic,
                 "ruleIndex" to ruleIds.indexOf(entry.diagnostic),
@@ -36,8 +35,8 @@ public object ApiWatchdogSarifReport {
                     mapOf(
                         "physicalLocation" to linkedMapOf(
                             "artifactLocation" to linkedMapOf(
-                                "uri" to uri.toUriPath(),
-                                "uriBaseId" to SOURCE_ROOT,
+                                "uri" to uri,
+                                "uriBaseId" to SOURCE_ROOT.takeUnless { uri.startsWith(FILE_URI) },
                             ),
                             "region" to line?.let { mapOf("startLine" to it) },
                         ),
@@ -70,6 +69,9 @@ public object ApiWatchdogSarifReport {
         "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json"
     private const val TOOL_NAME = "Library API Watchdog"
     private const val SOURCE_ROOT = "%SRCROOT%"
+    private const val FILE_URI = "file:///"
+    private val WINDOWS_DRIVE = Regex("^[A-Za-z]:/")
+    private val URI_PATH_CHARACTERS = (('a'..'z') + ('A'..'Z') + ('0'..'9') + "/-._~!$&'()*+,;=@".toList()).toSet()
 
     private fun NotAppliedExemptionReportEntry.message(): String = listOfNotNull(
         (WatchdogCheckDescriptions.checks[diagnostic]?.title ?: diagnostic) + ".",
@@ -82,7 +84,16 @@ public object ApiWatchdogSarifReport {
         return if (line == null) this to null else substringBeforeLast(':') to line
     }
 
-    private fun String.toUriPath(): String = URI(null, null, this, null).rawPath
+    private fun String.toUri(): String {
+        val onDrive = WINDOWS_DRIVE.containsMatchIn(this)
+        val path = buildString {
+            for (byte in this@toUri.toByteArray(Charsets.UTF_8)) {
+                val character = byte.toInt().toChar()
+                if (character in URI_PATH_CHARACTERS || onDrive && character == ':') append(character) else append("%%%02X".format(byte))
+            }
+        }
+        return if (onDrive) FILE_URI + path else path
+    }
 
     private fun StringBuilder.appendJson(value: Any?, indent: Int) {
         when (value) {
