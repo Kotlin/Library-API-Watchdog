@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.fir.declarations.FirTypeAlias
 import org.jetbrains.kotlin.fir.declarations.FirTypeParameter
 import org.jetbrains.kotlin.fir.declarations.FirTypeParameterRef
 import org.jetbrains.kotlin.fir.declarations.FirValueParameter
+import org.jetbrains.kotlin.fir.declarations.getSingleMatchedExpectForActualOrNull
 import org.jetbrains.kotlin.fir.declarations.isLegacyContextReceiver
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
 import org.jetbrains.kotlin.fir.declarations.utils.correspondingValueParameterFromPrimaryConstructor
@@ -23,12 +24,14 @@ import org.jetbrains.kotlin.fir.declarations.utils.isActual
 import org.jetbrains.kotlin.fir.declarations.utils.isOverride
 import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
+import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirValueParameterSymbol
 import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
 import org.jetbrains.kotlin.fir.types.ConeClassLikeType
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.fir.types.FirTypeRef
+import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.customAnnotations
 import org.jetbrains.kotlin.fir.types.type
@@ -55,7 +58,10 @@ internal abstract class PublicSignatureTypeChecker<Violation : Any>(
     context(context: CheckerContext, reporter: DiagnosticReporter)
     final override fun check(declaration: FirDeclaration) {
         // The expansion of an actual typealias can expose a type that the expect doesn't mention.
-        if (declaration.isActualizedDeclaration() && declaration !is FirTypeAlias) return
+        if (declaration.isActualizedDeclaration() && declaration !is FirTypeAlias) {
+            if (declaration is FirRegularClass) checkActualSupertypes(declaration)
+            return
+        }
 
         when (declaration) {
             // The enclosing callable checks its parameters.
@@ -206,6 +212,20 @@ internal abstract class PublicSignatureTypeChecker<Violation : Any>(
             }
         }
         declaration.contextParameters.forEach { checkParameter(it) }
+    }
+
+    /** The `expect` class reports the supertypes that it declares. */
+    context(context: CheckerContext, reporter: DiagnosticReporter)
+    private fun checkActualSupertypes(declaration: FirRegularClass) {
+        if (!checkClassSupertypes || !shouldCheck(declaration)) return
+
+        val expect = declaration.symbol.getSingleMatchedExpectForActualOrNull() as? FirClassSymbol<*>
+        val expectSupertypes = expect?.resolvedSuperTypes.orEmpty().map { it.fullyExpandedType().classId }
+        for (superTypeRef in declaration.superTypeRefs) {
+            if (superTypeRef.coneType.fullyExpandedType().classId !in expectSupertypes) {
+                checkType(superTypeRef, "supertypeOf", declaration.name, declaration.source)
+            }
+        }
     }
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
