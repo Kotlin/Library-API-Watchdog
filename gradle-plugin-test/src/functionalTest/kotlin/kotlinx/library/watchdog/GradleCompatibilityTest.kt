@@ -3,6 +3,7 @@
 package kotlinx.library.watchdog
 
 import com.autonomousapps.kit.gradle.Dependency.Companion.api
+import com.autonomousapps.kit.gradle.Dependency.Companion.implementation
 import com.autonomousapps.kit.gradle.Plugin
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -15,6 +16,8 @@ import org.gradle.testkit.runner.TaskOutcome.FROM_CACHE
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.TEST_COMPILER_VERSION
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.pluginUnderTestVersion
+import org.jetbrains.kotlin.tooling.core.toKotlinVersion
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 class GradleCompatibilityTest {
@@ -280,7 +283,38 @@ class GradleCompatibilityTest {
         assertFalse(project.file("build/reports/api-watchdog/report.sarif").exists())
     }
 
+    @Test
+    fun `works on the minimum Gradle version`() {
+        assumeKotlinSupportsOlderGradle()
+        val project = jvmProject {
+            consumerSource()
+            dependencies(implementation(":model"))
+            modelSubproject()
+        }.withGradle(MINIMUM_GRADLE_VERSION)
+
+        project.buildAndFail("compileKotlin").assertErrors(PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY)
+        project.build("generateApiWatchdogReport", "--configuration-cache")
+        assertTrue(project.file("build/reports/api-watchdog/report.html").isFile)
+    }
+
+    @Test
+    fun `fails on a Gradle version before the minimum`() {
+        assumeKotlinSupportsOlderGradle()
+
+        val result = jvmProject().withGradle("8.10.2").buildAndFail("help")
+
+        result.assertOutputHas(
+            "library-api-watchdog needs Gradle $MINIMUM_GRADLE_VERSION or later, and this build runs on Gradle 8.10.2."
+        )
+    }
+
+    /** Kotlin 2.5.0 needs Gradle 8.14.4. */
+    private fun assumeKotlinSupportsOlderGradle() {
+        assumeTrue(TEST_COMPILER_VERSION.toKotlinVersion() < KotlinVersion(2, 5))
+    }
+
     private companion object {
+        const val MINIMUM_GRADLE_VERSION = "8.11"
         val PROJECT_ISOLATION = arrayOf("-Dorg.gradle.unsafe.isolated-projects=true", "--configuration-cache-problems=fail")
     }
 }
