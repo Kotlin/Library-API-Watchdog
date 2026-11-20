@@ -1488,6 +1488,85 @@ class ExemptionFixerTest {
     }
 
     @Test
+    fun `an exemption on the property or on the constructor parameter skips the fix`() {
+        for (useSite in listOf("", "property:", "param:")) {
+            val text = "$MUTABLE_COLLECTION_IMPORTS" +
+                    "public class Holder(@${useSite}IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN) public val items: MutableList<Int>)\n"
+
+            val result = fix(text, diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "items:"))
+
+            assertNull(result.newText, "useSite=$useSite")
+            assertContains(result.skipped.single().reason, "already has")
+        }
+    }
+
+    @Test
+    fun `a setparam exemption doesn't skip the fix of a member property`() {
+        val text = "$MUTABLE_COLLECTION_IMPORTS" + """
+            public class Holder {
+                @setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN)
+                public var items: MutableList<Int> = mutableListOf()
+            }
+        """.trimIndent()
+
+        val result = fix(text, diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "public var items"))
+
+        assertEquals(
+            "$MUTABLE_COLLECTION_IMPORTS" + """
+                public class Holder {
+                    @IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+                    @setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN)
+                    public var items: MutableList<Int> = mutableListOf()
+                }
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `a setparam exemption doesn't skip the fix of a constructor property`() {
+        val text = "$MUTABLE_COLLECTION_IMPORTS" +
+                "public class Holder(@setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN) public var items: MutableList<Int>)\n"
+
+        val result = fix(text, diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "items:"))
+
+        assertEquals(
+            "$MUTABLE_COLLECTION_IMPORTS" +
+                    "public class Holder(@IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY) " +
+                    "@setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN) public var items: MutableList<Int>)\n",
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `an exemption that the run removes doesn't skip the fix of the same annotation class`() {
+        val text = "$MUTABLE_COLLECTION_IMPORTS" + """
+            public class Holder {
+                @setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN)
+                public var items: MutableList<Int> = mutableListOf()
+            }
+        """.trimIndent()
+
+        val result = fix(
+            text,
+            diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "public var items"),
+            diagnostic("REDUNDANT_EXEMPTION", text, "@setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN)")
+                .copy(messageParameters = listOf("IntentionallyMutableCollection", "declaration")),
+        )
+
+        assertEquals(
+            "$MUTABLE_COLLECTION_IMPORTS" + """
+                public class Holder {
+                    @IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+                    public var items: MutableList<Int> = mutableListOf()
+                }
+            """.trimIndent(),
+            result.newText,
+        )
+        assertEquals(emptyList(), result.skipped)
+    }
+
+    @Test
     fun `secondary constructor is annotated in place`() {
         @Language("kotlin")
         val text = """
@@ -2150,6 +2229,9 @@ class ExemptionFixerTest {
     private companion object {
         const val FILE_PATH = "/project/src/main/kotlin/com/example/Sample.kt"
         const val PLACEHOLDER_KDOC = "/** TODO: Document this declaration */"
+        const val MUTABLE_COLLECTION_IMPORTS = "package test\n\n" +
+                "import kotlinx.library.watchdog.ExemptionReason\n" +
+                "import kotlinx.library.watchdog.IntentionallyMutableCollection\n\n"
 
         fun String.asCompilerText(): String = removePrefix("\uFEFF").replace("\r\n", "\n").replace('\r', '\n')
 
