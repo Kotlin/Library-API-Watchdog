@@ -47,7 +47,6 @@ internal class FixerRequest(
     val diagnosticSeverities: Map<String, String>,
     val updateSources: Boolean,
     val responseFile: Path,
-    /** The fixer doesn't edit a file in this directory, because a build task generates the file. */
     val buildDirectory: Path? = null,
 ) {
     fun fixes(diagnostic: String): Boolean =

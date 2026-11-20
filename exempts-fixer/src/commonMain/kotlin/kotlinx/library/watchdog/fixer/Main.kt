@@ -64,9 +64,9 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
                 fix(
                     when {
                         request.isGenerated(file) ->
-                            "`exemptExistingApi` doesn't edit a file in the build directory. Change the generator of the file"
+                            "`exemptExistingApi` doesn't edit a file in the build directory. Add the exemption in the generator of the file"
                         !source.isValidUtf8 -> "The file isn't valid UTF-8. Save the file as UTF-8"
-                        request.updateSources && !Files.isWritable(file) -> "The file is read-only"
+                        request.updateSources && !Files.isWritable(file) -> "The file is read-only. Make the file writable"
                         else -> null
                     }
                 )
@@ -79,7 +79,7 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
                     replaceText(file, newText)
                     response.modifiedFiles += filePath
                 } catch (e: IOException) {
-                    fixResult = fix("`exemptExistingApi` can't write the file: $e")
+                    fixResult = fix("`exemptExistingApi` can't write the file")
                 }
             }
             response.applied += fixResult.applied
