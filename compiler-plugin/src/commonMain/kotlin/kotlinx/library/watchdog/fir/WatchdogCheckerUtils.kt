@@ -260,7 +260,8 @@ internal fun FirFunction.reportedName(): Name? = when (this) {
 /**
  * Whether the declaration is in the public or `@PublishedApi` binary API, isn't marked as
  * internal API, and passes [ConfiguredApiFilters]. A property from a constructor parameter has a
- * fake source but is hand-written API, so it counts as real.
+ * fake source but is hand-written API, so it counts as real. A constructor of a sealed class
+ * doesn't count, because no code outside the module can call it.
  */
 context(context: CheckerContext)
 internal fun FirMemberDeclaration.isWatchedPublicApi(): Boolean {
@@ -270,6 +271,10 @@ internal fun FirMemberDeclaration.isWatchedPublicApi(): Boolean {
     }
 
     if (visibility == Visibilities.Local || this is FirRegularClass && isLocalCompat) {
+        return false
+    }
+
+    if (this is FirConstructor && symbol.isSealedClassConstructor()) {
         return false
     }
 
@@ -340,10 +345,14 @@ private fun FirCallableSymbol<*>.isIncludedApiMember(filters: ConfiguredApiFilte
     if (sourceKind != KtRealSourceElementKind && sourceKind != KtFakeSourceElementKind.PropertyFromParameter) {
         return false
     }
+    if (isSealedClassConstructor()) return false
     val publicApi = effectiveVisibility.publicApi ||
             (fir as? FirMemberDeclaration)?.publishedApiEffectiveVisibility?.publicApi == true
     return publicApi && filters.includes(this) && filters.excludingPattern(this) == null && !hasUnwatchedAnnotation()
 }
+
+private fun FirCallableSymbol<*>.isSealedClassConstructor(): Boolean =
+    this is FirConstructorSymbol && getContainingClassSymbol()?.resolvedStatus?.modality == Modality.SEALED
 
 /**
  * Whether users can reference the declaration in Kotlin source. Use it in a check about how users

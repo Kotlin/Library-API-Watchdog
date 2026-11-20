@@ -1,6 +1,6 @@
 // RUN_PIPELINE_TILL: FRONTEND
 // EXPLICIT_API_MODE: WARNING
-// INCLUDED_ANNOTATIONS: test.markers.PublicApi
+// INCLUDED_ANNOTATIONS: test.markers.PublicApi test.sealed.PublicConstructor
 // INCLUDED_NAMES: test.api.Outer.Companion test.api.**.create* test.api.Levels.HIGH
 // EXCLUDED_NAMES: test.api.ExcludedMember.createExcluded test.api.Levels.HIGH
 // DIAGNOSTICS: -STATEFUL_CLASS_WITHOUT_EQUALS -STATEFUL_CLASS_WITHOUT_HASH_CODE -STATEFUL_CLASS_WITHOUT_TO_STRING
@@ -69,3 +69,17 @@ public open class Outer {
 public enum class Levels {
     HIGH,
 }
+
+// FILE: sealed.kt
+package test.sealed
+
+@Target(AnnotationTarget.CONSTRUCTOR)
+public annotation class PublicConstructor
+
+// An included constructor includes its class. A constructor of a sealed class isn't public API and doesn't include the class.
+
+/** Documented. */
+public abstract class <!OPEN_API_WITHOUT_SUBCLASS_OPT_IN!>Abstract<!> @PublicConstructor constructor(tags: <!MUTABLE_COLLECTION_PUBLIC_API!>MutableList<String><!>)
+
+/** Documented. */
+public sealed class Sealed @PublicConstructor constructor(tags: MutableList<String>)
