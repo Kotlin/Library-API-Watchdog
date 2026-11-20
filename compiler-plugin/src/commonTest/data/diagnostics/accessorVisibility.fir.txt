@@ -1,0 +1,101 @@
+FILE: mangled.kt
+    @FILE:R|kotlin/jvm/JvmName|(name = String(Mangled) [evaluated = String(Mangled)])
+    package foo.bar
+
+    @R|kotlin/jvm/JvmInline|() public final inline value class UserId : R|kotlin/Any| {
+        public constructor(raw: R|kotlin/String|): R|foo/bar/UserId| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val raw: R|kotlin/String| = R|<local>/raw|
+            public get(): R|kotlin/String|
+
+    }
+    public final var current: R|foo/bar/UserId| = R|foo/bar/UserId.UserId|(String(x))
+        public get(): R|foo/bar/UserId|
+        private set(value: R|foo/bar/UserId|): R|kotlin/Unit|
+    public final var shared: R|foo/bar/UserId| = R|foo/bar/UserId.UserId|(String(x))
+        public get(): R|foo/bar/UserId|
+        internal set(value: R|foo/bar/UserId|): R|kotlin/Unit|
+    public open class Ledger : R|kotlin/Any| {
+        public constructor(): R|foo/bar/Ledger| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final var owner: R|foo/bar/UserId| = R|foo/bar/UserId.UserId|(String(x))
+            public get(): R|foo/bar/UserId|
+            private set(value: R|foo/bar/UserId|): R|kotlin/Unit|
+
+        public final var editor: R|foo/bar/UserId| = R|foo/bar/UserId.UserId|(String(x))
+            @PROPERTY_GETTER:R|kotlin/jvm/JvmName|(name = String(getEditorNamed) [evaluated = String(getEditorNamed)]) public get(): R|foo/bar/UserId|
+            private set(value: R|foo/bar/UserId|): R|kotlin/Unit|
+
+        public final var auditor: R|foo/bar/UserId| = R|foo/bar/UserId.UserId|(String(x))
+            @PROPERTY_GETTER:R|kotlin/jvm/JvmName|(name = String(getAuditorNamed) [evaluated = String(getAuditorNamed)]) public get(): R|foo/bar/UserId|
+            protected set(value: R|foo/bar/UserId|): R|kotlin/Unit|
+
+    }
+FILE: inline.kt
+    @FILE:R|kotlin/jvm/JvmName|(name = String(Inline) [evaluated = String(Inline)])
+    package foo.bar
+
+    @R|kotlin/PublishedApi|() internal final var storedLimit: R|kotlin/Int| = Int(0)
+        internal get(): R|kotlin/Int|
+        internal set(value: R|kotlin/Int|): R|kotlin/Unit|
+    public final var privateSetter: R|kotlin/Int|
+        public inline get(): R|kotlin/Int| {
+            ^ R|foo/bar/storedLimit|
+        }
+        private inline set(value: R|kotlin/Int|): R|kotlin/Unit| {
+            R|foo/bar/storedLimit| = when () {
+                CMP(<, R|<local>/value|.R|kotlin/Int.compareTo|(Int(0))) ->  {
+                    Int(0)
+                }
+                else ->  {
+                    R|<local>/value|
+                }
+            }
+
+        }
+    public final var internalSetter: R|kotlin/Int|
+        public inline get(): R|kotlin/Int| {
+            ^ R|foo/bar/storedLimit|
+        }
+        internal inline set(value: R|kotlin/Int|): R|kotlin/Unit| {
+            R|foo/bar/storedLimit| = when () {
+                CMP(<, R|<local>/value|.R|kotlin/Int.compareTo|(Int(0))) ->  {
+                    Int(0)
+                }
+                else ->  {
+                    R|<local>/value|
+                }
+            }
+
+        }
+    @R|kotlin/PublishedApi|() internal final var publishedSetter: R|kotlin/Int|
+        internal inline get(): R|kotlin/Int| {
+            ^ R|foo/bar/storedLimit|
+        }
+        internal inline set(value: R|kotlin/Int|): R|kotlin/Unit| {
+            R|foo/bar/storedLimit| = when () {
+                CMP(<, R|<local>/value|.R|kotlin/Int.compareTo|(Int(0))) ->  {
+                    Int(0)
+                }
+                else ->  {
+                    R|<local>/value|
+                }
+            }
+
+        }
+FILE: hiddenGetter.kt
+    package foo.bar
+
+    public final var counter: R|kotlin/Int| = Int(0)
+        @PROPERTY_GETTER:R|kotlin/jvm/JvmSynthetic|() public get(): R|kotlin/Int|
+        private set(value: R|kotlin/Int|): R|kotlin/Unit|
+FILE: publishedSetter.kt
+    package foo.bar
+
+    @R|kotlin/PublishedApi|() internal final var publishedCounter: R|kotlin/Int| = Int(0)
+        @PROPERTY_GETTER:R|kotlin/jvm/JvmSynthetic|() internal get(): R|kotlin/Int|
+        internal set(value: R|kotlin/Int|): R|kotlin/Unit|

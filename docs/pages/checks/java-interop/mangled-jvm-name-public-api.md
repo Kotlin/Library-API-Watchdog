@@ -143,7 +143,7 @@ public class Ledger {
   A member with the return type `Result` has a mangled JVM name.
 - If a top-level function or getter uses a value class only as its return type, its JVM name doesn't change.
 - The check skips members and constructors of the value class itself.
-- The check skips `const val` properties and annotation classes.
+- The check skips `const val` properties, annotation classes, and private or internal setters.
 - The plugin checks `suspend` functions with [Kotlin-only API without JvmSynthetic](./kotlin-only-api-without-jvm-synthetic.md).
 - The check skips overrides, `@JvmSynthetic` functions and accessors, and `@PublishedApi internal` declarations.
 

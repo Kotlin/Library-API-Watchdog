@@ -70,7 +70,7 @@ internal class MangledJvmNameChecker(
         val receiverValueClass = declaration.receiverParameter?.typeRef?.coneType?.mangledValueClass()
             ?: declaration.contextParameters.firstNotNullOfOrNull { it.returnTypeRef.coneType.mangledValueClass() }
         val getterValueClass = receiverValueClass ?: declaration.returnValueClassIfMember()
-        val setterValueClass = if (declaration.isVar) {
+        val setterValueClass = if (declaration.hasApiAccessor(declaration.setter)) {
             receiverValueClass ?: declaration.returnTypeRef.coneType.mangledValueClass()
         } else {
             null
