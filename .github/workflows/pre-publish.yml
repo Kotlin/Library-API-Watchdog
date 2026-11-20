@@ -1,4 +1,4 @@
-name: Pre-release
+name: Pre-publish
 
 # The first part of a release. The publication runs outside GitHub Actions, from the `release/<version>` branch of this
 # workflow. Then the Post-publish workflow finishes the release. RELEASE.md has the process.
@@ -121,7 +121,7 @@ jobs:
               --description 'A pull request of the release workflows. The release notes skip it.'
             gh pr create --base "$GITHUB_REF_NAME" --head "$RELEASE_BRANCH" --label release \
               --title "Release $LIBRARY_VERSION" \
-              --body "The [Pre-release workflow]($RUN_URL) made this pull request. The Post-publish workflow merges it after the publication. Don't merge it by hand."
+              --body "The [Pre-publish workflow]($RUN_URL) made this pull request. The Post-publish workflow merges it after the publication. Don't merge it by hand."
             pr="$(gh pr view "$RELEASE_BRANCH" --json number --jq .number)"
           fi
           echo "pr=$pr" >> "$GITHUB_OUTPUT"

@@ -56,7 +56,7 @@ jobs:
             --json number,state,baseRefName \
             --jq 'map(select(.state != "CLOSED")) | first | if . then "\(.number) \(.baseRefName)" else empty end')"
           if [[ -z "$pr" ]]; then
-            echo "No open or merged pull request is from $RELEASE_BRANCH. Run the Pre-release workflow first." >&2
+            echo "No open or merged pull request is from $RELEASE_BRANCH. Run the Pre-publish workflow first." >&2
             exit 1
           fi
           echo "pr=${pr%% *}" >> "$GITHUB_OUTPUT"
@@ -73,7 +73,7 @@ jobs:
           elif sha="$(git rev-parse --verify --quiet "refs/remotes/origin/$RELEASE_BRANCH^{commit}")"; then
             echo "$RELEASE_BRANCH is at $sha."
           else
-            echo "Neither v$LIBRARY_VERSION nor $RELEASE_BRANCH exists. Run the Pre-release workflow first." >&2
+            echo "Neither v$LIBRARY_VERSION nor $RELEASE_BRANCH exists. Run the Pre-publish workflow first." >&2
             exit 1
           fi
           if [[ -n "$PUBLISHED_SHA" && "$PUBLISHED_SHA" != "$sha" ]]; then

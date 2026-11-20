@@ -87,7 +87,7 @@ low-noise, per-checker view: no plugin loading, no message rendering, no backend
 
 The `benchmarkBaseline` task runs `IsolatedCheckerBenchmark` with every `checker` value and compares
 the allocation with a baseline file. The `Benchmark baseline` workflow runs it on every push to `main`
-that changes the compiler plugin, and in the Pre-release and Dev kit update workflows. A pull request
+that changes the compiler plugin, and in the Pre-publish and Dev kit update workflows. A pull request
 doesn't run it.
 
 ```bash

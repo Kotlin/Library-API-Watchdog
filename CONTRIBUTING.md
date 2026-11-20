@@ -62,7 +62,7 @@ publication tasks of the included builds. The root `publishAllPublicationsToBuil
 ./gradlew :build-logic:test                                               # build logic tests
 ```
 
-A push to `main`, the Pre-release workflow, and the Dev kit update workflow run every test against every supported
+A push to `main`, the Pre-publish workflow, and the Dev kit update workflow run every test against every supported
 Kotlin version, and the benchmark baseline check. A pull request runs fewer tests:
 
 - Functional tests: every test against one Kotlin version of each release line, and only the tests with
@@ -159,7 +159,7 @@ CI on `main` sets `DEVELOCITY_CACHE_PUSH=true` to write cache entries.
 ## Version
 
 `library.properties` sets the next development version, for example `0.3.0` after the `0.2.0` release.
-Local builds and the development builds of `main` use it. The release commit of the Pre-release workflow sets it.
+Local builds and the development builds of `main` use it. The release commit of the Pre-publish workflow sets it.
 To change the build and website package versions by hand, run:
 
 ```bash
@@ -196,7 +196,7 @@ A check workflow has no `pull_request` trigger of its own. To add a check workfl
 
 ## Watchdog bot
 
-The Dev kit update, Pre-release, and Post-publish workflows push their branches and open their pull requests as the
+The Dev kit update, Pre-publish, and Post-publish workflows push their branches and open their pull requests as the
 Watchdog bot, a
 GitHub App. A pull request of `GITHUB_TOKEN` starts `pull_request` runs that wait for an approval
 ([Events that trigger workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request)).
@@ -218,7 +218,7 @@ Then generate a private key, install the app on this repository, and add the rep
 | `WATCHDOG_BOT_PRIVATE_KEY` | Secret | The private key, the content of the `.pem` file |
 | `WATCHDOG_BOT_LOGIN` | Variable | The user of the app, `<app slug>[bot]`, for example `library-api-watchdog[bot]` |
 
-The Dev kit update and the Pre-release workflows check the commit of their pull request themselves. So the compiler plugin
+The Dev kit update and the Pre-publish workflows check the commit of their pull request themselves. So the compiler plugin
 tests, the Gradle tests, the docs checks, the version alignment check, and the artifact list check skip a
 `pull_request` run of `WATCHDOG_BOT_LOGIN`. A push of another user to the branch runs them.
 
@@ -257,7 +257,7 @@ npm exec --yes --package=node@24 --package=renovate@44.164.6 -- renovate-config-
 
 ## Changelog
 
-The Pre-release workflow writes the section of each release in [CHANGELOG.md](CHANGELOG.md), so a pull request doesn't
+The Pre-publish workflow writes the section of each release in [CHANGELOG.md](CHANGELOG.md), so a pull request doesn't
 edit the changelog. The section holds the GitHub generated release notes: the pull requests since the previous release
 tag. The title of a pull request is its changelog entry. The notes skip the pull requests with the `release` label of
 [.github/release.yml](.github/release.yml).

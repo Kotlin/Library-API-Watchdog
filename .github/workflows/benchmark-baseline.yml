@@ -46,7 +46,7 @@ env:
   DEVELOCITY_CACHE_PUSH: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
 
 jobs:
-  # A pull request doesn't run the check. The Dev kit update and the Pre-release workflows call this workflow on the
+  # A pull request doesn't run the check. The Dev kit update and the Pre-publish workflows call this workflow on the
   # commit of their pull request.
   benchmark:
     runs-on: ubuntu-24.04

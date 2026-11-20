@@ -50,7 +50,7 @@ npm run build                       # the site build, fails on a broken link or 
   request of a new version needs a token (CONTRIBUTING.md, "Build"). The workflows have it, a pull request from a fork
   doesn't.
 - GitHub Actions doesn't publish a release. The Maven Central and Gradle Plugin Portal publications run outside this
-  repository, between the `Pre-release` and `Post-publish` workflows. Space gets development versions only. RELEASE.md
+  repository, between the `Pre-publish` and `Post-publish` workflows. Space gets development versions only. RELEASE.md
   has the process.
 - The `artifacts/` lists of the root build and `plugin-annotations` hold the published files of the Maven Central
   modules. After a change of a publication, run `./gradlew dumpArtifacts` and commit the lists. A change of
@@ -64,9 +64,9 @@ npm run build                       # the site build, fails on a broken link or 
 - `version` in `library.properties` is the next development version, not the latest release. The release build and
   the docs deploy get the release version from `LIBRARY_VERSION`, so the README has no plugin version. Only a manual
   run of `docs.yml` on `main` with the `version` input deploys the website. The `Post-publish` workflow starts it.
-- A pull request doesn't edit `CHANGELOG.md`. The `Pre-release` workflow writes the section of a release from the GitHub
+- A pull request doesn't edit `CHANGELOG.md`. The `Pre-publish` workflow writes the section of a release from the GitHub
   generated release notes, after the text of an optional `## Unreleased` section.
-- The `Dev kit update`, `Pre-release`, and `Post-publish` workflows push their branches and open their pull requests as
+- The `Dev kit update`, `Pre-publish`, and `Post-publish` workflows push their branches and open their pull requests as
   the Watchdog bot, a
   GitHub App (CONTRIBUTING.md, "Watchdog bot"). A pull request of `GITHUB_TOKEN` starts `pull_request` runs that wait
   for an approval. The test workflows skip the `pull_request` runs of `WATCHDOG_BOT_LOGIN`. The merges use
@@ -78,7 +78,7 @@ npm run build                       # the site build, fails on a broken link or 
 - A pull request runs every functional test and the `*FuzzTest` classes of the compiler plugin against one Kotlin
   version of each release line only (`2.4.0` of `2.4.0` and `2.4.10`). Against the other versions, it runs the
   functional tests with `@Category(SmokeTest::class)`. It doesn't test the newest Kotlin dev build, and it doesn't
-  run the benchmark baseline check. A push to `main`, `Pre-release`, and `Dev kit update` run every test against
+  run the benchmark baseline check. A push to `main`, `Pre-publish`, and `Dev kit update` run every test against
   every version.
 - A project of an included build depends on the root build's projects, and the reverse, by coordinates
   (`"$group:<name>:$version"`), never with `project(...)`. Composite substitution resolves them.
