@@ -1977,6 +1977,50 @@ class ExemptionFixerTest {
     }
 
     @Test
+    fun `imports of a file without a package go to the line start of an indented declaration`() {
+        for (header in listOf("", "// License\n\n", "@file:JvmName(\"Facade\")\n\n")) {
+            for (indent in listOf("    ", "\t")) {
+                val text = "$header${indent}public open class Api\n"
+
+                val result = fix(text, diagnostic("OPEN_API_WITHOUT_SUBCLASS_OPT_IN", text, "public open class Api"))
+
+                assertEquals(
+                    header +
+                            "import kotlinx.library.watchdog.ExemptionReason\n" +
+                            "import kotlinx.library.watchdog.IntentionallyOpen\n\n" +
+                            "$indent@IntentionallyOpen(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n" +
+                            "${indent}public open class Api\n",
+                    result.newText,
+                    "header=$header, indent=$indent",
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `file annotation of a file without a package goes to the line start of an indented declaration`() {
+        val text = "    public fun enabled(): Boolean? = null\n"
+
+        val result = fix(
+            text,
+            diagnostic("TOP_LEVEL_API_WITHOUT_JVM_NAME", text, "enabled"),
+            diagnostic("UNDOCUMENTED_PUBLIC_API", text, "enabled"),
+            diagnostic("NULLABLE_BOOLEAN_PUBLIC_API", text, "enabled"),
+        )
+
+        assertEquals(
+            "@file:IntentionallyDefaultFacadeName(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n\n" +
+                    "import kotlinx.library.watchdog.ExemptionReason\n" +
+                    "import kotlinx.library.watchdog.IntentionallyDefaultFacadeName\n" +
+                    "import kotlinx.library.watchdog.IntentionallyNullableBoolean\n\n" +
+                    "    $PLACEHOLDER_KDOC\n" +
+                    "    @IntentionallyNullableBoolean(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n" +
+                    "    public fun enabled(): Boolean? = null\n",
+            result.newText,
+        )
+    }
+
+    @Test
     fun `file annotation of a file without a package goes below the header comment`() {
         for (header in listOf("// License", "/* License */")) {
             val text = "$header\n\npublic fun topLevel(): Int = 0\n"

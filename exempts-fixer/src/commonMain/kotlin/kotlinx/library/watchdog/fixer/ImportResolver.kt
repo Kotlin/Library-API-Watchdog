@@ -69,7 +69,7 @@ internal class ImportResolver(private val ktFile: KtFile) {
                     if (packageDirective != null) {
                         TextEdit(packageDirective.endWithTrailingComment(), "\n\n$importLines", EditOrder.IMPORT)
                     } else {
-                        val offset = ktFile.declarations.firstOrNull()?.textRange?.startOffset ?: 0
+                        val offset = text.lineStartIfIndented(ktFile.declarations.firstOrNull()?.textRange?.startOffset ?: 0)
                         TextEdit(offset, "$importLines\n\n", EditOrder.IMPORT)
                     }
                 }

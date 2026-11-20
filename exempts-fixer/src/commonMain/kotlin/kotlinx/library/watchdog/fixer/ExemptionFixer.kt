@@ -424,7 +424,7 @@ internal sealed interface FixTarget {
                     while (child != null && (child is PsiComment || child is PsiWhiteSpace || child.textLength == 0)) {
                         child = child.nextSibling
                     }
-                    child?.textRange?.startOffset ?: 0
+                    text.lineStartIfIndented(child?.textRange?.startOffset ?: 0)
                 }
 
             return fixes.map {
@@ -494,6 +494,11 @@ private fun KtAnnotationEntry.removedElement(removedEntries: Set<KtAnnotationEnt
     val list = annotationList?.takeIf { annotationList -> annotationList.entries.all { it in removedEntries } }
     if (list != null && list.entries.first() != this) return null
     return list ?: this
+}
+
+internal fun String.lineStartIfIndented(offset: Int): Int {
+    val lineStart = lastIndexOf('\n', offset - 1) + 1
+    return if (substring(lineStart, offset).isBlank()) lineStart else offset
 }
 
 private fun PsiElement.wholeLine(text: String): IntRange? {
