@@ -14,7 +14,8 @@ declarations that are hard to evolve: shapes that can't change later without a b
 the library's users.
 
 Every check is on by default and reports a compilation error, except
-[Undocumented public API](./checks/undocumented-public-api.md), which reports a warning.
+[Undocumented public API](./checks/undocumented-public-api.md) and
+[Redundant exemptions](./checks/special/redundant-exemption.md), which report a warning.
 [Configuration](./configuration.md) changes the severity of a check or turns it off.
 [Exemptions and internal API](./exemptions.md) exempts a declaration.
 
