@@ -3,9 +3,13 @@
 package kotlinx.library.watchdog.fixer
 
 import java.io.IOException
+import java.nio.file.AccessDeniedException
+import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
+import java.nio.file.attribute.PosixFileAttributeView
 import kotlin.system.exitProcess
 
 /**
@@ -67,7 +71,7 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
             val newText = fixResult.newText
             if (request.updateSources && newText != null) {
                 try {
-                    Files.writeString(file, newText)
+                    replaceText(file, newText)
                     response.modifiedFiles += filePath
                 } catch (e: IOException) {
                     fixResult = fix("`exemptExistingApi` can't write the file: $e")
@@ -84,6 +88,30 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
                 response.exemptions += scanner.scan(file.toString(), SourceFile.read(file).text)
             }
         }
+    }
+}
+
+/** Replaces the file in one step, so a failure doesn't leave a part of [text] in the file. */
+private fun replaceText(file: Path, text: String) {
+    val target = file.toRealPath()
+    val temporary = try {
+        Files.createTempFile(target.parent, target.fileName.toString(), ".tmp")
+    } catch (e: AccessDeniedException) {
+        Files.writeString(target, text)
+        return
+    }
+    try {
+        Files.writeString(temporary, text)
+        Files.getFileAttributeView(target, PosixFileAttributeView::class.java)?.let { attributes ->
+            Files.setPosixFilePermissions(temporary, attributes.readAttributes().permissions())
+        }
+        try {
+            Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE)
+        } catch (e: AtomicMoveNotSupportedException) {
+            Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING)
+        }
+    } finally {
+        Files.deleteIfExists(temporary)
     }
 }
 

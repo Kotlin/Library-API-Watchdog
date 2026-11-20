@@ -106,6 +106,48 @@ class ExemptsFixerMainTest {
         assertContains(skipped.reason, "read-only")
     }
 
+    @Test
+    fun `a fixed file keeps its permissions and its directory gets no other file`() {
+        if (!posix) return
+        val file = source("Api.kt")
+        val permissions = PosixFilePermissions.fromString("rw-r-----")
+        Files.setPosixFilePermissions(file, permissions)
+        reportOpenClass(file)
+
+        runFixer()
+
+        assertEquals(EXEMPTED_API, Files.readString(file))
+        assertEquals(permissions, Files.getPosixFilePermissions(file))
+        assertEquals(listOf(file), Files.list(file.parent).use { it.iterator().asSequence().toList() })
+    }
+
+    @Test
+    fun `a symbolic link to a source file stays a link`() {
+        if (!posix) return
+        val target = source("Target.kt")
+        val link = Files.createSymbolicLink(target.resolveSibling("Api.kt"), target.fileName)
+        reportOpenClass(link)
+
+        runFixer()
+
+        assertTrue(Files.isSymbolicLink(link))
+        assertTrue(Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS))
+        assertEquals(EXEMPTED_API, Files.readString(target))
+    }
+
+    @Test
+    fun `a file in a read-only directory is fixed`() {
+        if (!posix) return
+        val file = source("Api.kt")
+        reportOpenClass(file)
+        assertTrue(file.parent.toFile().setWritable(false))
+
+        val response = runFixer()
+
+        assertEquals(EXEMPTED_API, Files.readString(file))
+        assertEquals(listOf(file.toString()), response.modifiedFiles)
+    }
+
     private companion object {
         val BYTE_ORDER_MARK = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
 
