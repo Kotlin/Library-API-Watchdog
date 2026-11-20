@@ -65,12 +65,11 @@ five things:
   severity still decides the fix: `exemptExistingApi` exempts a check set to `ERROR` and leaves a
   check set to `WARNING`. A check set to `NONE` in `apiWatchdog` doesn't record anything.
 - `allWarningsAsErrors` is off, so the warnings don't fail the compilation.
-- The three always-error checks are off, because `FOR_BACKWARDS_COMPATIBILITY` isn't a reason for
-  them:
+- [`PUBLIC_TYPE_WITH_INTERNAL_API`](./checks/special/public-type-with-internal-api.md) reports a
+  warning, and `exemptExistingApi` exempts it. The other two always-error checks are off, because
+  `FOR_BACKWARDS_COMPATIBILITY` isn't a reason for them:
   - [`EXEMPTION_WITHOUT_EXPLANATION`](./checks/special/exemption-without-explanation.md): only the
     author of the exemption can write its reason.
-  - [`PUBLIC_TYPE_WITH_INTERNAL_API`](./checks/special/public-type-with-internal-api.md): the
-    internal type has to leave the signature.
   - [`PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY`](./checks/special/public-type-from-non-transitive-dependency.md):
     declare the dependency with `api` in the build script. This doesn't break any consumer.
 - In a multiplatform project, one compilation prints the diagnostics of a shared source set, so the
@@ -83,5 +82,5 @@ five things:
 copies on the `actual` declarations with the exemption on the `expect` declaration.
 
 Any other compilation error still fails the task. Fix unresolved references and syntax errors first.
-The compilations outside collection mode still report the three always-error checks, so fix them
+The compilations outside collection mode still report the two checks that are off, so fix them
 after you commit the generated exemptions.
