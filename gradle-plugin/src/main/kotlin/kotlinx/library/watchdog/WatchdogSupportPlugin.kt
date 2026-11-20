@@ -27,7 +27,6 @@ import org.gradle.api.attributes.java.TargetJvmEnvironment.TARGET_JVM_ENVIRONMEN
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.compiler.plugin.devkit.DevKitSupportPlugin
@@ -359,20 +358,21 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 dependencyFiles(exemptNonTransitiveDependencies.get(), android),
             )
         })
-        val declarations = providers.provider {
-            if (!checkDependencyExposure.get()) return@provider emptyList<DeclaredArtifact>()
-            declaredArtifacts(compileDependencies.get(), compilesForAndroid.get())
-        }
+        fun artifactIds(configuration: NamedDomainObjectProvider<Configuration>): Provider<List<String>> =
+            checkDependencyExposure.flatMap { check ->
+                if (!check) return@flatMap providers.provider { emptyList<String>() }
+                dependencyArtifacts(configuration.get(), compilesForAndroid.get()).resolvedArtifacts
+                    .map { artifacts -> artifacts.map { it.id.displayName } }
+            }
         // A path option isn't a task input, because a path is different in each checkout directory. The
-        // compile classpath is an input of the task already.
+        // compile classpath is an input of the task already, so the transitive dependencies are inputs by name.
         kotlinCompilation.compileTaskProvider.configure { task ->
             task.inputs.property("apiWatchdog.checkDependencyExposure", checkDependencyExposure)
-            task.inputs.files(transitiveFiles)
-                .withPropertyName("apiWatchdog.transitiveDependencies")
-                .withNormalizer(ClasspathNormalizer::class.java)
+            task.dependsOn(transitiveFiles)
+            task.inputs.property("apiWatchdog.transitiveDependencies", artifactIds(transitiveDependencies))
             task.inputs.property(
-                "apiWatchdog.dependencyDeclarations",
-                declarations.map { artifacts -> artifacts.map { "${it.component}\t${it.declaration}" } },
+                "apiWatchdog.exemptNonTransitiveDependencies",
+                artifactIds(exemptNonTransitiveDependencies),
             )
         }
         return providers.provider {
@@ -447,7 +447,8 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 )
                 add(
                     pathsOption("dependencyDeclarations") {
-                        declarations.get().joinToString("\t") { "${it.path}\t${it.declaration}" }
+                        if (!checkDependencyExposure.get()) return@pathsOption ""
+                        dependencyDeclarations(compileDependencies.get(), compilesForAndroid.get())
                     },
                 )
                 add(
@@ -467,10 +468,11 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
     }
 
     /**
-     * The build script declaration of each artifact of [configuration]. The declaration is the direct
-     * dependency with the shortest resolution path to the component of the artifact.
+     * The build script declaration of each artifact of [configuration], as tab-separated
+     * `path`, `configuration`, `notation` triples. The declaration is the direct dependency with
+     * the shortest resolution path to the component of the artifact.
      */
-    private fun declaredArtifacts(configuration: Configuration, android: Boolean): List<DeclaredArtifact> {
+    private fun dependencyDeclarations(configuration: Configuration, android: Boolean): String {
         val declarations = HashMap<ComponentIdentifier, String>()
         val queue = ArrayDeque<Pair<ResolvedComponentResult, String>>()
         for (dependency in configuration.incoming.resolutionResult.root.dependencies) {
@@ -485,14 +487,12 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 if (dependency is ResolvedDependencyResult) queue.add(dependency.selected to declaration)
             }
         }
-        return dependencyArtifacts(configuration, android).artifacts.mapNotNull { artifact ->
-            val component = artifact.id.componentIdentifier
-            declarations[component]?.let { DeclaredArtifact(artifact.file.path, component.displayName, it) }
-        }
+        return dependencyArtifacts(configuration, android).artifacts.asSequence()
+            .mapNotNull { artifact ->
+                declarations[artifact.id.componentIdentifier]?.let { "${artifact.file.path}\t$it" }
+            }
+            .joinToString("\t")
     }
-
-    /** [declaration] is a tab-separated configuration name and notation. */
-    private class DeclaredArtifact(val path: String, val component: String, val declaration: String)
 
     /** The declaration of [requested] as a tab-separated configuration name and notation. */
     private fun declarationOf(requested: ComponentSelector, configuration: Configuration): String? {

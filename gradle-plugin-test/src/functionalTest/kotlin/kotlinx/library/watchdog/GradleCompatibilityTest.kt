@@ -14,6 +14,7 @@ import kotlinx.library.watchdog.Diagnostic.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPEN
 import org.gradle.testkit.runner.TaskOutcome.FAILED
 import org.gradle.testkit.runner.TaskOutcome.FROM_CACHE
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
+import org.gradle.testkit.runner.TaskOutcome.UP_TO_DATE
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.TEST_COMPILER_VERSION
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.pluginUnderTestVersion
 import org.jetbrains.kotlin.tooling.core.toKotlinVersion
@@ -204,21 +205,42 @@ class GradleCompatibilityTest {
     }
 
     @Test
-    fun `cached compile task isn't reused after a dependency leaves the API`() {
+    fun `cached compile task isn't reused after a dependency exemption is removed`() {
+        val exemption = "dependencies { apiWatchdogExemptNonTransitive(project(\":model\")) }"
         val project = jvmProject {
             consumerSource()
-            dependencies(api(":model"))
+            dependencies(implementation(":model"))
+            buildScript(exemption)
             modelSubproject()
         }
         project.useLocalBuildCache()
         project.build("compileKotlin", "--build-cache")
         val script = project.file("build.gradle.kts")
-        script.writeText(script.readText().replace("api(project(\":model\"))", "implementation(project(\":model\"))"))
+        script.writeText(script.readText().replace(exemption, ""))
 
         val result = project.buildAndFail("clean", "compileKotlin", "--build-cache")
 
         result.assertTaskOutcome(":compileKotlin", FAILED)
         result.assertErrors(PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY)
+    }
+
+    @Test
+    fun `compile task stays up to date after a function body changes in a dependency`() {
+        val project = jvmProject {
+            consumerSource()
+            dependencies(api(":model"))
+            modelSubproject()
+        }
+        val model = project.file("model/src/main/kotlin/test/model/ExternalModel.kt")
+        val withFunction = "public class ExternalModel {\n    public fun size(): Int = 1\n}"
+        model.writeText(model.readText().replace("public class ExternalModel", withFunction))
+        project.build("compileKotlin")
+        model.writeText(model.readText().replace("= 1", "= 2"))
+
+        val result = project.build("compileKotlin")
+
+        result.assertTaskOutcome(":model:compileKotlin", SUCCESS)
+        result.assertTaskOutcome(":compileKotlin", UP_TO_DATE)
     }
 
     /** The cache is outside the build, so a copy of the build in another directory has the same cache. */
