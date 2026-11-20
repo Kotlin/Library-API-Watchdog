@@ -1,0 +1,46 @@
+Module: lib
+FILE: models.kt
+    package com.example.models
+
+    @R|kotlinx/library/watchdog/IntentionallyOpen|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public open class Model : R|kotlin/Any| {
+        public constructor(): R|com/example/models/Model| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+Module: common
+FILE: common.kt
+    package foo.bar
+
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final expect class SupertypeOnly : R|kotlin/Any| {
+    }
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final expect class MemberOnly : R|kotlin/Any| {
+    }
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final expect class Plain : R|kotlin/Any| {
+    }
+Module: jvm
+FILE: jvm.kt
+    package foo.bar
+
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final actual class SupertypeOnly : R|com/example/models/Model| {
+        public constructor(): R|foo/bar/SupertypeOnly| {
+            super<R|com/example/models/Model|>()
+        }
+
+    }
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final actual class MemberOnly : R|kotlin/Any| {
+        public constructor(): R|foo/bar/MemberOnly| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final fun extra(): R|com/example/models/Model| {
+            ^extra R|com/example/models/Model.Model|()
+        }
+
+    }
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final actual class Plain : R|kotlin/Any| {
+        public constructor(): R|foo/bar/Plain| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
