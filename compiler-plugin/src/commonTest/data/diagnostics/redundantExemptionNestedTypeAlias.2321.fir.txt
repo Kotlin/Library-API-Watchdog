@@ -1,0 +1,47 @@
+Module: lib
+FILE: models.kt
+    package com.example.models
+
+    @R|kotlinx/library/watchdog/IntentionallyOpen|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public open class Model : R|kotlin/Any| {
+        public constructor(): R|com/example/models/Model| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+FILE: shared.kt
+    package com.example.shared
+
+    public final class Shared : R|kotlin/Any| {
+        public constructor(): R|com/example/shared/Shared| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+Module: main
+FILE: exposure.kt
+    package consumer
+
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.INTEROP|, description = String(The host ships the models.)) public final class Tasks : R|kotlin/Any| {
+        public constructor(): R|consumer/Tasks| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final typealias Model = R|com/example/models/Model|
+
+    }
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.INTEROP|, description = String(The host ships the models.)) public final class SharedTasks : R|kotlin/Any| {
+        public constructor(): R|consumer/SharedTasks| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final typealias Shared = R|com/example/shared/Shared|
+
+    }
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.INTEROP|, description = String(The host ships the models.)) public final class CoveredTasks : R|kotlin/Any| {
+        public constructor(): R|consumer/CoveredTasks| {
+            super<R|kotlin/Any|>()
+        }
+
+        @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.INTEROP|, description = String(The host ships the models.)) public final typealias Model = R|com/example/models/Model|
+
+    }
