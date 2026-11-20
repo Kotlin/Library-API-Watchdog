@@ -1,6 +1,6 @@
 name: Docs checks
 
-# Builds the docs website and runs the docs checks. The Pull request checks, Build docs website, and Pre-release
+# Builds the docs website and runs the docs checks. The Pull request checks, Build docs website, and Pre-publish
 # workflows call this workflow. No job requests a write permission, so a pull request from a fork can run it.
 on:
   workflow_call:
@@ -34,7 +34,7 @@ env:
   WEBSITE_VERSION: ${{ inputs.version }}
 
 jobs:
-  # A `pull_request` run of the Watchdog bot skips the checks. The Pre-release workflow calls this workflow on the
+  # A `pull_request` run of the Watchdog bot skips the checks. The Pre-publish workflow calls this workflow on the
   # commit of its pull request.
   build:
     if: github.event_name != 'pull_request' || github.actor != vars.WATCHDOG_BOT_LOGIN

@@ -2,16 +2,16 @@
 
 A release has three parts, in this order:
 
-1. [Pre-release](#pre-release): a GitHub workflow makes the `release/<version>` branch and checks it.
+1. [Pre-publish](#pre-publish): a GitHub workflow makes the `release/<version>` branch and checks it.
 2. [Publication](#publication): a build outside GitHub Actions publishes the branch to Maven Central and to the Gradle
    Plugin Portal.
 3. [Post-publish](#post-publish): a GitHub workflow creates the tag and the GitHub release, and merges the branch.
 
 Space gets [development versions](#development-versions) only.
 
-## Pre-release
+## Pre-publish
 
-Run [Pre-release](.github/workflows/pre-release.yml) with the `version` input, for example `0.2.0`:
+Run [Pre-publish](.github/workflows/pre-publish.yml) with the `version` input, for example `0.2.0`:
 
 - From `main` for a version later than every release.
 - From `release/<MAJOR>.<MINOR>.x` for a backport. Create the branch from the latest release tag of the line, and
