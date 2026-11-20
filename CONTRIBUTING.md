@@ -133,7 +133,7 @@ a tag, and the code samples show that version. The Post-publish workflow starts 
 
 ## Build scans and cache
 
-The root build and its included builds use [JetBrains Develocity](https://ge.jetbrains.com/) for build scans and the remote build cache.
+The root build and its included builds use [JetBrains Develocity](https://develocity.jetbrains.com/) for build scans and the remote build cache.
 CI publishes scans for authenticated builds. Local scans are disabled by default.
 
 To enable local scans, copy `local.properties.template` to `local.properties` and set `develocity.buildScan.enabled=true`.
@@ -150,7 +150,7 @@ To authenticate locally, run:
 Gradle stores the key in `~/.gradle/develocity/keys.properties`.
 The same key authenticates scan uploads and remote cache access.
 
-For GitHub Actions, add the repository secret `DEVELOCITY_ACCESS_KEY` with the value `ge.jetbrains.com=<access-key>`.
+For GitHub Actions, add the repository secret `DEVELOCITY_ACCESS_KEY` with the value `develocity.jetbrains.com=<access-key>`.
 The key needs permission to publish scans and read and write the build cache.
 
 Local builds and pull requests only read the remote cache.
