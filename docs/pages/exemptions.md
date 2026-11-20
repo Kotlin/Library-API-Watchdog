@@ -273,7 +273,8 @@ apiWatchdog {
 ```
 
 A rule works for configurable checks only, not for always-error checks. With `recursive = true`,
-the rule also covers every declaration nested in the annotated one.
+the rule also covers every declaration nested in the annotated one. When the annotation is on a parameter or a
+type parameter, the rule skips what the check reports on that parameter.
 
 ## The annotations artifact
 
