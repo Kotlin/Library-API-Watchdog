@@ -4,7 +4,6 @@ package kotlinx.library.watchdog.fixer
 
 import java.io.IOException
 import java.nio.file.AccessDeniedException
-import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -97,7 +96,10 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
     }
 }
 
-/** Replaces the file in one step, so a failure doesn't leave a part of [text] in the file. */
+/**
+ * Replaces the file in one step, so a failure doesn't leave a part of [text] in the file. When the directory doesn't
+ * accept a new file or the move fails, writes [text] into the file.
+ */
 private fun replaceText(file: Path, text: String) {
     val target = file.toRealPath()
     val temporary = try {
@@ -113,8 +115,9 @@ private fun replaceText(file: Path, text: String) {
         }
         try {
             Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE)
-        } catch (e: AtomicMoveNotSupportedException) {
-            Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING)
+        } catch (e: IOException) {
+            // On Windows, the move fails while another process has the file open.
+            Files.writeString(target, text)
         }
     } finally {
         Files.deleteIfExists(temporary)
