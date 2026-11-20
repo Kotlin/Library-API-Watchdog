@@ -1,5 +1,7 @@
 package kotlinx.library.watchdog.fixer
 
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -116,8 +118,15 @@ class ExemptsFixerMainTest {
         reportLines += "SUBCLASS_OPT_IN_WITHOUT_MARKERS\t$failing\t$start\t${CONFLICTING.length}"
         reportLines += "REDUNDANT_EXEMPTION\t$failing\t$start\t${CONFLICTING.length}"
         reportOpenClass(fixed)
+        val errorOutput = ByteArrayOutputStream()
+        val standardError = System.err
+        System.setErr(PrintStream(errorOutput, true))
 
-        val response = runFixer()
+        val response = try {
+            runFixer()
+        } finally {
+            System.setErr(standardError)
+        }
 
         assertEquals(CONFLICTING, Files.readString(failing))
         assertEquals(EXEMPTED_API, Files.readString(fixed))
@@ -126,8 +135,12 @@ class ExemptsFixerMainTest {
         assertEquals(listOf("REDUNDANT_EXEMPTION", "SUBCLASS_OPT_IN_WITHOUT_MARKERS"), response.skipped.map { it.diagnostic }.sorted())
         response.skipped.forEach { skipped ->
             assertEquals(3, skipped.line)
-            assertContains(skipped.reason, "internal error")
+            assertEquals(
+                "`exemptExistingApi` can't edit the file because of an internal error. Add the exemptions by hand",
+                skipped.reason,
+            )
         }
+        assertContains(errorOutput.toString(), "$failing: java.lang.IllegalStateException")
     }
 
     @Test

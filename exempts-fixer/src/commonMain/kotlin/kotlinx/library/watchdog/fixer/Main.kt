@@ -4,6 +4,7 @@ package kotlinx.library.watchdog.fixer
 
 import java.io.IOException
 import java.nio.file.AccessDeniedException
+import java.nio.file.FileSystemException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -71,7 +72,8 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
                     }
                 )
             } catch (e: Exception) {
-                fix("`exemptExistingApi` can't edit the file because of an internal error: ${e.message ?: e}")
+                System.err.println("$filePath: ${e.stackTraceToString()}")
+                fix("`exemptExistingApi` can't edit the file because of an internal error. Add the exemptions by hand")
             }
             val newText = fixResult.newText
             if (request.updateSources && newText != null) {
@@ -79,7 +81,7 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
                     replaceText(file, newText)
                     response.modifiedFiles += filePath
                 } catch (e: IOException) {
-                    fixResult = fix("`exemptExistingApi` can't write the file")
+                    fixResult = fix(e.writeFailureReason())
                 }
             }
             response.applied += fixResult.applied
@@ -98,14 +100,15 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
 
 /**
  * Replaces the file in one step, so a failure doesn't leave a part of [text] in the file. When the directory doesn't
- * accept a new file or the move fails, writes [text] into the file.
+ * accept a new file or the move fails, writes [text] into the file, and a failure of that write throws
+ * [IncompleteWriteException].
  */
 private fun replaceText(file: Path, text: String) {
     val target = file.toRealPath()
     val temporary = try {
         Files.createTempFile(target.parent, target.fileName.toString(), ".tmp")
     } catch (e: AccessDeniedException) {
-        Files.writeString(target, text)
+        writeInPlace(target, text)
         return
     }
     try {
@@ -117,11 +120,33 @@ private fun replaceText(file: Path, text: String) {
             Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE)
         } catch (e: IOException) {
             // On Windows, the move fails while another process has the file open.
-            Files.writeString(target, text)
+            Files.deleteIfExists(temporary)
+            writeInPlace(target, text)
         }
     } finally {
         Files.deleteIfExists(temporary)
     }
+}
+
+private class IncompleteWriteException(cause: IOException) : IOException(cause)
+
+private fun writeInPlace(target: Path, text: String) {
+    try {
+        Files.writeString(target, text)
+    } catch (e: IOException) {
+        throw IncompleteWriteException(e)
+    }
+}
+
+private fun IOException.writeFailureReason(): String {
+    val incomplete = this is IncompleteWriteException
+    val reason = ((if (incomplete) cause else this) as? FileSystemException)?.reason?.removeSuffix(".")
+    val action = if (incomplete) {
+        "The file can be incomplete. Restore the file from version control"
+    } else {
+        "Fix the cause and run `exemptExistingApi` again"
+    }
+    return "`exemptExistingApi` can't write the file${reason?.let { ": $it" }.orEmpty()}. $action"
 }
 
 private class SourceFile(val text: String, val isValidUtf8: Boolean) {
