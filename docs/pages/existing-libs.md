@@ -56,12 +56,13 @@ A second run doesn't add anything, because an exempted declaration doesn't repor
 `exemptExistingApi` and `generateApiWatchdogReport` compile every compilation except tests in
 collection mode. [The report page](./report.md) lists the compilations.
 When neither task is in the task graph, the compilations run as configured. Collection mode changes
-four things:
+five things:
 
 - A module without explicit API mode compiles with `-Xexplicit-api=warning`.
 - Every enabled configurable check reports a warning, so the compilation passes. The configured
   severity still decides the fix: `exemptExistingApi` exempts a check set to `ERROR` and leaves a
   check set to `WARNING`. A check set to `NONE` in `apiWatchdog` doesn't record anything.
+- `allWarningsAsErrors` is off, so the warnings don't fail the compilation.
 - The three always-error checks are off, because `FOR_BACKWARDS_COMPATIBILITY` isn't a reason for
   them:
   - [`EXEMPTION_WITHOUT_EXPLANATION`](./checks/special/exemption-without-explanation.md): only the
