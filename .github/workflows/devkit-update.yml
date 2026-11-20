@@ -84,8 +84,9 @@ jobs:
           pr="$(gh pr list --head "$UPDATE_BRANCH" --base main --state open --json number,isCrossRepository \
             --jq 'map(select(.isCrossRepository == false)) | first | .number // empty')"
           if [[ -n "$pr" ]]; then
-            others="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$UPDATE_BRANCH" \
-              --jq '.commits[] | .author.login // "an unknown user"' | grep -vxF "$BOT" || true)"
+            authors="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$UPDATE_BRANCH" \
+              --jq '.commits[] | .author.login // "an unknown user"')"
+            others="$(grep -vxF "$BOT" <<< "$authors" || true)"
             if [[ -n "$others" ]]; then
               echo "::warning::$UPDATE_BRANCH has commits of other authors, so the workflow doesn't replace it. Merge or close pull request #$pr."
               exit 0
