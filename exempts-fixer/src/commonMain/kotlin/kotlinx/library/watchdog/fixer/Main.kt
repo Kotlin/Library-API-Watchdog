@@ -61,15 +61,19 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
                 skipReason = skipReason,
             )
 
-            var fixResult = fix(
-                when {
-                    request.isGenerated(file) ->
-                        "`exemptExistingApi` doesn't edit a file in the build directory. Change the generator of the file"
-                    !source.isValidUtf8 -> "The file isn't valid UTF-8. Save the file as UTF-8"
-                    request.updateSources && !Files.isWritable(file) -> "The file is read-only"
-                    else -> null
-                }
-            )
+            var fixResult = try {
+                fix(
+                    when {
+                        request.isGenerated(file) ->
+                            "`exemptExistingApi` doesn't edit a file in the build directory. Change the generator of the file"
+                        !source.isValidUtf8 -> "The file isn't valid UTF-8. Save the file as UTF-8"
+                        request.updateSources && !Files.isWritable(file) -> "The file is read-only"
+                        else -> null
+                    }
+                )
+            } catch (e: Exception) {
+                fix("`exemptExistingApi` can't edit the file because of an internal error: ${e.message ?: e}")
+            }
             val newText = fixResult.newText
             if (request.updateSources && newText != null) {
                 try {

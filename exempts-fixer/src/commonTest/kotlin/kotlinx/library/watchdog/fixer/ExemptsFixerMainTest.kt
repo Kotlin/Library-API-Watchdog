@@ -108,6 +108,29 @@ class ExemptsFixerMainTest {
     }
 
     @Test
+    fun `a file that the fixer fails on is skipped and the other files are fixed`() {
+        val failing = source("A.kt", CONFLICTING)
+        val fixed = source("B.kt")
+        // The replacement and the removal of one annotation are overlapping edits.
+        val start = CONFLICTING.indexOf("@SubclassOptInRequired")
+        reportLines += "SUBCLASS_OPT_IN_WITHOUT_MARKERS\t$failing\t$start\t${CONFLICTING.length}"
+        reportLines += "REDUNDANT_EXEMPTION\t$failing\t$start\t${CONFLICTING.length}"
+        reportOpenClass(fixed)
+
+        val response = runFixer()
+
+        assertEquals(CONFLICTING, Files.readString(failing))
+        assertEquals(EXEMPTED_API, Files.readString(fixed))
+        assertEquals(listOf(fixed.toString()), response.modifiedFiles)
+        assertEquals(listOf(fixed.toString()), response.applied.map { it.filePath })
+        assertEquals(listOf("REDUNDANT_EXEMPTION", "SUBCLASS_OPT_IN_WITHOUT_MARKERS"), response.skipped.map { it.diagnostic }.sorted())
+        response.skipped.forEach { skipped ->
+            assertEquals(3, skipped.line)
+            assertContains(skipped.reason, "internal error")
+        }
+    }
+
+    @Test
     fun `a fixed file keeps its permissions and its directory gets no other file`() {
         if (!posix) return
         val file = source("Api.kt")
@@ -205,5 +228,7 @@ class ExemptsFixerMainTest {
                 "import kotlinx.library.watchdog.IntentionallyOpen\n\n" +
                 "@IntentionallyOpen(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n" +
                 "public open class Api\n"
+
+        const val CONFLICTING = "package p\n\n@SubclassOptInRequired\npublic open class Api\n"
     }
 }
