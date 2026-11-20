@@ -38,7 +38,7 @@ public object ApiWatchdogSarifReport {
                                 "uri" to uri,
                                 "uriBaseId" to SOURCE_ROOT.takeUnless { uri.startsWith(FILE_URI) },
                             ),
-                            "region" to line?.let { mapOf("startLine" to it) },
+                            "region" to line?.takeIf { it > 0 }?.let { mapOf("startLine" to it) },
                         ),
                     ),
                 ),

@@ -416,6 +416,13 @@ class ApiWatchdogReportTest {
         })
     }
 
+    @Test
+    fun `SARIF has no region for a line below 1`() {
+        val locations = sarifLocations(sarifReport("", "src/Api.kt:1"), sarifReport("", "src/Gone.kt:0"), sarifReport("", "src/Gone.kt:-1"))
+        assertEquals(listOf("src/Api.kt", "src/Gone.kt", "src/Gone.kt"), locations.map { it.uri })
+        assertEquals(listOf(1, null, null), locations.map { it.startLine })
+    }
+
     private class SarifLocation(val uri: String, val uriBaseId: String?, val startLine: Int?)
 
     private fun sarifReport(directory: String, location: String, project: String = ":library") = ApiWatchdogProjectReport(
