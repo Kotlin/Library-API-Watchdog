@@ -1,0 +1,42 @@
+FILE: inlineFunctionSamConversion.kt
+    package foo.bar
+
+    @R|kotlin/PublishedApi|() internal final val executor: R|java/util/concurrent/Executor| = R|java/util/concurrent/Executor|(<L> = Executor@fun <anonymous>(it: R|java/lang/Runnable!|): R|kotlin/Unit| <inline=NoInline>  {
+        R|<local>/it|.R|java/lang/Runnable.run|()
+    }
+    )
+        internal get(): R|java/util/concurrent/Executor|
+    public abstract fun interface Task : R|kotlin/Any| {
+        public abstract fun run(): R|kotlin/Unit|
+
+    }
+    @R|kotlin/PublishedApi|() internal final fun submit(task: R|foo/bar/Task|): R|kotlin/Unit| {
+    }
+    @R|kotlin/PublishedApi|() internal final fun log(message: R|kotlin/String|): R|kotlin/Unit| {
+    }
+    public final inline fun runLater(crossinline action: R|() -> kotlin/Unit|): R|kotlin/Unit| {
+        R|foo/bar/executor|.R|java/util/concurrent/Executor.execute|(<L> = SAM(execute@fun <anonymous>(): R|kotlin/Unit| <inline=NoInline>  {
+            R|<local>/action|.R|SubstitutionOverride<kotlin/Function0.invoke: R|kotlin/Unit|>|()
+        }
+        ))
+    }
+    public final inline fun submitLater(crossinline action: R|() -> kotlin/Unit|): R|kotlin/Unit| {
+        R|foo/bar/submit|(<L> = SAM(submit@fun <anonymous>(): R|kotlin/Unit| <inline=NoInline>  {
+            R|<local>/action|.R|SubstitutionOverride<kotlin/Function0.invoke: R|kotlin/Unit|>|()
+        }
+        ))
+    }
+    public final inline fun runLoggedLater(crossinline action: R|() -> kotlin/Unit|): R|kotlin/Unit| {
+        R|foo/bar/executor|.R|java/util/concurrent/Executor.execute|(<L> = SAM(execute@fun <anonymous>(): R|kotlin/Unit| <inline=NoInline>  {
+            R|foo/bar/log|(String(run))
+            R|<local>/action|.R|SubstitutionOverride<kotlin/Function0.invoke: R|kotlin/Unit|>|()
+        }
+        ))
+    }
+    public final inline fun submitLoggedLater(crossinline action: R|() -> kotlin/Unit|): R|kotlin/Unit| {
+        R|foo/bar/submit|(<L> = SAM(submit@fun <anonymous>(): R|kotlin/Unit| <inline=NoInline>  {
+            R|foo/bar/log|(String(run))
+            R|<local>/action|.R|SubstitutionOverride<kotlin/Function0.invoke: R|kotlin/Unit|>|()
+        }
+        ))
+    }
