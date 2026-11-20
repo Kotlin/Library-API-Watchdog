@@ -561,7 +561,7 @@ class WatchdogProjectTest {
     }
 
     @Test
-    fun `disabled watchdog keeps exemption annotations when it is applied before the Android plugins`() =
+    fun `disabled watchdog keeps exemption annotations when it is applied before AGP 8`() =
         disabledWatchdogBeforeAndroidPluginCase(AGP8)
 
     @Test
