@@ -1834,6 +1834,84 @@ class ExemptionFixerTest {
     }
 
     @Test
+    fun `a new exemption of a constructor property goes after the exemption that the run removes`() {
+        val text = """
+            package test
+
+            import kotlinx.library.watchdog.ExemptionReason
+            import kotlinx.library.watchdog.IntentionallyBooleanParameter
+
+            /** A holder. */
+            public class Holder(
+                @IntentionallyBooleanParameter(reason = ExemptionReason.API_DESIGN)
+                public val items: MutableList<String>,
+            )
+        """.trimIndent()
+
+        val result = fix(
+            text,
+            diagnostic("REDUNDANT_EXEMPTION", text, "@IntentionallyBooleanParameter(reason = ExemptionReason.API_DESIGN)")
+                .copy(messageParameters = listOf("IntentionallyBooleanParameter", "declaration")),
+            diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "items"),
+        )
+
+        assertEquals(
+            """
+                package test
+
+                import kotlinx.library.watchdog.ExemptionReason
+                import kotlinx.library.watchdog.IntentionallyMutableCollection
+
+                /** A holder. */
+                public class Holder(
+                    @IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY) public val items: MutableList<String>,
+                )
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `a removed exemption keeps the constructor keyword that a new exemption needs`() {
+        val text = """
+            package test
+
+            import kotlinx.library.watchdog.ExemptionReason
+            import kotlinx.library.watchdog.IntentionallyWithoutJvmOverloads
+
+            /** A format. */
+            public class Binary @IntentionallyWithoutJvmOverloads(reason = ExemptionReason.API_DESIGN) constructor(a: Int, flag: Boolean)
+        """.trimIndent()
+
+        val result = fix(
+            text,
+            diagnostic("REDUNDANT_EXEMPTION", text, "@IntentionallyWithoutJvmOverloads(reason = ExemptionReason.API_DESIGN)")
+                .copy(messageParameters = listOf("IntentionallyWithoutJvmOverloads", "declaration")),
+            diagnostic("BOOLEAN_PARAMETER_PUBLIC_API", text, "flag"),
+        )
+
+        assertEquals(
+            """
+                package test
+
+                import kotlinx.library.watchdog.ExemptionReason
+                import kotlinx.library.watchdog.IntentionallyBooleanParameter
+
+                /** A format. */
+                public class Binary @IntentionallyBooleanParameter(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY) constructor(a: Int, flag: Boolean)
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `overlapping edits fail`() {
+        assertFailsWith<IllegalStateException> { applyEdits("abcdef", listOf(TextEdit(1, 4, ""), TextEdit(2, "x"))) }
+        assertFailsWith<IllegalStateException> { applyEdits("abcdef", listOf(TextEdit(1, 4, ""), TextEdit(1, 3, "x"))) }
+        assertEquals("axef", applyEdits("abcdef", listOf(TextEdit(1, 4, ""), TextEdit(4, "x"))))
+    }
+
+    @Test
     fun `annotation of a constructor property goes after its KDoc`() {
         val text = """
             package test

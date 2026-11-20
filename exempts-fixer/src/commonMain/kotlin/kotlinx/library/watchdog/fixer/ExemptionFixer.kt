@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.psi.KtEnumEntry
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFileAnnotationList
 import org.jetbrains.kotlin.psi.KtImportDirective
+import org.jetbrains.kotlin.psi.KtModifierList
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
@@ -118,12 +119,15 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
         val edits = mutableListOf<TextEdit>()
         val applied = mutableListOf<PlannedFix>()
         val removedEntries = plannedFixes.keys.filterIsInstance<FixTarget.RemovedAnnotation>().mapTo(hashSetOf()) { it.entry }
+        val annotatedConstructors = plannedFixes.keys.mapNotNullTo(hashSetOf()) {
+            (it as? FixTarget.BeforeDeclaration)?.declaration as? KtPrimaryConstructor
+        }
         for ((target, fixesById) in plannedFixes) {
             val fixes = fixesById.values.sortedWith(compareBy({ it.fix !is PlaceholderKdocFix }, { it.fix.id }))
             edits += if (target is FixTarget.RemovedAnnotation) {
-                target.entry.removal(text, removedEntries)
+                target.entry.removal(text, removedEntries, annotatedConstructors)
             } else {
-                target.render(fixes, text, imports)
+                target.render(fixes, text, imports, removedEntries)
             }
             applied += fixes
         }
@@ -282,13 +286,18 @@ internal class TextEdit(val offset: Int, val endOffset: Int, val text: String) {
  */
 internal fun applyEdits(text: String, edits: List<TextEdit>): String {
     val builder = StringBuilder(text)
+    var appliedFrom = text.length
     edits
         .sortedWith(
             compareByDescending<TextEdit> { it.offset }
                 .thenByDescending { it.endOffset }
                 .thenByDescending { it.text }
         )
-        .forEach { builder.replace(it.offset, it.endOffset, it.text) }
+        .forEach {
+            check(it.endOffset <= appliedFrom) { "The edits at the offsets ${it.offset} and $appliedFrom overlap" }
+            builder.replace(it.offset, it.endOffset, it.text)
+            appliedFrom = it.offset
+        }
     return builder.toString()
 }
 
@@ -304,7 +313,7 @@ internal sealed interface FixTarget {
     }
 
     /** Fixes that share an insertion point go into one edit, so [applyEdits] can't reorder them. */
-    fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit>
+    fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit>
 
     data class BeforeDeclaration(val declaration: KtDeclaration) : FixTarget {
         override fun alreadyAnnotated(annotationShortName: String) =
@@ -312,7 +321,7 @@ internal sealed interface FixTarget {
 
         override fun alreadyDocumented() = declaration.docComment != null
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> {
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
             var anchor: PsiElement = declaration
             var child = declaration.firstChild
             while (child is PsiComment || child is PsiWhiteSpace) {
@@ -337,12 +346,8 @@ internal sealed interface FixTarget {
         override fun alreadyAnnotated(annotationShortName: String) =
             (element as? KtDeclaration)?.hasAnnotationNamed(annotationShortName) ?: false
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> {
-            var anchor = element.firstChild
-            while (anchor is PsiComment || anchor is PsiWhiteSpace) {
-                anchor = anchor.nextSibling
-            }
-            val offset = (anchor ?: element).textRange.startOffset
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
+            val offset = (element.firstKeptChild(removedEntries) ?: element).textRange.startOffset
             return listOf(TextEdit(offset, fixes.joinToString("") { it.insertionText(imports) + " " }))
         }
     }
@@ -351,7 +356,7 @@ internal sealed interface FixTarget {
     data class ReplacedAnnotation(val entry: KtAnnotationEntry) : FixTarget {
         override fun alreadyAnnotated(annotationShortName: String) = false
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> {
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
             val owner = entry.annotatedDeclaration()
             val missing = fixes.filterNot { owner?.hasAnnotationNamed(it.exemption.annotationShortName) == true }
             if (missing.isEmpty()) {
@@ -369,7 +374,7 @@ internal sealed interface FixTarget {
     data class RemovedAnnotation(val entry: KtAnnotationEntry) : FixTarget {
         override fun alreadyAnnotated(annotationShortName: String) = false
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> =
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> =
             entry.removal(text, setOf(entry))
     }
 
@@ -377,7 +382,7 @@ internal sealed interface FixTarget {
         override fun alreadyAnnotated(annotationShortName: String) =
             constructor.hasAnnotationNamed(annotationShortName)
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> {
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
             val annotations = fixes.joinToString(" ") { it.insertionText(imports) }
             return listOf(TextEdit(constructor.textRange.startOffset, " $annotations constructor"))
         }
@@ -387,7 +392,7 @@ internal sealed interface FixTarget {
         override fun alreadyAnnotated(annotationShortName: String) =
             file.fileAnnotationList?.hasAnnotationNamed(annotationShortName) ?: false
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> {
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
             val annotationList = file.fileAnnotationList
             if (annotationList != null) {
                 return fixes.map {
@@ -408,11 +413,35 @@ internal sealed interface FixTarget {
     }
 }
 
+private fun PsiElement.firstKeptChild(removedEntries: Set<KtAnnotationEntry>): PsiElement? {
+    var child = firstChild
+    while (child != null) {
+        val kept = when (child) {
+            is PsiComment, is PsiWhiteSpace -> null
+            is KtAnnotationEntry -> child.takeUnless { it in removedEntries }
+            is KtAnnotation -> child.takeUnless { list -> list.entries.all { it in removedEntries } }
+            is KtModifierList -> child.firstKeptChild(removedEntries)
+            else -> child
+        }
+        if (kept != null) return kept
+        child = child.nextSibling
+    }
+    return null
+}
+
 private val KtAnnotationEntry.annotationList: KtAnnotation? get() = parent as? KtAnnotation
 
-/** [removedEntries] holds every entry that this run removes, this one included. */
-private fun KtAnnotationEntry.removal(text: String, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
-    val constructor = (annotatedDeclaration() as? KtPrimaryConstructor)?.takeIf { it.keywordGoesWith(removedEntries) }
+/**
+ * [removedEntries] holds every entry that this run removes, this one included.
+ * [annotatedConstructors] holds the constructors that get an annotation in this run.
+ */
+private fun KtAnnotationEntry.removal(
+    text: String,
+    removedEntries: Set<KtAnnotationEntry>,
+    annotatedConstructors: Set<KtPrimaryConstructor> = emptySet(),
+): List<TextEdit> {
+    val constructor = (annotatedDeclaration() as? KtPrimaryConstructor)
+        ?.takeIf { it !in annotatedConstructors && it.keywordGoesWith(removedEntries) }
     if (constructor != null) {
         // The fixer wrote the keyword for the annotations, so the first removed entry takes the keyword too.
         if (constructor.modifierList?.annotationEntries?.firstOrNull() != this) return emptyList()
