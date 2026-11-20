@@ -646,12 +646,12 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
     private fun Project.publishedApiElementsName(kotlinCompilation: KotlinCompilation<*>): String {
         // The target-level configuration of Android lacks the build-type and flavor `api`
         // dependencies. A non-library Android variant doesn't have API elements of its own.
-        val androidApiElementsName = "${kotlinCompilation.name}ApiElements"
-        return if (
-            kotlinCompilation.platformType == KotlinPlatformType.androidJvm &&
-            androidApiElementsName in configurations.names
-        ) {
-            androidApiElementsName
+        // In a Kotlin/JVM project, a Java feature such as the test fixtures has its own API elements.
+        val ownApiElementsName = "${kotlinCompilation.name}ApiElements"
+        val canHaveOwnApiElements = kotlinCompilation.platformType == KotlinPlatformType.androidJvm ||
+                extensions.findByName("kotlin") is KotlinJvmExtension
+        return if (canHaveOwnApiElements && ownApiElementsName in configurations.names) {
+            ownApiElementsName
         } else {
             kotlinCompilation.target.apiElementsConfigurationName
         }
