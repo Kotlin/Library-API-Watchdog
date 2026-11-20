@@ -325,6 +325,32 @@ class ExemptExistingApiTest {
     }
 
     @Test
+    fun `allWarningsAsErrors doesn't fail the exempt task`() {
+        val project = jvmProject {
+            buildScript(ALL_WARNINGS_AS_ERRORS_BUILD_SCRIPT)
+            source(openClass("ExistingApi") + " {\n    public fun undocumented(): Int = 0\n}", "existingApi")
+        }
+
+        project.build(EXEMPT_TASK)
+
+        project.assertExempted("src/main/kotlin/test/existingApi.kt", "ExistingApi")
+        // The undocumented function is still a warning, and the flag is on outside the task.
+        project.buildAndFail("compileKotlin").assertOutputHas("-Werror")
+    }
+
+    @Test
+    fun `allWarningsAsErrors doesn't fail the report task in a multiplatform project`() {
+        val project = kmpProject("jvm()\njs { nodejs() }") {
+            buildScript(ALL_WARNINGS_AS_ERRORS_BUILD_SCRIPT)
+            source(openClass("SharedApi"), "sharedApi")
+        }
+
+        project.build(REPORT_TASK)
+
+        assertContains(project.report().readText(), "sharedApi.kt:")
+    }
+
+    @Test
     fun `keeps the configured explicit API mode`() {
         val project = kmpProject { source(openClass("SharedApi"), "sharedApi") }
 
@@ -944,6 +970,85 @@ class ExemptExistingApiTest {
         project.build("compileTestFixturesKotlin").assertNoWatchdogDiagnostics()
     }
 
+    @Test
+    fun `test fixtures are fixed when the requirement is WARN`() = testFixturesAreFixedCase(ExplicitApiRequirement.WARN)
+
+    @Test
+    fun `test fixtures are fixed when the requirement is SKIP`() = testFixturesAreFixedCase(ExplicitApiRequirement.SKIP)
+
+    private fun testFixturesAreFixedCase(requirement: ExplicitApiRequirement) {
+        val project = jvmProject {
+            plugins(
+                KotlinPlugins.jvm("$TEST_COMPILER_VERSION"),
+                Plugin("java-test-fixtures"),
+                Plugin(WATCHDOG_PLUGIN_ID, pluginUnderTestVersion),
+            )
+            buildScript("kotlin { explicitApi() }")
+            apiWatchdog { explicitApiRequirement = requirement }
+            source(cleanMainFile)
+            source(openClass("Fixture"), "fixture", sourceSet = "testFixtures")
+        }
+
+        project.buildAndFail("compileTestFixturesKotlin").assertErrors(OPEN_API_WITHOUT_SUBCLASS_OPT_IN)
+
+        val result = project.build(EXEMPT_TASK)
+
+        result.assertTaskOutcome(":compileTestFixturesKotlin", SUCCESS)
+        project.assertExempted("src/testFixtures/kotlin/test/fixture.kt", "Fixture")
+        project.build("compileTestFixturesKotlin").assertNoWatchdogDiagnostics()
+    }
+
+    @Test
+    fun `explicit API flag of a target makes its custom compilation fixed`() {
+        val project = kmpProject(
+            """
+                jvm {
+                    compilations.create("extra")
+                    compilerOptions.freeCompilerArgs.add("-Xexplicit-api=strict")
+                }
+            """
+        ) {
+            source(openClass("ExtraApi"), "extraApi", sourceSet = "jvmExtra")
+        }
+
+        project.buildAndFail("compileExtraKotlinJvm").assertErrors(OPEN_API_WITHOUT_SUBCLASS_OPT_IN)
+
+        val result = project.build(EXEMPT_TASK)
+
+        result.assertTaskOutcome(":compileExtraKotlinJvm", SUCCESS)
+        project.assertExempted("src/jvmExtra/kotlin/test/extraApi.kt", "ExtraApi")
+        project.build("compileExtraKotlinJvm").assertNoWatchdogDiagnostics()
+    }
+
+    @Test
+    fun `explicit API flag of a compile task makes its custom compilation fixed`() {
+        val project = jvmProject {
+            plugins(
+                KotlinPlugins.jvm("$TEST_COMPILER_VERSION"),
+                Plugin("java-test-fixtures"),
+                Plugin(WATCHDOG_PLUGIN_ID, pluginUnderTestVersion),
+            )
+            buildScript(
+                """
+                    kotlin { explicitApi() }
+                    tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileTestFixturesKotlin") {
+                        compilerOptions.freeCompilerArgs.add("-Xexplicit-api=strict")
+                    }
+                """
+            )
+            source(cleanMainFile)
+            source(openClass("Fixture"), "fixture", sourceSet = "testFixtures")
+        }
+
+        project.buildAndFail("compileTestFixturesKotlin").assertErrors(OPEN_API_WITHOUT_SUBCLASS_OPT_IN)
+
+        val result = project.build(EXEMPT_TASK)
+
+        result.assertTaskOutcome(":compileTestFixturesKotlin", SUCCESS)
+        project.assertExempted("src/testFixtures/kotlin/test/fixture.kt", "Fixture")
+        project.build("compileTestFixturesKotlin").assertNoWatchdogDiagnostics()
+    }
+
     private fun openClass(name: String): String = "/** An existing open API. */\npublic open class $name"
 
     private fun WatchdogBuild.assertExempted(path: String, className: String) {
@@ -963,6 +1068,7 @@ class ExemptExistingApiTest {
         const val EXEMPT_TASK = "exemptExistingApi"
         const val REPORT_TASK = "generateApiWatchdogReport"
         const val PLACEHOLDER_KDOC = "/** TODO: Document this declaration */"
+        const val ALL_WARNINGS_AS_ERRORS_BUILD_SCRIPT = "kotlin { compilerOptions { allWarningsAsErrors = true } }"
         const val CONTEXT_PARAMETERS_BUILD_SCRIPT = """kotlin { compilerOptions.freeCompilerArgs.add("-Xcontext-parameters") }"""
     }
 }

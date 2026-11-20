@@ -97,6 +97,9 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
         )
 
     companion object {
+        private const val COMMA_ESCAPE_DESCRIPTION =
+            "A comma splits a -P argument, so write a comma in the value as '%2C' and a percent sign as '%25'."
+
         private const val NAME_PATTERN_DESCRIPTION =
             "The value is a fully qualified name or a pattern: '**' matches any characters, " +
                     "'*' matches any characters except '.', and '?' matches one character."
@@ -174,7 +177,7 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
                     "offset of the source element, start and end offset of the reported " +
                     "range, then one field for each message parameter. For tooling. " +
                     "The exemptExistingApi and generateApiWatchdogReport tasks of the " +
-                    "Gradle plugin read it.",
+                    "Gradle plugin read it. " + COMMA_ESCAPE_DESCRIPTION,
             required = false,
             // The blank placeholder of the Gradle plugin can meet a path from other tooling.
             allowMultipleOccurrences = true,
@@ -239,7 +242,7 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
                     "that declares it, such as implementation, and the dependency notation as " +
                     "written, such as \"com.example:models:1.0\". " +
                     "PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY shows the declaration in its " +
-                    "exemption snippet.",
+                    "exemption snippet. " + COMMA_ESCAPE_DESCRIPTION,
             required = false,
             allowMultipleOccurrences = false,
         )
@@ -270,7 +273,7 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
         private fun dependencyPathsOption(optionName: String, description: String): CliOption = CliOption(
             optionName = optionName,
             valueDescription = "<paths separated by the platform path separator>",
-            description = description,
+            description = "$description $COMMA_ESCAPE_DESCRIPTION",
             required = false,
             allowMultipleOccurrences = false,
         )
@@ -298,7 +301,7 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
             DIAGNOSTICS_OUTPUT_FILE_OPTION.optionName -> {
                 // The Gradle plugin passes a blank value outside collection.
                 if (value.isNotBlank()) {
-                    configuration.put(WatchdogConfigurationKeys.DIAGNOSTICS_OUTPUT_FILE, value)
+                    configuration.put(WatchdogConfigurationKeys.DIAGNOSTICS_OUTPUT_FILE, unescapeCommas(value))
                 }
             }
             PUBLIC_TYPE_WITH_INTERNAL_API_OPTION.optionName -> {
@@ -348,14 +351,16 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
     }
 
     private fun parsePaths(value: String): Set<String> =
-        value.split(File.pathSeparatorChar).filterTo(linkedSetOf(), String::isNotEmpty)
+        unescapeCommas(value).split(File.pathSeparatorChar).filterTo(linkedSetOf(), String::isNotEmpty)
+
+    private fun unescapeCommas(value: String): String = value.replace("%2C", ",").replace("%25", "%")
 
     private fun parseSourceSets(value: String): Set<String> =
         value.split(':').filterTo(linkedSetOf(), String::isNotBlank)
 
     private fun parseDeclarations(value: String): Map<String, DependencyDeclaration> {
         if (value.isEmpty()) return emptyMap()
-        val fields = value.split('\t')
+        val fields = unescapeCommas(value).split('\t')
         if (fields.size % 3 != 0) {
             throw CliOptionProcessingException(
                 "Invalid value for watchdog option '${DEPENDENCY_DECLARATIONS_OPTION.optionName}': " +

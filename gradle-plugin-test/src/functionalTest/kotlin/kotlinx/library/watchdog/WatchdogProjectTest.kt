@@ -561,6 +561,48 @@ class WatchdogProjectTest {
     }
 
     @Test
+    fun `disabled watchdog keeps exemption annotations when it is applied before AGP 8`() =
+        disabledWatchdogBeforeAndroidPluginCase(AGP8)
+
+    @Test
+    fun `disabled watchdog keeps exemption annotations when it is applied before AGP 9`() =
+        disabledWatchdogBeforeAndroidPluginCase(AGP9)
+
+    private fun disabledWatchdogBeforeAndroidPluginCase(agp: AgpVersion) {
+        val project = androidLibrary(agp) {
+            plugins(
+                Plugin(WATCHDOG_PLUGIN_ID, pluginUnderTestVersion),
+                Plugin("com.android.library", agp.version),
+                when (agp) {
+                    AGP8 -> Plugin(KOTLIN_ANDROID_PLUGIN_ID, "$TEST_COMPILER_VERSION")
+                    AGP9 -> Plugin(KOTLIN_JVM_PLUGIN_ID, "$TEST_COMPILER_VERSION", apply = false)
+                },
+            )
+            buildScript(
+                """
+                    android {
+                        namespace = "test.consumer"
+                        compileSdk = 36
+                        compileOptions {
+                            sourceCompatibility = JavaVersion.VERSION_17
+                            targetCompatibility = JavaVersion.VERSION_17
+                        }
+                    }
+                    kotlin { compilerOptions { jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17 } }
+                """
+            )
+            apiWatchdog { enabled = false }
+            source(
+                acknowledgedFile,
+                "acknowledged",
+                fileAnnotation = "@file:IntentionallyDefaultFacadeName(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)",
+            )
+        }
+
+        project.build("compileDebugKotlin").assertNoWatchdogDiagnostics()
+    }
+
+    @Test
     fun `test sources aren't checked`() {
         val project = jvmProject {
             source(cleanMainFile)

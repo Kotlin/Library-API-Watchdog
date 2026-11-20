@@ -3,6 +3,7 @@ package kotlinx.library.watchdog
 import java.io.File
 import org.gradle.api.Action
 import org.gradle.api.GradleException
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
@@ -13,6 +14,7 @@ import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentSelector
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentSelector
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
@@ -32,12 +34,16 @@ import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.dsl.HasConfigurableKotlinCompilerOptions
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinBaseExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinCommonCompilerOptions
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
+import org.jetbrains.kotlin.gradle.plugin.FilesOptionKind
+import org.jetbrains.kotlin.gradle.plugin.FilesSubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.KotlinTargetsContainer
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileTool
 
 /**
@@ -54,6 +60,8 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
     /** The compile tasks that have checks when the project turns explicit API mode on. */
     private val checkedCompileTaskPaths = mutableSetOf<String>()
 
+    private val feedsReportByCompileTaskPath = mutableMapOf<String, Provider<Boolean>>()
+
     @Volatile
     private var tasksInGraph: Set<String>? = null
 
@@ -66,6 +74,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         enabled.get() && !kotlinCompilation.isTestCompilation()
 
     override fun apply(target: Project) {
+        requireMinimumGradleVersion("library-api-watchdog")
         target.configurations.register(EXEMPT_NON_TRANSITIVE_CONFIGURATION_NAME) { configuration ->
             configuration.isCanBeConsumed = false
             configuration.isCanBeResolved = false
@@ -113,16 +122,16 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
 
     /** KGP adds the annotations library only through [applyToCompilation], which a disabled watchdog never reaches. */
     private fun Project.addExemptionAnnotationsWithoutChecks() {
-        val compilations = when (val kotlin = extensions.findByName("kotlin")) {
-            is KotlinJvmExtension -> kotlin.target.compilations
-            is KotlinAndroidExtension -> kotlin.target.compilations
-            is KotlinTargetsContainer -> kotlin.targets.flatMap { it.compilations }
-            else -> return
-        }
-        compilations.filterNot { it.isTestCompilation() }.forEach { compilation ->
+        fun NamedDomainObjectContainer<out KotlinCompilation<*>>.addAnnotations() = all { compilation ->
+            if (compilation.isTestCompilation()) return@all
             compilation.defaultSourceSet.dependencies {
                 info.companionLibraryCoordinates.forEach(::implementation)
             }
+        }
+        when (val kotlin = extensions.findByName("kotlin")) {
+            is KotlinJvmExtension -> kotlin.target.compilations.addAnnotations()
+            is KotlinAndroidExtension -> kotlin.target.compilations.addAnnotations()
+            is KotlinTargetsContainer -> kotlin.targets.all { it.compilations.addAnnotations() }
         }
     }
 
@@ -216,6 +225,12 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
             val collecting = exemptsTaskPaths.any(graph::hasTask)
             collectDiagnostics.set(collecting)
             if (!collecting) return@whenReady
+            for ((path, feedsReport) in feedsReportByCompileTaskPath) {
+                if (!graph.hasTask(path) || !feedsReport.get()) continue
+                tasks.named(path.substringAfterLast(':'), KotlinCompilationTask::class.java).configure { task ->
+                    task.compilerOptions.allWarningsAsErrors.set(false)
+                }
+            }
             // `graph.allTasks` fails under project isolation.
             val kotlin = extensions.findByName("kotlin") as? KotlinTargetsContainer
             tasksInGraph = kotlin?.targets.orEmpty().asSequence()
@@ -262,10 +277,15 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         kotlinCompilation: KotlinCompilation<*>
     ): Provider<List<SubpluginOption>> {
         val extension = extensions.getByType(WatchdogGradleExtension::class.java)
-        val feedsReport = feedsReport(kotlinCompilation)
-        val collect = collectDiagnosticsForExempts.map { it && feedsReport }
+        val withoutTaskFlag = feedsReportWithoutTaskFlag(kotlinCompilation)
+        val feedsReport = providers.provider {
+            withoutTaskFlag || hasRawExplicitApiFlag(kotlinCompilation.compileTaskProvider.get().compilerOptions)
+        }
+        feedsReportByCompileTaskPath[taskPath(kotlinCompilation.compileKotlinTaskName)] = feedsReport
+        val collect = collectDiagnosticsForExempts.map { it && feedsReport.get() }
         // KGP already sets `-Xexplicit-api`. A different value causes a warning about repeated flags.
-        val forceExplicitApi = collect.map { it && !hasExplicitApiMode() }
+        // `feedsReport` reads the compiler arguments, so this value can't use it.
+        val forceExplicitApi = collectDiagnosticsForExempts.map { it && withoutTaskFlag && !hasExplicitApiMode() }
         val compileDependencies = configurations.named(compileDependenciesName(kotlinCompilation))
         val transitiveDependencies = transitiveDependenciesFor(kotlinCompilation, compileDependencies)
         val exemptNonTransitiveDependencies = exemptNonTransitiveDependenciesFor(kotlinCompilation, compileDependencies)
@@ -275,47 +295,49 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         // `whenReady` sets `tasksInGraph`.
         val roles = lazy { if (collect.get()) sourceSetRoles(kotlinCompilation) else SourceSetRoles.NONE }
 
-        if (feedsReport) {
-            checkedCompileTaskPaths += taskPath(kotlinCompilation.compileKotlinTaskName)
-            val exemptTask = tasks.named(
-                EXEMPT_EXISTING_API_TASK_NAME,
-                ExemptExistingApiTask::class.java,
-            )
-            val reportTask = tasks.named(
-                GENERATE_REPORT_TASK_NAME,
-                GenerateApiWatchdogReportTask::class.java,
-            )
-            fun ApiWatchdogReportTask.addCompilation() {
-                compilationNames.add(kotlinCompilation.compileKotlinTaskName)
-                sourceFiles.from(kotlinCompilation.allKotlinSourceSets.map { it.kotlin })
-                // The built-in Kotlin of AGP 9 doesn't register a Kotlin source set on the compilation.
-                sourceFiles.from(kotlinCompilation.compileTaskProvider.map { task ->
+        if (withoutTaskFlag) checkedCompileTaskPaths += taskPath(kotlinCompilation.compileKotlinTaskName)
+        val exemptTask = tasks.named(
+            EXEMPT_EXISTING_API_TASK_NAME,
+            ExemptExistingApiTask::class.java,
+        )
+        val reportTask = tasks.named(
+            GENERATE_REPORT_TASK_NAME,
+            GenerateApiWatchdogReportTask::class.java,
+        )
+        fun <T : Any> ifFeedsReport(values: () -> List<T>): Provider<List<T>> =
+            feedsReport.map { if (it) values() else emptyList() }
+        fun ApiWatchdogReportTask.addCompilation() {
+            compilationNames.addAll(ifFeedsReport { listOf(kotlinCompilation.compileKotlinTaskName) })
+            sourceFiles.from(ifFeedsReport { kotlinCompilation.allKotlinSourceSets.map { it.kotlin } })
+            // The built-in Kotlin of AGP 9 doesn't register a Kotlin source set on the compilation.
+            sourceFiles.from(ifFeedsReport {
+                listOf(kotlinCompilation.compileTaskProvider.map { task ->
                     (task as? KotlinCompileTool)?.sources ?: objects.fileCollection()
                 })
-                diagnosticReports.from(reportFile)
-                dependsOn(kotlinCompilation.compileTaskProvider)
-            }
-            exemptTask.configure { task -> task.addCompilation() }
-            reportTask.configure { task -> task.addCompilation() }
+            })
+            diagnosticReports.from(ifFeedsReport { listOf(reportFile) })
+            dependsOn(ifFeedsReport { listOf(kotlinCompilation.compileTaskProvider) })
+        }
+        exemptTask.configure { task -> task.addCompilation() }
+        reportTask.configure { task -> task.addCompilation() }
 
-            kotlinCompilation.compileTaskProvider.configure { task ->
-                task.inputs.property("apiWatchdog.collectDiagnosticsForExempts", collect)
-                // The report isn't a declared output because JVM compile tasks prepare every
-                // extra output as a directory. So collection mode always runs and skips the
-                // build cache.
-                task.outputs.upToDateWhen { !collect.get() }
-                task.outputs.doNotCacheIf("watchdog diagnostic collection is enabled") {
-                    collect.get()
-                }
-                task.compilerOptions.freeCompilerArgs.addAll(forceExplicitApi.map {
-                    if (it) listOf("-Xexplicit-api=warning") else emptyList()
-                })
-                task.doFirst {
-                    if (collect.get()) {
-                        reportFile.get().asFile.apply {
-                            parentFile.mkdirs()
-                            writeText("")
-                        }
+        kotlinCompilation.compileTaskProvider.configure { task ->
+            task.inputs.property("apiWatchdog.collectDiagnosticsForExempts", collect)
+            // The report isn't a declared output because JVM compile tasks prepare every
+            // extra output as a directory. So collection mode always runs and skips the
+            // build cache.
+            task.outputs.upToDateWhen { !collect.get() }
+            task.outputs.doNotCacheIf("watchdog diagnostic collection is enabled") {
+                collect.get()
+            }
+            task.compilerOptions.freeCompilerArgs.addAll(forceExplicitApi.map {
+                if (it) listOf("-Xexplicit-api=warning") else emptyList()
+            })
+            task.doFirst {
+                if (collect.get()) {
+                    reportFile.get().asFile.apply {
+                        parentFile.mkdirs()
+                        writeText("")
                     }
                 }
             }
@@ -326,6 +348,44 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         // lazy. The compiler plugin ignores a blank value.
         val checkDependencyExposure = extension.publicTypesMustBeTransitiveDependencies.map { it && !collect.get() }
         val compilesForAndroid = compileDependencies.map { kotlinCompilation.compilesForAndroid(it) }
+        // The compiler plugin doesn't have an option for exempt dependencies, so they go into the
+        // transitive paths.
+        val transitiveFiles = files(providers.provider {
+            if (!checkDependencyExposure.get()) return@provider emptyList<FileCollection>()
+            val android = compilesForAndroid.get()
+            listOf(
+                dependencyFiles(transitiveDependencies.get(), android),
+                dependencyFiles(exemptNonTransitiveDependencies.get(), android),
+            )
+        })
+        fun artifactIds(configuration: NamedDomainObjectProvider<Configuration>): Provider<List<String>> =
+            checkDependencyExposure.flatMap { check ->
+                if (!check) return@flatMap providers.provider { emptyList<String>() }
+                dependencyArtifacts(configuration.get(), compilesForAndroid.get()).resolvedArtifacts
+                    .map { artifacts ->
+                        artifacts.map { artifact ->
+                            // A root project without `rootProject.name` has the name of its directory, and the
+                            // display name and the jar name of its artifact have it too.
+                            val component = artifact.id.componentIdentifier
+                            if (component is ProjectComponentIdentifier) {
+                                component.buildTreePath
+                            } else {
+                                artifact.id.displayName
+                            }
+                        }
+                    }
+            }
+        // A path option isn't a task input, because a path is different in each checkout directory. The
+        // compile classpath is an input of the task already, so the transitive dependencies are inputs by name.
+        kotlinCompilation.compileTaskProvider.configure { task ->
+            task.inputs.property("apiWatchdog.checkDependencyExposure", checkDependencyExposure)
+            task.dependsOn(transitiveFiles)
+            task.inputs.property("apiWatchdog.transitiveDependencies", artifactIds(transitiveDependencies))
+            task.inputs.property(
+                "apiWatchdog.exemptNonTransitiveDependencies",
+                artifactIds(exemptNonTransitiveDependencies),
+            )
+        }
         return providers.provider {
             buildList {
                 extension.diagnosticSeverities.forEach { (diagnostic, severity) ->
@@ -367,7 +427,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 add(
                     SubpluginOption(
                         "diagnosticsOutputFile",
-                        lazy { if (collect.get()) reportFile.get().asFile.path else "" },
+                        lazy { if (collect.get()) escapeCommas(reportFile.get().asFile.path) else "" },
                     ),
                 )
                 add(SubpluginOption("exemptingExistingApi", lazy { collect.get().toString() }))
@@ -386,36 +446,21 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 )
                 add(SubpluginOption("ignoreDeprecatedApi", lazy { extension.ignoreDeprecatedApi.get().toString() }))
                 add(
-                    SubpluginOption(
-                        "compileDependencyPaths",
-                        lazy {
-                            if (!checkDependencyExposure.get()) return@lazy ""
-                            dependencyFiles(compileDependencies.get(), compilesForAndroid.get()).asPath
-                        },
-                    ),
-                )
-                // The compiler plugin doesn't have an option for exempt dependencies, so they go into the
-                // transitive paths.
-                add(
-                    SubpluginOption(
-                        "transitiveDependencyPaths",
-                        lazy {
-                            if (!checkDependencyExposure.get()) return@lazy ""
-                            val android = compilesForAndroid.get()
-                            val files = dependencyFiles(transitiveDependencies.get(), android).files +
-                                    dependencyFiles(exemptNonTransitiveDependencies.get(), android).files
-                            files.joinToString(File.pathSeparator, transform = File::getPath)
-                        },
-                    ),
+                    pathsOption("compileDependencyPaths") {
+                        if (!checkDependencyExposure.get()) return@pathsOption ""
+                        dependencyFiles(compileDependencies.get(), compilesForAndroid.get()).asPath
+                    },
                 )
                 add(
-                    SubpluginOption(
-                        "dependencyDeclarations",
-                        lazy {
-                            if (!checkDependencyExposure.get()) return@lazy ""
-                            dependencyDeclarations(compileDependencies.get(), compilesForAndroid.get())
-                        },
-                    ),
+                    pathsOption("transitiveDependencyPaths") {
+                        transitiveFiles.files.joinToString(File.pathSeparator, transform = File::getPath)
+                    },
+                )
+                add(
+                    pathsOption("dependencyDeclarations") {
+                        if (!checkDependencyExposure.get()) return@pathsOption ""
+                        dependencyDeclarations(compileDependencies.get(), compilesForAndroid.get())
+                    },
                 )
                 add(
                     SubpluginOption(
@@ -494,7 +539,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         ) {
             return SourceSetRoles.NONE
         }
-        val running = collectingCompilations(kotlin).filter { taskPath(it.compileKotlinTaskName) in graph }
+        val running = collectingCompilations(kotlin, graph)
         val order = ownerOrder()
         val checkedElsewhere = mutableListOf<String>()
         val platformChecks = mutableListOf<String>()
@@ -522,17 +567,27 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 // and `enabled` stays true.
                 (compilation.platformType != KotlinPlatformType.native || compilation.target.publishable)
 
-    private fun Project.collectingCompilations(kotlin: KotlinTargetsContainer): List<KotlinCompilation<*>> =
+    private fun Project.collectingCompilations(
+        kotlin: KotlinTargetsContainer,
+        graph: Set<String>,
+    ): List<KotlinCompilation<*>> =
         kotlin.targets.flatMap { it.compilations }.filter { compilation ->
+            val compileTaskPath = taskPath(compilation.compileKotlinTaskName)
             // KGP skips the `main` metadata compilation (`onlyIf { false }`).
             val skippedMetadata = compilation.platformType == KotlinPlatformType.common &&
                     compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME
-            isApplicable(compilation) && !skippedMetadata && feedsReport(compilation)
+            // The task graph check comes first, because a `feedsReport` value can realize the compile task.
+            compileTaskPath in graph && isApplicable(compilation) && !skippedMetadata &&
+                    feedsReportByCompileTaskPath[compileTaskPath]?.get() == true
         }
 
-    private fun Project.feedsReport(compilation: KotlinCompilation<*>): Boolean =
-        !compilation.isTestCompilation() &&
-                (compilation.hasExplicitApiFromExtension() || hasRawExplicitApiFlag())
+    /** Doesn't read the compile task, so the task stays unrealized. */
+    private fun Project.feedsReportWithoutTaskFlag(compilation: KotlinCompilation<*>): Boolean {
+        if (compilation.isTestCompilation()) return false
+        val requirement = extensions.getByType(WatchdogGradleExtension::class.java).explicitApiRequirement.get()
+        return requirement != ExplicitApiRequirement.FAIL || compilation.hasExplicitApiFromExtension() ||
+                hasRawExplicitApiFlag() || hasRawExplicitApiFlag(compilation.target)
+    }
 
     private fun Project.ownerOrder(): Comparator<KotlinCompilation<*>> = compareBy(
         { it.platformType != KotlinPlatformType.common },
@@ -639,12 +694,12 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
     private fun Project.publishedApiElementsName(kotlinCompilation: KotlinCompilation<*>): String {
         // The target-level configuration of Android lacks the build-type and flavor `api`
         // dependencies. A non-library Android variant doesn't have API elements of its own.
-        val androidApiElementsName = "${kotlinCompilation.name}ApiElements"
-        return if (
-            kotlinCompilation.platformType == KotlinPlatformType.androidJvm &&
-            androidApiElementsName in configurations.names
-        ) {
-            androidApiElementsName
+        // In a Kotlin/JVM project, a Java feature such as the test fixtures has its own API elements.
+        val ownApiElementsName = "${kotlinCompilation.name}ApiElements"
+        val canHaveOwnApiElements = kotlinCompilation.platformType == KotlinPlatformType.androidJvm ||
+                extensions.findByName("kotlin") is KotlinJvmExtension
+        return if (canHaveOwnApiElements && ownApiElementsName in configurations.names) {
+            ownApiElementsName
         } else {
             kotlinCompilation.target.apiElementsConfigurationName
         }
@@ -691,6 +746,13 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
 
         private const val DISABLED_TASK_REASON = "apiWatchdog.enabled is true"
 
+        /** A comma splits a `-P` compiler argument. The compiler plugin restores the value. */
+        private fun escapeCommas(value: String): String = value.replace("%", "%25").replace(",", "%2C")
+
+        /** KGP doesn't add a [FilesSubpluginOption] to the task inputs. */
+        private fun pathsOption(key: String, paths: () -> String): SubpluginOption =
+            FilesSubpluginOption(key, emptyList(), FilesOptionKind.INTERNAL, lazy { escapeCommas(paths()) })
+
         private fun Project.kotlinPluginVersion(): String =
             plugins.withType(KotlinBasePlugin::class.java)
                 .firstOrNull()?.pluginVersion
@@ -704,12 +766,15 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
             return hasRawExplicitApiFlag()
         }
 
-        private fun Project.hasRawExplicitApiFlag(): Boolean {
-            val kotlin = extensions.findByName("kotlin") as? HasConfigurableKotlinCompilerOptions<*> ?: return false
-            return kotlin.compilerOptions.freeCompilerArgs.orNull.orEmpty().any {
+        private fun Project.hasRawExplicitApiFlag(): Boolean = hasRawExplicitApiFlag(extensions.findByName("kotlin"))
+
+        private fun hasRawExplicitApiFlag(extensionOrTarget: Any?): Boolean =
+            hasRawExplicitApiFlag((extensionOrTarget as? HasConfigurableKotlinCompilerOptions<*>)?.compilerOptions)
+
+        private fun hasRawExplicitApiFlag(options: KotlinCommonCompilerOptions?): Boolean =
+            options?.freeCompilerArgs?.orNull.orEmpty().any {
                 it.startsWith("-Xexplicit-api=") && it != "-Xexplicit-api=disable"
             }
-        }
 
         /**
          * The rule of `AbstractKotlinCompileConfig.explicitApiMode()` in KGP. Every other

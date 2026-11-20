@@ -312,6 +312,29 @@ class WatchdogCommandLineProcessorTest {
         assertEquals(emptySet(), configuration[WatchdogConfigurationKeys.TRANSITIVE_DEPENDENCY_PATHS])
     }
 
+    @Test
+    fun `escaped commas and percent signs are restored in paths and declarations`() {
+        for ((option, key) in listOf(
+            WatchdogCommandLineProcessor.COMPILE_DEPENDENCY_PATHS_OPTION to WatchdogConfigurationKeys.COMPILE_DEPENDENCY_PATHS,
+            WatchdogCommandLineProcessor.TRANSITIVE_DEPENDENCY_PATHS_OPTION to WatchdogConfigurationKeys.TRANSITIVE_DEPENDENCY_PATHS,
+        )) {
+            process(option, listOf("a%2Cb/first.jar", "100%25/second.jar", "%252C.jar").joinToString(File.pathSeparator))
+            assertEquals(setOf("a,b/first.jar", "100%/second.jar", "%2C.jar"), configuration[key])
+        }
+
+        process(
+            WatchdogCommandLineProcessor.DEPENDENCY_DECLARATIONS_OPTION,
+            "a%2Cb/library.jar\timplementation\t\"com.example:library:[1.0%2C2.0)\"",
+        )
+        assertEquals(
+            mapOf("a,b/library.jar" to DependencyDeclaration("implementation", "\"com.example:library:[1.0,2.0)\"")),
+            configuration[WatchdogConfigurationKeys.DEPENDENCY_DECLARATIONS],
+        )
+
+        process(WatchdogCommandLineProcessor.DIAGNOSTICS_OUTPUT_FILE_OPTION, "a%2Cb/report.tsv")
+        assertEquals("a,b/report.tsv", configuration[WatchdogConfigurationKeys.DIAGNOSTICS_OUTPUT_FILE])
+    }
+
     private fun booleanOptions() = listOf(
         WatchdogCommandLineProcessor.PUBLIC_TYPE_WITH_INTERNAL_API_OPTION to WatchdogConfigurationKeys.PUBLIC_TYPE_WITH_INTERNAL_API_ENABLED,
         WatchdogCommandLineProcessor.EXEMPTING_EXISTING_API_OPTION to WatchdogConfigurationKeys.UPDATING_BACKWARDS_COMPATIBILITY_EXEMPTS,

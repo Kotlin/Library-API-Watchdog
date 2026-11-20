@@ -29,7 +29,7 @@ kotlin {
 
 dependencies {
     implementation(pluginDevKit("version-resolution"))
-    implementation(project(":library-api-watchdog-report-aggregation"))
+    api(project(":library-api-watchdog-report-aggregation"))
     testImplementation(kotlin("test-junit"))
 }
 
