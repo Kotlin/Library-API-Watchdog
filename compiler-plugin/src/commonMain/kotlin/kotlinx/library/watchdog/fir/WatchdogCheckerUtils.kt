@@ -590,12 +590,13 @@ private fun FirProperty.hasAnnotationWithUseSiteTarget(
 /**
  * [isWatchedPublicSourceApi] for an overload sibling. The sibling can be a member of another
  * class or a function of another file, so its own enclosing classes and file give the internal
- * API marker and the filter verdict. A library symbol has no real source, so a dependency never
- * passes.
+ * API marker and the filter verdict. A declaration of a dependency never passes. A library symbol
+ * has no real source, but a declaration of another module has one in the IDE.
  */
 context(context: CheckerContext)
 internal fun FirCallableSymbol<*>.isWatchedPublicSourceApiSibling(): Boolean {
-    if (source?.kind != KtRealSourceElementKind || !effectiveVisibility.publicApi) return false
+    if (source?.kind != KtRealSourceElementKind || !isFromModuleOf(context.session)) return false
+    if (!effectiveVisibility.publicApi) return false
     val chain = listOf(this) + enclosingDeclarationsOfSymbol()
     return chain.none { it.hasUnwatchedAnnotation() } &&
             context.session.configuredApiFilters?.watches(chain) != false
