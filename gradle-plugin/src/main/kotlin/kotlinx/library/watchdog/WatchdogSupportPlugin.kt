@@ -14,6 +14,7 @@ import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentSelector
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentSelector
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
@@ -361,7 +362,18 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
             checkDependencyExposure.flatMap { check ->
                 if (!check) return@flatMap providers.provider { emptyList<String>() }
                 dependencyArtifacts(configuration.get(), compilesForAndroid.get()).resolvedArtifacts
-                    .map { artifacts -> artifacts.map { it.id.displayName } }
+                    .map { artifacts ->
+                        artifacts.map { artifact ->
+                            // A root project without `rootProject.name` has the name of its directory, and the
+                            // display name and the jar name of its artifact have it too.
+                            val component = artifact.id.componentIdentifier
+                            if (component is ProjectComponentIdentifier) {
+                                component.buildTreePath
+                            } else {
+                                artifact.id.displayName
+                            }
+                        }
+                    }
             }
         // A path option isn't a task input, because a path is different in each checkout directory. The
         // compile classpath is an input of the task already, so the transitive dependencies are inputs by name.
