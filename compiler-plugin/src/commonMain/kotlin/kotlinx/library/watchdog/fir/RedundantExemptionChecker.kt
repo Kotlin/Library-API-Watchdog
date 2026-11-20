@@ -245,6 +245,8 @@ internal class EnclosingExemptionProbes(
             // The IDE can visit a class before its members resolve.
             member.symbol.lazyResolveToPhase(FirResolvePhase.BODY_RESOLVE)
             member.exemptionCandidates(setOf(classId)).mapTo(into) { it.annotation }
+            // An `actual` member also reads the exemptions of its `expect` member.
+            member.expectOrigins().flatMap { it.candidates }.filter { it.classId == classId }.mapTo(into) { it.annotation }
             if (member is FirRegularClass) {
                 member.annotations.filterTo(into) { it.toAnnotationClassIdSafe(context.session) == classId }
                 collectNestedExemptions(member, classId, into)
