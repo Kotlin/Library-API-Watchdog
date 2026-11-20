@@ -1,0 +1,80 @@
+Module: lib
+FILE: models.kt
+    package com.example.models
+
+    @R|kotlinx/library/watchdog/IntentionallyOpen|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public open class Model : R|kotlin/Any| {
+        public constructor(): R|com/example/models/Model| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+Module: main
+FILE: aliases.kt
+    package consumer
+
+    @R|kotlinx/library/watchdog/InternalAnnotationMarker|() public final annotation class InternalApi : R|kotlin/Annotation| {
+        public constructor(): R|consumer/InternalApi| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    @R|consumer/InternalApi|() public final class Engine : R|kotlin/Any| {
+        public constructor(): R|consumer/Engine| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final typealias Buffers = R|kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>>|
+    public final typealias Points = R|kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyPairOrTriple|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/Pair<kotlin/Int, kotlin/Int>>|
+    public final typealias Flags = R|kotlin/collections/Map<kotlin/String, @R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/Boolean?>|
+    public final typealias Models = R|kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  com/example/models/Model>|
+    public final typealias Engines = R|kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  consumer/Engine>|
+    public final fun buffers(): R|{consumer/Buffers=} kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>>| {
+        ^buffers R|kotlin/collections/emptyList|<R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>|>()
+    }
+    public final fun points(): R|{consumer/Points=} kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyPairOrTriple|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/Pair<kotlin/Int, kotlin/Int>>| {
+        ^points R|kotlin/collections/emptyList|<R|@R|kotlinx/library/watchdog/IntentionallyPairOrTriple|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/Pair<kotlin/Int, kotlin/Int>|>()
+    }
+    public final fun flags(): R|{consumer/Flags=} kotlin/collections/Map<kotlin/String, @R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/Boolean?>| {
+        ^flags R|kotlin/collections/emptyMap|<R|kotlin/String|, R|@R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/Boolean?|>()
+    }
+    public final fun models(): R|{@R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  consumer/Models=} @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  com/example/models/Model>| {
+        ^models R|kotlin/collections/emptyList|<R|@R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  com/example/models/Model|>()
+    }
+    public final fun engines(): R|{consumer/Engines=} kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  consumer/Engine>| {
+        ^engines R|kotlin/collections/emptyList|<R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  consumer/Engine|>()
+    }
+    public final typealias Buffer = R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|
+    public final fun buffer(items: R|{consumer/Buffer=} @R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|): R|kotlin/Unit| {
+    }
+    public final fun nestedBuffers(): R|kotlin/collections/Map<kotlin/String, {consumer/Buffers=} kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>>>| {
+        ^nestedBuffers R|kotlin/collections/emptyMap|<R|kotlin/String|, R|{consumer/Buffers=} kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>>|>()
+    }
+    public final fun exemptBuffers(): R|{@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  consumer/Buffers=} @R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>>| {
+        ^exemptBuffers R|kotlin/collections/emptyList|<R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>|>()
+    }
+    public final typealias Wrapped<T> = R|kotlin/collections/List<T>|
+    public final fun wrapped(): R|{consumer/Wrapped<@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>>=} kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>>| {
+        ^wrapped R|kotlin/collections/emptyList|<R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>|>()
+    }
+    public final fun wrappedBuffer(): R|{consumer/Wrapped<{consumer/Buffer=} @R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>>=} kotlin/collections/List<{consumer/Buffer=} @R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>>| {
+        ^wrappedBuffer R|kotlin/collections/emptyList|<R|{consumer/Buffer=} @R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|>()
+    }
+FILE: uses.kt
+    package consumer
+
+    public final fun buffersElsewhere(): R|{consumer/Buffers=} kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>>| {
+        ^buffersElsewhere R|kotlin/collections/emptyList|<R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableSet<kotlin/Int>|>()
+    }
+    public final fun pointsElsewhere(): R|{consumer/Points=} kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyPairOrTriple|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/Pair<kotlin/Int, kotlin/Int>>| {
+        ^pointsElsewhere R|kotlin/collections/emptyList|<R|@R|kotlinx/library/watchdog/IntentionallyPairOrTriple|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/Pair<kotlin/Int, kotlin/Int>|>()
+    }
+    public final fun flagsElsewhere(): R|{consumer/Flags=} kotlin/collections/Map<kotlin/String, @R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/Boolean?>| {
+        ^flagsElsewhere R|kotlin/collections/emptyMap|<R|kotlin/String|, R|@R|kotlinx/library/watchdog/IntentionallyNullableBoolean|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/Boolean?|>()
+    }
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final fun modelsElsewhere(): R|{consumer/Models=} kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  com/example/models/Model>| {
+        ^modelsElsewhere R|kotlin/collections/emptyList|<R|@R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  com/example/models/Model|>()
+    }
+    public final fun enginesElsewhere(): R|{consumer/Engines=} kotlin/collections/List<@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  consumer/Engine>| {
+        ^enginesElsewhere R|kotlin/collections/emptyList|<R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  consumer/Engine|>()
+    }

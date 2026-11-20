@@ -365,12 +365,13 @@ private class ProgramBuilder(private val random: Random, private val packageName
         }
         file.line()
         repeat(3 + random.nextInt(4)) {
-            when (random.nextInt(11)) {
+            when (random.nextInt(12)) {
                 in 0..3 -> file.classDeclaration(Scope.TOP_LEVEL, depth = 0, forbidden = emptySet())
                 in 4..6 -> file.function(Scope.TOP_LEVEL, forbidden = emptySet())
                 in 7..8 -> file.property(Scope.TOP_LEVEL, forbidden = emptySet())
                 9 -> file.typeAlias()
-                else -> file.inferredProperty()
+                10 -> file.inferredProperty()
+                else -> file.aliasProperty()
             }
             file.line()
         }
@@ -387,6 +388,28 @@ private class ProgramBuilder(private val random: Random, private val packageName
         filterAnnotations(Scope.TOP_LEVEL, propertyName)
         annotationLines(pickExemptions(Pools.property, emptySet()))
         line("${visibility(Scope.TOP_LEVEL)} val $propertyName = $source")
+    }
+
+    /** The exemptions in the expansion of each public type alias. */
+    private val publicTypeAliases = mutableMapOf<String, List<String>>()
+
+    /**
+     * A property with the type of a public type alias. [ApiFiltersFuzzTest] gets none, because the exposure
+     * check reports an excluded type alias, but not a type alias outside the inclusion rules.
+     */
+    private fun FileBuilder.aliasProperty() {
+        if (marks != null || publicTypeAliases.isEmpty()) return inferredProperty()
+        val propertyName = name("v")
+        kdoc()
+        val own = pickExemptions(Pools.property, emptySet())
+        annotationLines(own)
+        val alias = pick(publicTypeAliases.keys.toList())
+        startLine(); raw("${visibility(Scope.TOP_LEVEL)} val $propertyName: ")
+        // The same annotation on the alias reference and at the top of its expansion doesn't compile.
+        val exemption = (Pools.typeUsage - own.toSet() - publicTypeAliases.getValue(alias).toSet()).takeIf { chance(30) }?.let(::pick)
+        if (exemption != null) { exemption(exemption); raw(" ") }
+        raw(alias); endLine()
+        indented { line("get() = TODO()") }
     }
 
     // ---- declarations ------------------------------------------------------------------------
@@ -865,12 +888,15 @@ private class ProgramBuilder(private val random: Random, private val packageName
         val own = pickExemptions(Pools.typeAlias, emptySet())
         annotationLines(own)
         startLine()
-        raw("${visibility(Scope.TOP_LEVEL)} typealias $aliasName = ")
+        val visibility = visibility(Scope.TOP_LEVEL)
+        raw("$visibility typealias $aliasName = ")
+        val before = exemptions.size
         when (random.nextInt(3)) {
             0 -> raw("(Int) -> Unit")
             1 -> raw("suspend (String) -> Int")
             else -> type(own.toSet())
         }
+        if (visibility == "public") publicTypeAliases[aliasName] = exemptions.drop(before).map { it.annotation }
         endLine()
     }
 }
