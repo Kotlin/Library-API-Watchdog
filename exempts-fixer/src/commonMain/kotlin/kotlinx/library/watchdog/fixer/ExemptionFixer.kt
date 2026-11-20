@@ -138,6 +138,7 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
                 mapping.toRawOffset(it.offset),
                 mapping.toRawOffset(it.endOffset),
                 it.text.replace("\n", mapping.newline),
+                it.order,
             )
         }
         val newText = applyEdits(originalText, rawEdits)
@@ -273,9 +274,12 @@ private class RewrittenLocations(
     }
 }
 
+/** The order of the insertions at one offset. */
+internal enum class EditOrder { FILE_ANNOTATION, IMPORT, DECLARATION }
+
 /** [text] replaces the range `[offset, endOffset)`. Edits never overlap. */
-internal class TextEdit(val offset: Int, val endOffset: Int, val text: String) {
-    constructor(offset: Int, text: String) : this(offset, offset, text)
+internal class TextEdit(val offset: Int, val endOffset: Int, val text: String, val order: EditOrder = EditOrder.DECLARATION) {
+    constructor(offset: Int, text: String, order: EditOrder = EditOrder.DECLARATION) : this(offset, offset, text, order)
 
     val lengthDelta: Int get() = text.length - (endOffset - offset)
 }
@@ -291,6 +295,7 @@ internal fun applyEdits(text: String, edits: List<TextEdit>): String {
         .sortedWith(
             compareByDescending<TextEdit> { it.offset }
                 .thenByDescending { it.endOffset }
+                .thenByDescending { it.order }
                 .thenByDescending { it.text }
         )
         .forEach {
@@ -396,18 +401,25 @@ internal sealed interface FixTarget {
             val annotationList = file.fileAnnotationList
             if (annotationList != null) {
                 return fixes.map {
-                    TextEdit(annotationList.textRange.startOffset, it.annotationText(imports, useSite = "file:") + "\n")
+                    TextEdit(
+                        annotationList.textRange.startOffset,
+                        it.annotationText(imports, useSite = "file:") + "\n",
+                        EditOrder.FILE_ANNOTATION,
+                    )
                 }
             }
             val anchorOffset = file.packageDirective?.takeIf { it.textLength > 0 }?.textRange?.startOffset
                 ?: run {
+                    // A file without a package has an empty package directive in front of its header comment.
                     var child = file.firstChild
-                    while (child is PsiComment || child is PsiWhiteSpace) child = child.nextSibling
+                    while (child != null && (child is PsiComment || child is PsiWhiteSpace || child.textLength == 0)) {
+                        child = child.nextSibling
+                    }
                     child?.textRange?.startOffset ?: 0
                 }
 
             return fixes.map {
-                TextEdit(anchorOffset, it.annotationText(imports, useSite = "file:") + "\n\n")
+                TextEdit(anchorOffset, it.annotationText(imports, useSite = "file:") + "\n\n", EditOrder.FILE_ANNOTATION)
             }
         }
     }

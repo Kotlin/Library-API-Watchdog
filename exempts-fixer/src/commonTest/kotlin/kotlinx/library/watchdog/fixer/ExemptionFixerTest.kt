@@ -1912,6 +1912,106 @@ class ExemptionFixerTest {
     }
 
     @Test
+    fun `imports of a file without a package go above the annotation of the first declaration`() {
+        val text = "public data class Point(val x: Int)"
+
+        val result = fix(text, diagnostic("DATA_CLASS_PUBLIC_API", text, "Point"))
+
+        assertEquals(
+            """
+                import kotlinx.library.watchdog.ExemptionReason
+                import kotlinx.library.watchdog.IntentionallyDataClass
+
+                @IntentionallyDataClass(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+                public data class Point(val x: Int)
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `imports of a file without a package go between the file annotation and the placeholder KDoc`() {
+        val text = "public fun enabled(): Boolean? = null"
+
+        val result = fix(
+            text,
+            diagnostic("TOP_LEVEL_API_WITHOUT_JVM_NAME", text, "enabled"),
+            diagnostic("UNDOCUMENTED_PUBLIC_API", text, "enabled"),
+            diagnostic("NULLABLE_BOOLEAN_PUBLIC_API", text, "enabled"),
+        )
+
+        assertEquals(
+            """
+                @file:IntentionallyDefaultFacadeName(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+
+                import kotlinx.library.watchdog.ExemptionReason
+                import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
+                import kotlinx.library.watchdog.IntentionallyNullableBoolean
+
+                $PLACEHOLDER_KDOC
+                @IntentionallyNullableBoolean(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+                public fun enabled(): Boolean? = null
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `imports of a file without a package go below its file annotation`() {
+        val text = "@file:JvmName(\"Facade\")\n\npublic data class Point(val x: Int)"
+
+        val result = fix(text, diagnostic("DATA_CLASS_PUBLIC_API", text, "Point"))
+
+        assertEquals(
+            """
+                @file:JvmName("Facade")
+
+                import kotlinx.library.watchdog.ExemptionReason
+                import kotlinx.library.watchdog.IntentionallyDataClass
+
+                @IntentionallyDataClass(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+                public data class Point(val x: Int)
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `file annotation of a file without a package goes below the header comment`() {
+        for (header in listOf("// License", "/* License */")) {
+            val text = "$header\n\npublic fun topLevel(): Int = 0\n"
+
+            val result = fix(text, diagnostic("TOP_LEVEL_API_WITHOUT_JVM_NAME", text, "topLevel"))
+
+            assertEquals(
+                "$header\n\n" +
+                        "@file:IntentionallyDefaultFacadeName(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n\n" +
+                        "import kotlinx.library.watchdog.ExemptionReason\n" +
+                        "import kotlinx.library.watchdog.IntentionallyDefaultFacadeName\n\n" +
+                        "public fun topLevel(): Int = 0\n",
+                result.newText,
+            )
+        }
+    }
+
+    @Test
+    fun `file annotation of a file without a package goes between the header comment and the imports`() {
+        val text = "// License\n\nimport kotlin.math.abs\n\npublic fun topLevel(): Int = abs(0)\n"
+
+        val result = fix(text, diagnostic("TOP_LEVEL_API_WITHOUT_JVM_NAME", text, "topLevel"))
+
+        assertEquals(
+            "// License\n\n" +
+                    "@file:IntentionallyDefaultFacadeName(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n\n" +
+                    "import kotlin.math.abs\n" +
+                    "import kotlinx.library.watchdog.ExemptionReason\n" +
+                    "import kotlinx.library.watchdog.IntentionallyDefaultFacadeName\n\n" +
+                    "public fun topLevel(): Int = abs(0)\n",
+            result.newText,
+        )
+    }
+
+    @Test
     fun `annotation of a constructor property goes after its KDoc`() {
         val text = """
             package test

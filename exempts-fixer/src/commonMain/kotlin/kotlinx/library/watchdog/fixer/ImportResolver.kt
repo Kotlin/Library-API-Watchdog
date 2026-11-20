@@ -57,15 +57,16 @@ internal class ImportResolver(private val ktFile: KtFile) {
         if (importsToAdd.isNotEmpty()) {
             val importLines = importsToAdd.joinToString("\n") { "import $it" }
             edits += when {
-                remaining.isNotEmpty() -> TextEdit(remaining.last().textRange.endOffset, "\n$importLines")
+                remaining.isNotEmpty() -> TextEdit(remaining.last().textRange.endOffset, "\n$importLines", EditOrder.IMPORT)
                 // The insertion at the offset of the removal goes in front of it.
-                unused.isNotEmpty() -> TextEdit(unused.first().textRange.startOffset, "$importLines\n")
+                unused.isNotEmpty() -> TextEdit(unused.first().textRange.startOffset, "$importLines\n", EditOrder.IMPORT)
                 else -> {
                     val packageDirective = ktFile.packageDirective?.takeIf { it.textLength > 0 }
                     if (packageDirective != null) {
-                        TextEdit(packageDirective.textRange.endOffset, "\n\n$importLines")
+                        TextEdit(packageDirective.textRange.endOffset, "\n\n$importLines", EditOrder.IMPORT)
                     } else {
-                        TextEdit(ktFile.declarations.firstOrNull()?.textRange?.startOffset ?: 0, "$importLines\n\n")
+                        val offset = ktFile.declarations.firstOrNull()?.textRange?.startOffset ?: 0
+                        TextEdit(offset, "$importLines\n\n", EditOrder.IMPORT)
                     }
                 }
             }
