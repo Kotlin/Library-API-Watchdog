@@ -406,6 +406,7 @@ class IncludedBuildReportsTest {
                     dependencies {
                         apiWatchdogReports("sample.included:the-project")
                         apiWatchdogReports("sample.included:the-projec")
+                        apiWatchdogReports("sample.included:missing:1.0")
                     }
                 """
             )
@@ -413,12 +414,15 @@ class IncludedBuildReportsTest {
         included.rootDir.copyRecursively(project.file("components"))
         project.file("settings.gradle.kts").appendText("\nincludeBuild(\"components\") { name = \"included-api\" }\n")
         val arguments = arrayOf("aggregateApiWatchdogReports", *PROJECT_ISOLATION)
-        val warning = "apiWatchdogReports(\"sample.included:the-projec\") doesn't match a project of an included build"
+        val warning = "apiWatchdogReports(\"sample.included:the-projec\") doesn't match a project of an included build, " +
+            "so the aggregate reports don't have the findings of that project. " +
+            "Set the coordinates to the group and the name of the included project."
 
         val result = GradleBuilder.build(gradle, project.rootDir, *arguments)
 
         result.assertOutputHas("Configuration cache entry stored.")
         result.assertOutputHas(warning)
+        result.assertOutputHas("apiWatchdogReports(\"sample.included:missing:1.0\") doesn't match")
         result.assertOutputLacks("apiWatchdogReports(\"sample.included:the-project\")")
         val html = project.file("build/reports/api-watchdog/aggregate-report.html").readText()
         assertContains(html, "Aggregate report for 1 project")

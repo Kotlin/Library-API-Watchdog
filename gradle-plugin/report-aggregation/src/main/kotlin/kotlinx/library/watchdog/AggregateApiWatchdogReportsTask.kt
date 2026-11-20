@@ -62,7 +62,8 @@ public abstract class AggregateApiWatchdogReportsTask internal constructor() : D
         unmatchedCoordinates.get().forEach { coordinates ->
             logger.warn(
                 "apiWatchdogReports(\"$coordinates\") doesn't match a project of an included build, " +
-                    "so the aggregate reports don't have it. Use the group and the name of the project."
+                    "so the aggregate reports don't have the findings of that project. " +
+                    "Set the coordinates to the group and the name of the included project."
             )
         }
         val prefixes = projectDirectoryPrefixes.getOrElse(emptyMap())

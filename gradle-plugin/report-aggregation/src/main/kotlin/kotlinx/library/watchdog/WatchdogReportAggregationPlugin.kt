@@ -86,7 +86,7 @@ public class WatchdogReportAggregationPlugin : Plugin<Project> {
                 root.dependencies.filterIsInstance<UnresolvedDependencyResult>()
                     .filter { result -> result.attemptedReason.descriptions.none { it.cause == ComponentSelectionCause.COMPOSITE_BUILD } }
                     .mapNotNull { it.requested as? ModuleComponentSelector }
-                    .map { "${it.group}:${it.module}" }
+                    .map { listOf(it.group, it.module, it.version).filter(String::isNotEmpty).joinToString(":") }
                     .distinct()
             })
             task.reports.html.convention(true)
