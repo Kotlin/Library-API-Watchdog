@@ -25,6 +25,7 @@ import org.gradle.api.attributes.Usage
  */
 public class WatchdogReportAggregationPlugin : Plugin<Project> {
     override fun apply(target: Project) {
+        requireMinimumGradleVersion("library-api-watchdog-report-aggregation")
         val reportDependencies = target.configurations.register(
             API_WATCHDOG_REPORTS_CONFIGURATION,
         ) { configuration ->

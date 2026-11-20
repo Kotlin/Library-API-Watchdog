@@ -29,7 +29,7 @@ dependencyResolutionManagement {
 A convention plugin build (`buildSrc` or an included build) that depends on the Gradle plugin needs both
 repositories in its own settings.
 
-The plugin needs Gradle 8.11 or later.
+The plugin needs Gradle 8.11 or later, running on Java 17 or later.
 
 Apply the plugin:
 
