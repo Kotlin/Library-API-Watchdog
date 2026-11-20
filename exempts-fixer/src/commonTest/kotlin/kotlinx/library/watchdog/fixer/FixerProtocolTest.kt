@@ -60,8 +60,6 @@ class FixerProtocolTest {
         assertEquals(false, request.updateSources)
         assertEquals(Paths.get("/tmp/response.txt"), request.responseFile)
         assertEquals(Paths.get("/project/build"), request.buildDirectory)
-        assertEquals(true, request.isGenerated(Paths.get("/project/build/generated/ksp/Generated.kt")))
-        assertEquals(false, request.isGenerated(Paths.get("/project/build-logic/src/main/kotlin/Api.kt")))
     }
 
     @Test

@@ -152,7 +152,7 @@ class ExemptsFixerMainTest {
     @Test
     fun `a file in the build directory is skipped`() {
         val generated = source("Generated.kt", directory = "build/generated")
-        val written = source("Api.kt")
+        val written = source("Api.kt", directory = "build-logic")
         reportOpenClass(generated)
         reportOpenClass(written)
 
@@ -165,6 +165,32 @@ class ExemptsFixerMainTest {
         assertEquals(generated.toString(), skipped.filePath)
         assertEquals(3, skipped.line)
         assertContains(skipped.reason, "build directory")
+    }
+
+    @Test
+    fun `a file under a symbolic link into the build directory is skipped`() {
+        if (!posix) return
+        val generated = source("Generated.kt", directory = "build/generated")
+        val link = Files.createSymbolicLink(Files.createDirectories(tempDir.resolve("src")).resolve("generated"), generated.parent)
+        reportOpenClass(link.resolve("Generated.kt"))
+
+        val response = runFixer()
+
+        assertEquals(API, Files.readString(generated))
+        assertContains(response.skipped.single().reason, "build directory")
+    }
+
+    @Test
+    fun `a file in a build directory that is a symbolic link is skipped`() {
+        if (!posix) return
+        val generated = source("Generated.kt", directory = "elsewhere/build/generated")
+        Files.createSymbolicLink(tempDir.resolve("build"), generated.parent.parent)
+        reportOpenClass(generated)
+
+        val response = runFixer()
+
+        assertEquals(API, Files.readString(generated))
+        assertContains(response.skipped.single().reason, "build directory")
     }
 
     private companion object {

@@ -54,8 +54,11 @@ internal class FixerRequest(
         diagnostic == WatchdogChecks.REDUNDANT_EXEMPTION.name ||
                 (diagnosticSeverities[diagnostic] ?: ERROR_SEVERITY) == ERROR_SEVERITY
 
-    fun isGenerated(file: Path): Boolean =
-        buildDirectory != null && file.toAbsolutePath().normalize().startsWith(buildDirectory.toAbsolutePath().normalize())
+    /** [file] must exist. */
+    fun isGenerated(file: Path): Boolean {
+        val directory = buildDirectory?.takeIf { Files.isDirectory(it) }?.toRealPath() ?: return false
+        return file.toRealPath().startsWith(directory)
+    }
 
     companion object {
         const val REPORT_FILE = "reportFile"
