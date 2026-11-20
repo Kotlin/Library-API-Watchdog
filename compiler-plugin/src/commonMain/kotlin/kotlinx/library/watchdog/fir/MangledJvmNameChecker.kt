@@ -1,5 +1,6 @@
 package kotlinx.library.watchdog.fir
 
+import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -14,6 +15,7 @@ import org.jetbrains.kotlin.fir.declarations.FirProperty
 import org.jetbrains.kotlin.fir.declarations.FirPropertyAccessor
 import org.jetbrains.kotlin.fir.declarations.toAnnotationClassIdSafe
 import org.jetbrains.kotlin.fir.declarations.utils.correspondingValueParameterFromPrimaryConstructor
+import org.jetbrains.kotlin.fir.declarations.utils.isConst
 import org.jetbrains.kotlin.fir.declarations.utils.isOverride
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
 import org.jetbrains.kotlin.fir.declarations.utils.modality
@@ -58,7 +60,7 @@ internal class MangledJvmNameChecker(
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     private fun checkProperty(declaration: FirProperty) {
-        if (declaration.isOverride || !declaration.isWatchedForMangling()) {
+        if (declaration.isOverride || declaration.isConst || !declaration.isWatchedForMangling()) {
             return
         }
 
@@ -110,8 +112,9 @@ internal class MangledJvmNameChecker(
             return false
         }
 
-        // `@JvmName` doesn't apply inside a value class.
-        if (context.containingClassSymbol?.isValueClass() == true) {
+        // `@JvmName` doesn't apply inside a value class. An annotation class has no mangled JVM names.
+        val containingClass = context.containingClassSymbol
+        if (containingClass?.isValueClass() == true || containingClass?.classKind == ClassKind.ANNOTATION_CLASS) {
             return false
         }
 
