@@ -8,7 +8,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import org.gradle.testkit.runner.TaskOutcome.FAILED
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
-import org.gradle.testkit.runner.TaskOutcome.UP_TO_DATE
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.pluginUnderTestVersion
 import org.junit.Test
 
@@ -101,7 +100,7 @@ class IncludedBuildReportsTest {
 
         val cached = project.build(*arguments)
         cached.assertOutputHas("Configuration cache entry reused.")
-        cached.assertTaskOutcome(":aggregateApiWatchdogReports", UP_TO_DATE)
+        cached.assertTaskOutcome(":aggregateApiWatchdogReports", SUCCESS)
         assertEquals(html, project.file("build/reports/api-watchdog/aggregate-report.html").readText())
         assertEquals(sarif, project.file("build/reports/api-watchdog/aggregate-report.sarif").readText())
     }
@@ -528,7 +527,7 @@ class IncludedBuildReportsTest {
 
         val cached = project.build(*arguments)
         cached.assertOutputHas("Configuration cache entry reused.")
-        cached.assertTaskOutcome(":aggregateApiWatchdogReports", UP_TO_DATE)
+        cached.assertTaskOutcome(":aggregateApiWatchdogReports", SUCCESS)
     }
 
     @Test

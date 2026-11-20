@@ -6,7 +6,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -14,13 +13,14 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.UntrackedTask
 
 /**
  * Combines the API Watchdog reports of the projects declared in `apiWatchdogReports`.
  *
  * See [Multi-project builds](https://kotlin.github.io/Library-API-Watchdog/report#multi-project-builds) for more details.
  */
-@CacheableTask
+@UntrackedTask(because = "Finds the running IDEs for the Open in IDE buttons")
 public abstract class AggregateApiWatchdogReportsTask internal constructor() : DefaultTask() {
     /** The project reports to combine. */
     @get:InputFiles
