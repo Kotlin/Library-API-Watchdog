@@ -73,7 +73,7 @@ class ApiWatchdogHtmlReportFuzzTest {
                             assertEquals(normalize(entry.severity), finding.selectFirst(".severity")?.wholeText())
                             assertEquals(normalize(entry.location), finding.selectFirst(".location code")?.wholeText())
                             val line = entry.location.substringAfterLast(':', "").toIntOrNull()
-                            val sourcePath = if (line != null && line > 0) entry.location.substringBeforeLast(':') else entry.location
+                            val sourcePath = if (line != null) entry.location.substringBeforeLast(':') else entry.location
                             val path = normalizedSourcePath(if (aggregate) report.projectDirectory else "", sourcePath)
                             assertEquals(normalize(path), finding.attr("data-path"))
                             report.sourceSnippets[entry.location]?.let { snippet ->

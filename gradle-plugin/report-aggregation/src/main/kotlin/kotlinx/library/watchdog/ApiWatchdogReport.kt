@@ -82,6 +82,11 @@ public data class ApiWatchdogProjectReport(
 
 internal fun String.percentEncoded(): String = URLEncoder.encode(this, Charsets.UTF_8).replace("+", "%20")
 
+internal fun String.splitLocation(): Pair<String, Int?> {
+    val line = substringAfterLast(':', "").toIntOrNull() ?: return this to null
+    return substringBeforeLast(':') to line.takeIf { it > 0 }
+}
+
 private val PATH_ROOT = Regex("^(//[^/]+/|[A-Za-z]:/|/)")
 
 internal fun normalizedSourcePath(directory: String, sourcePath: String): String {

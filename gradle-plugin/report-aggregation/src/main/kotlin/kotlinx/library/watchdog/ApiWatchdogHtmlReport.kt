@@ -89,8 +89,9 @@ public object ApiWatchdogHtmlReport {
         val redundant: Boolean = false,
     ) {
         val title = diagnostics.joinToString(", ") { diagnosticTitle(it) }
-        val line = location.lineNumber()
-        val sourcePath = if (line == null) location else location.substringBeforeLast(':')
+        private val split = location.splitLocation()
+        val sourcePath = split.first
+        val line = split.second
 
         fun path(aggregate: Boolean): String = normalizedSourcePath(if (aggregate) report.projectDirectory else "", sourcePath)
     }
@@ -275,7 +276,7 @@ public object ApiWatchdogHtmlReport {
             return
         }
         val numbered = snippet.startLine > 0
-        val line = sourceRange?.startLine ?: location.lineNumber()
+        val line = sourceRange?.startLine ?: location.splitLocation().second
         val highlightedLine = line?.takeIf {
             numbered && it >= snippet.startLine && it.toLong() < snippet.startLine.toLong() + snippet.code.lines().size
         }
@@ -311,8 +312,6 @@ public object ApiWatchdogHtmlReport {
 
     private fun countLabel(count: Int, singular: String): String =
         "$count $singular${if (count == 1) "" else "s"}"
-
-    private fun String.lineNumber(): Int? = substringAfterLast(':', "").toIntOrNull()?.takeIf { it > 0 }
 
     private fun String.filterKey(): String = if (isEmpty()) "~" else percentEncoded()
 

@@ -38,7 +38,7 @@ public object ApiWatchdogSarifReport {
                                 "uri" to uri,
                                 "uriBaseId" to SOURCE_ROOT.takeUnless { uri.startsWith(FILE_SCHEME) },
                             ),
-                            "region" to line?.takeIf { it > 0 }?.let { mapOf("startLine" to it) },
+                            "region" to line?.let { mapOf("startLine" to it) },
                         ),
                     ),
                 ),
@@ -77,11 +77,6 @@ public object ApiWatchdogSarifReport {
         annotation?.let { "Exemption: @$it." },
         reason.ifEmpty { null },
     ).joinToString(" ")
-
-    private fun String.splitLocation(): Pair<String, Int?> {
-        val line = substringAfterLast(':', "").toIntOrNull()
-        return if (line == null) this to null else substringBeforeLast(':') to line
-    }
 
     private fun String.toUri(): String {
         val path = split('/').joinToString("/") { it.percentEncoded() }
