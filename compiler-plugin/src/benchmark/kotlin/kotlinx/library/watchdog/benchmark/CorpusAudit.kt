@@ -17,6 +17,9 @@ import org.jetbrains.kotlin.config.Services
  */
 fun main(args: Array<String>) {
     val fileCount = args.firstOrNull()?.toInt() ?: 200
+    require(fileCount >= BenchmarkCorpus.templateCount) {
+        "The corpus audit needs at least ${BenchmarkCorpus.templateCount} files, one for each template. It has $fileCount."
+    }
     setIdeaIoUseFallback()
 
     val sourceRoot = Files.createTempDirectory("watchdog-audit-src")
@@ -51,14 +54,11 @@ fun main(args: Array<String>) {
             println("  ${name.padEnd(width)}  $count")
         }
 
-        val silent = WatchdogDiagnostics.allDiagnostics.map { it.name }
-            .filter { it !in counts } +
-            listOf("EXEMPTION_WITHOUT_EXPLANATION", "REDUNDANT_EXEMPTION", "PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY")
-                .filter { it !in counts }
-        if (silent.isNotEmpty()) {
-            println()
-            println("Diagnostics that never fired (their checkers still scan the corpus):")
-            silent.forEach { println("  $it") }
+        val silent = (WatchdogDiagnostics.allDiagnostics.map { it.name } + WatchdogDiagnostics.REDUNDANT_EXEMPTION.name)
+            .filter { it !in counts }
+        check(silent.isEmpty()) {
+            "The corpus doesn't trigger ${silent.joinToString()}. " +
+                "Add a shape to `BenchmarkCorpus` that triggers each diagnostic."
         }
     } finally {
         deleteRecursively(sourceRoot)

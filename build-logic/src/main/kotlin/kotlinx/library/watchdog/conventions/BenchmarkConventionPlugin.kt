@@ -308,8 +308,8 @@ class BenchmarkConventionPlugin : Plugin<Project> {
             tasks.register("benchmarkCorpusAudit", JavaExec::class.java) {
                 group = "benchmark"
                 description = "Compiles the benchmark corpus with every watchdog diagnostic enabled and " +
-                        "prints the report count of each one. Set the file count with " +
-                        "-Pbenchmark.corpusFiles=<n>."
+                        "prints the report count of each one. Fails when a diagnostic that can be a warning " +
+                        "has no report. Set the file count with -Pbenchmark.corpusFiles=<n>."
                 mainClass.set("kotlinx.library.watchdog.benchmark.CorpusAudit")
                 classpath = benchmarkRuntimeClasspath
                 configureWatchdogBenchmarkInputs(this)
