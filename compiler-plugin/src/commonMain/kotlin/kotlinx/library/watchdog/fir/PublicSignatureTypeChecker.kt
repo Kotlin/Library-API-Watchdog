@@ -54,6 +54,7 @@ internal abstract class PublicSignatureTypeChecker<Violation : Any>(
 ) : FirBasicDeclarationChecker(MppCheckerKind.Common), ExemptingChecker {
     override val exemptions: Set<ClassId> = setOfNotNull(exemption)
     override val pairSide: PairSide = PairSide.EXPECT
+    override val actualClassReadsExpectClassExemption: Boolean get() = checkClassSupertypes
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     final override fun check(declaration: FirDeclaration) {
@@ -214,12 +215,12 @@ internal abstract class PublicSignatureTypeChecker<Violation : Any>(
         declaration.contextParameters.forEach { checkParameter(it) }
     }
 
-    /** The `expect` class reports the supertypes that it declares. */
     context(context: CheckerContext, reporter: DiagnosticReporter)
     private fun checkActualSupertypes(declaration: FirRegularClass) {
         if (!checkClassSupertypes || !shouldCheck(declaration)) return
 
         val expect = declaration.symbol.getSingleMatchedExpectForActualOrNull() as? FirClassSymbol<*>
+        if (exemption != null && expect?.hasExemption(exemption) == true) return
         val expectSupertypes = expect?.resolvedSuperTypes.orEmpty().map { it.fullyExpandedType().classId }
         for (superTypeRef in declaration.superTypeRefs) {
             if (superTypeRef.coneType.fullyExpandedType().classId !in expectSupertypes) {

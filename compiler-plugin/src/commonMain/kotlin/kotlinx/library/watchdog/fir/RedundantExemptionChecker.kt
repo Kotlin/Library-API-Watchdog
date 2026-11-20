@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.fir.declarations.toAnnotationClassIdSafe
 import org.jetbrains.kotlin.fir.declarations.utils.correspondingValueParameterFromPrimaryConstructor
 import org.jetbrains.kotlin.fir.declarations.utils.isActual
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
+import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.resolve.getContainingClassSymbol
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
@@ -53,14 +54,19 @@ import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirTypeAliasSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirValueParameterSymbol
 import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
+import org.jetbrains.kotlin.fir.types.ConeDefinitelyNotNullType
+import org.jetbrains.kotlin.fir.types.ConeFlexibleType
+import org.jetbrains.kotlin.fir.types.ConeIntersectionType
+import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.fir.types.FirFunctionTypeRef
 import org.jetbrains.kotlin.fir.types.FirResolvedTypeRef
 import org.jetbrains.kotlin.fir.types.FirTypeProjectionWithVariance
 import org.jetbrains.kotlin.fir.types.FirTypeRef
 import org.jetbrains.kotlin.fir.types.FirUserTypeRef
+import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.fir.types.coneTypeOrNull
 import org.jetbrains.kotlin.fir.types.customAnnotations
-import org.jetbrains.kotlin.fir.types.forEachType
+import org.jetbrains.kotlin.fir.types.type
 import org.jetbrains.kotlin.name.ClassId
 
 /** The side of an `expect`/`actual` pair that a checker reports on. */
@@ -85,6 +91,8 @@ internal interface ExemptingChecker {
 
     /** Decides whether the verdict on an exemption of an `expect` needs the `actual` declarations. */
     val pairSide: PairSide
+
+    val actualClassReadsExpectClassExemption: Boolean get() = false
 }
 
 /**
@@ -157,9 +165,9 @@ private fun FirDeclaration.expectOrigins(): List<ExpectOrigin> = buildList {
     val index = constructor.valueParameters.indexOfFirst { it.symbol == parameter }
     val expectConstructor = constructor.matchedExpect() as? FirConstructor ?: return@buildList
     add(ExpectOrigin(expectConstructor, expectConstructor.exemptionCandidates(allExemptions)) { position ->
-        when (position) {
-            "declaration" -> "parameter:$index"
-            "return/type" -> "parameter:$index/type"
+        when {
+            position == "declaration" -> "parameter:$index"
+            position.startsWith("return/type") -> "parameter:$index/type" + position.removePrefix("return/type")
             else -> null
         }
     })
@@ -394,12 +402,16 @@ internal class ExpectExemptionRedundancyChecker(
             return if (disabledReaders.isEmpty()) null else redundantVerdictOf(disabledReaders)
         }
         if (readers.any { it.checker.needs(this, candidate, candidates, it.checker.probedDiagnostics(this)) }) return Verdict.NEEDED
-        if (readers.all { it.exempting.pairSide == PairSide.EXPECT }) return redundantVerdictOf(readers.map { it.exempting })
+        val classDeclaration = this is FirRegularClass && candidate.rank == 0
+        fun ExemptingChecker.readsOn(actual: FirDeclaration?): Boolean = pairSide != PairSide.EXPECT ||
+                classDeclaration && actualClassReadsExpectClassExemption && (actual == null || actual is FirRegularClass)
+        if (readers.none { it.exempting.readsOn(null) }) return redundantVerdictOf(readers.map { it.exempting })
         // Other checkers read an `actual typealias` and the property of a `val` constructor parameter.
         val needed = actuals()?.any { actual ->
             (listOf(actual) + actual.valParameterProperty(candidate)).any { probed ->
                 probes.any {
-                    it.accepts(probed) && candidate.isReadBy(it.exempting, probed) && it.checker.needsOnActual(probed, candidate)
+                    it.accepts(probed) && candidate.isReadBy(it.exempting, probed) && it.exempting.readsOn(probed) &&
+                            it.checker.needsOnActual(probed, candidate)
                 }
             }
         } ?: return null
@@ -471,7 +483,9 @@ internal class ExpectExemptionRedundancyChecker(
             enclosing.collectNestedExemptions(this@classVerdict, exemption.classId, this)
         }
         if (enclosing.isNeeded(this, ignored, exemption.probes)) return Verdict.NEEDED
-        if (exemption.probes.all { it.exempting.pairSide == PairSide.EXPECT }) return redundantVerdictOf(exemption.probes.map { it.exempting })
+        if (exemption.probes.all { it.exempting.pairSide == PairSide.EXPECT && !it.exempting.actualClassReadsExpectClassExemption }) {
+            return redundantVerdictOf(exemption.probes.map { it.exempting })
+        }
         val actualClasses = actuals()?.filterIsInstance<FirRegularClass>() ?: return null
         val ignoredWithCopies = buildList {
             addAll(ignored)
@@ -675,7 +689,8 @@ private fun FirDeclaration.exemptionCandidates(exemptions: Set<ClassId>): List<E
         is FirRegularClass -> {
             collector.annotations(this, "declaration")
             collector.typeParameters(typeParameters)
-            superTypeRefs.forEachIndexed { index, it -> collector.types(it, position = "supertype:$index") }
+            // An `actual` class can declare other supertypes, so the class identifies the position.
+            superTypeRefs.forEach { collector.types(it, position = "supertype:${it.coneTypeOrNull?.fullyExpandedType()?.classId}") }
             collector.parameters(contextParameters, "context")
         }
         is FirTypeAlias -> {
@@ -745,15 +760,26 @@ private class ExemptionCandidateCollector(
      * `vararg x: Boolean` resolves to `BooleanArray` without a type argument, so the cone type has no
      * annotations of the element type. The written type reference still has them.
      *
-     * All annotations in [typeRef] get one position, because one type rarely has the same exemption twice.
+     * The position of a nested annotation ends with the indices of its type arguments, so an `actual` pairs
+     * each copy with its original.
      */
     fun types(typeRef: FirTypeRef?, group: Any? = null, position: String) {
-        typeRef?.coneTypeOrNull?.forEachType { type ->
-            for (annotation in type.customAnnotations) {
-                add(annotation, "typeUsage", rank = 2, group = group, position = "$position/type")
+        typeRef?.coneTypeOrNull?.let { coneTypes(it, group, "$position/type") }
+        writtenTypes(typeRef, group, "$position/type")
+    }
+
+    private fun coneTypes(type: ConeKotlinType, group: Any?, position: String) {
+        for (annotation in type.customAnnotations) {
+            add(annotation, "typeUsage", rank = 2, group = group, position = position)
+        }
+        when (type) {
+            is ConeFlexibleType -> coneTypes(type.lowerBound, group, position)
+            is ConeDefinitelyNotNullType -> coneTypes(type.original, group, position)
+            is ConeIntersectionType -> type.intersectedTypes.forEach { coneTypes(it, group, position) }
+            else -> type.typeArguments.forEachIndexed { index, argument ->
+                argument.type?.let { coneTypes(it, group, "$position/$index") }
             }
         }
-        writtenTypes(typeRef, group, "$position/type")
     }
 
     private fun writtenTypes(typeRef: FirTypeRef?, group: Any?, position: String) {
@@ -761,20 +787,15 @@ private class ExemptionCandidateCollector(
         for (annotation in written.annotations) {
             add(annotation, "typeUsage", rank = 2, group = group, position = position)
         }
-        when (written) {
-            is FirUserTypeRef -> for (part in written.qualifier) {
-                for (argument in part.typeArgumentList.typeArguments) {
-                    writtenTypes((argument as? FirTypeProjectionWithVariance)?.typeRef, group, position)
-                }
+        val arguments = when (written) {
+            is FirUserTypeRef -> written.qualifier.flatMap { part ->
+                part.typeArgumentList.typeArguments.map { (it as? FirTypeProjectionWithVariance)?.typeRef }
             }
-            is FirFunctionTypeRef -> {
-                writtenTypes(written.receiverTypeRef, group, position)
-                written.contextParameterTypeRefs.forEach { writtenTypes(it, group, position) }
-                written.parameters.forEach { writtenTypes(it.returnTypeRef, group, position) }
-                writtenTypes(written.returnTypeRef, group, position)
-            }
-            else -> {}
+            is FirFunctionTypeRef -> listOf(written.receiverTypeRef) + written.contextParameterTypeRefs +
+                    written.parameters.map { it.returnTypeRef } + written.returnTypeRef
+            else -> emptyList()
         }
+        arguments.forEachIndexed { index, argument -> writtenTypes(argument, group, "$position/$index") }
     }
 
     /** [included] filters without a change to the indices, so the positions match an `expect`. */
