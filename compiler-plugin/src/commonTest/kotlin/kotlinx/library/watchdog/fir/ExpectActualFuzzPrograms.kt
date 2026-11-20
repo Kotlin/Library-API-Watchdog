@@ -140,9 +140,12 @@ private class Prop(id: String) : Decl(id) {
     /** `field`, `getter`, `inlineGetter`, or `abstract`. */
     var shape: String = "field"
     val jvmAnnotations = mutableListOf<String>()
+
+    /** An exemption with the `setparam:` target. */
+    var setterParameter: Ann? = null
 }
 
-private class Entry(val name: String, val doc: Side?)
+private class Entry(val name: String, val doc: Side?, val exemption: Ann? = null)
 
 private enum class Kind(val keyword: String) {
     FINAL("class"), OPEN("open class"), ABSTRACT("abstract class"), SEALED("sealed class"), INTERFACE("interface"),
@@ -471,7 +474,10 @@ private class ModelBuilder(private val random: Random) {
         if (kind in listOf(Kind.FINAL, Kind.OPEN, Kind.ABSTRACT, Kind.SEALED)) constructors(cls)
         when (kind) {
             Kind.ENUM -> {
-                repeat(1 + random.nextInt(2)) { cls.entries += Entry(id("E"), docSide(origin)) }
+                repeat(1 + random.nextInt(2)) {
+                    val exemption = if (chance(25)) Ann(pick(Exemptions.property), side(origin)) else null
+                    cls.entries += Entry(id("E"), docSide(origin), exemption)
+                }
                 if (origin == Origin.PAIR && chance(40)) cls.extraEntries += Entry(id("X"), Side.ACTUAL)
                 return cls
             }
@@ -671,6 +677,9 @@ private class ModelBuilder(private val random: Random) {
         prop.visibility = if (owner != Kind.INTERFACE && chance(8)) "internal" else "public"
         prop.exemptions += exemptions(Exemptions.property, origin, forbidden)
         prop.type = type(origin, forbidden = forbidden + prop.exemptions.map { it.name })
+        if (prop.isVar && chance(30)) {
+            prop.setterParameter = Ann(pick(Exemptions.parameter - prop.exemptions.map { it.name }.toSet() - forbidden), side(origin))
+        }
         if (!topLevel && (owner == Kind.OBJECT || owner == Kind.COMPANION) && prop.visibility == "public" && chance(40)) {
             prop.jvmAnnotations += "@JvmStatic"
         }
@@ -766,9 +775,9 @@ private class Renderer(private val model: Model, private val packageName: String
         fun isPairHalf(decl: Decl): Boolean = pair && decl.origin == Origin.PAIR
 
         /** The class of an `actual typealias` isn't an `actual`, so its copy of an exemption is independent. */
-        fun exemption(ann: Ann) {
+        fun exemption(ann: Ann, siteTarget: String = "") {
             val start = out.text.length
-            out.raw("@").raw(ann.name).raw(REASON)
+            out.raw("@").raw(siteTarget).raw(ann.name).raw(REASON)
             if (!out.record) return
             val group = "${ann.id}@$owner".takeIf { pair && keywords && ann.side == Side.BOTH }
             out.exemptions += FuzzExemption(out.name, ann.name, start, out.text.length, group)
@@ -906,6 +915,7 @@ private class Renderer(private val model: Model, private val packageName: String
             keep(prop)
             if (prop.hidden) out.line("@Hidden")
             annotationLines(prop.exemptions)
+            prop.setterParameter?.takeIf { present(it.side) }?.let { out.startLine(); exemption(it, siteTarget = "setparam:"); out.endLine() }
             if (jvmSide(prop)) prop.jvmAnnotations.forEach { out.line(it) }
             out.span(path) {
                 out.startLine()
@@ -1018,6 +1028,8 @@ private class Renderer(private val model: Model, private val packageName: String
             val all = if (withExtra) cls.entries + cls.extraEntries else cls.entries
             all.forEachIndexed { index, entry ->
                 doc(entry.doc)
+                owner = "$path.${entry.name}"
+                entry.exemption?.let { annotationLines(listOf(it)) }
                 out.span("$path.${entry.name}") {
                     out.startLine(); out.raw(entry.name).raw(if (index == all.lastIndex) ";" else ","); out.endLine()
                 }
