@@ -95,6 +95,8 @@ class WatchdogBuild internal constructor(
         rootDir.copyRecursively(copy)
         return WatchdogBuild(copy, gradleVersion)
     }
+
+    fun withGradle(version: String): WatchdogBuild = WatchdogBuild(rootDir, GradleVersion.version(version))
 }
 
 /** The declarations of one module of a generated build. */
