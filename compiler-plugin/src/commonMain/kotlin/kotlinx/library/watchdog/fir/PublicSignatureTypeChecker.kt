@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirValueParameterSymbol
 import org.jetbrains.kotlin.fir.types.ConeClassLikeType
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
+import org.jetbrains.kotlin.fir.types.FirResolvedTypeRef
 import org.jetbrains.kotlin.fir.types.FirTypeRef
 import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.customAnnotations
@@ -241,17 +242,19 @@ internal abstract class PublicSignatureTypeChecker<Violation : Any>(
         name: Name,
         fallbackSource: KtSourceElement?,
     ) {
-        val violation = typeRef.coneType.findViolation() ?: return
+        // An inferred type has the type annotations of the declaration that it comes from.
+        val written = (typeRef as? FirResolvedTypeRef)?.delegatedTypeRef != null
+        val violation = typeRef.coneType.findViolation(visited = null, typeExemptions = written) ?: return
         report(typeRef.source ?: fallbackSource, kind, name, violation)
     }
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     protected fun ConeKotlinType.findViolation(): Violation? =
-        findViolation(visited = null)
+        findViolation(visited = null, typeExemptions = true)
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
-    private fun ConeKotlinType.findViolation(visited: MutableSet<ConeKotlinType>?): Violation? {
-        if (isTypeExempt()) return null
+    private fun ConeKotlinType.findViolation(visited: MutableSet<ConeKotlinType>?, typeExemptions: Boolean): Violation? {
+        if (typeExemptions && isTypeExempt()) return null
 
         val type = declaredBound()
         var visitedTypes = visited
@@ -260,7 +263,7 @@ internal abstract class PublicSignatureTypeChecker<Violation : Any>(
         val beforeClassifier = type.typeBeforeClassifier()
         if (beforeClassifier != null) {
             if (visitedTypes == null) visitedTypes = mutableSetOf(type)
-            beforeClassifier.findViolation(visitedTypes)?.let { return it }
+            beforeClassifier.findViolation(visitedTypes, typeExemptions)?.let { return it }
         }
 
         val classifierType = type.classifierType()
@@ -273,7 +276,7 @@ internal abstract class PublicSignatureTypeChecker<Violation : Any>(
                 visitedTypes = mutableSetOf(type)
                 if (classifierType != type) visitedTypes.add(classifierType)
             }
-            afterClassifier.findViolation(visitedTypes)?.let { return it }
+            afterClassifier.findViolation(visitedTypes, typeExemptions)?.let { return it }
         }
 
         for ((index, argument) in classifierType.typeArguments.withIndex()) {
@@ -283,7 +286,7 @@ internal abstract class PublicSignatureTypeChecker<Violation : Any>(
                 visitedTypes = mutableSetOf(type)
                 if (classifierType != type) visitedTypes.add(classifierType)
             }
-            argumentType.findViolation(visitedTypes)?.let { return it }
+            argumentType.findViolation(visitedTypes, typeExemptions)?.let { return it }
         }
         return null
     }
