@@ -1833,6 +1833,28 @@ class ExemptionFixerTest {
         assertEquals(listOf(9, 12), result.applied.map { it.line })
     }
 
+    @Test
+    fun `annotation of a constructor property goes after its KDoc`() {
+        val text = """
+            package test
+
+            /** A holder. */
+            public class Holder(
+                /** The items. */
+                public val items: MutableList<String>,
+            )
+        """.trimIndent()
+
+        val result = fix(text, diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "items:"))
+
+        assertContains(
+            result.newText!!,
+            "    /** The items. */\n" +
+                    "    @IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY) " +
+                    "public val items: MutableList<String>,\n",
+        )
+    }
+
     private companion object {
         const val FILE_PATH = "/project/src/main/kotlin/com/example/Sample.kt"
         const val PLACEHOLDER_KDOC = "/** TODO: Document this declaration */"

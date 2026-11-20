@@ -337,8 +337,14 @@ internal sealed interface FixTarget {
         override fun alreadyAnnotated(annotationShortName: String) =
             (element as? KtDeclaration)?.hasAnnotationNamed(annotationShortName) ?: false
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> =
-            listOf(TextEdit(element.textRange.startOffset, fixes.joinToString("") { it.insertionText(imports) + " " }))
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> {
+            var anchor = element.firstChild
+            while (anchor is PsiComment || anchor is PsiWhiteSpace) {
+                anchor = anchor.nextSibling
+            }
+            val offset = (anchor ?: element).textRange.startOffset
+            return listOf(TextEdit(offset, fixes.joinToString("") { it.insertionText(imports) + " " }))
+        }
     }
 
     /** The exemption replaces the reported annotation. */
