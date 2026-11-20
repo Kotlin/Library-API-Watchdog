@@ -101,6 +101,7 @@ internal class FuzzProgramGenerator(private val seed: Long, private val filters:
             appendLine("// RUN_PIPELINE_TILL: FRONTEND")
             appendLine("// DISABLE_NEXT_PHASE_SUGGESTION")
             appendLine("// EXPLICIT_API_MODE: WARNING")
+            appendLine("// LANGUAGE: +AnnotationAllUseSiteTarget")
             val overrides = severityOverrides(random)
             if (overrides.isNotEmpty()) appendLine("// DIAGNOSTIC_SEVERITIES: ${overrides.joinToString(" ")}")
             appendLine()
@@ -364,15 +365,29 @@ private class ProgramBuilder(private val random: Random, private val packageName
         }
         file.line()
         repeat(3 + random.nextInt(4)) {
-            when (random.nextInt(10)) {
+            when (random.nextInt(11)) {
                 in 0..3 -> file.classDeclaration(Scope.TOP_LEVEL, depth = 0, forbidden = emptySet())
                 in 4..6 -> file.function(Scope.TOP_LEVEL, forbidden = emptySet())
                 in 7..8 -> file.property(Scope.TOP_LEVEL, forbidden = emptySet())
-                else -> file.typeAlias()
+                9 -> file.typeAlias()
+                else -> file.inferredProperty()
             }
             file.line()
         }
         return file.build()
+    }
+
+    private val readableProperties = mutableListOf<String>()
+
+    /** A property with the inferred type of another property, which has the type annotations of that property. */
+    private fun FileBuilder.inferredProperty() {
+        if (readableProperties.isEmpty()) return property(Scope.TOP_LEVEL, forbidden = emptySet())
+        val source = pick(readableProperties)
+        val propertyName = name("v")
+        kdoc()
+        filterAnnotations(Scope.TOP_LEVEL, propertyName)
+        annotationLines(pickExemptions(Pools.property, emptySet()))
+        line("${visibility(Scope.TOP_LEVEL)} val $propertyName = $source")
     }
 
     // ---- declarations ------------------------------------------------------------------------
@@ -501,6 +516,7 @@ private class ProgramBuilder(private val random: Random, private val packageName
     private fun FileBuilder.classBody(kind: ClassKind, depth: Int, memberForbidden: Set<String>, hasPrimaryConstructor: Boolean) {
         indented {
             if (kind == ClassKind.ENUM) {
+                if (chance(30)) annotationLines(listOf(pick(Pools.property - memberForbidden)))
                 line("A, B;")
                 marks?.member("A", publicApi = false)
                 marks?.member("B", publicApi = false)
@@ -564,11 +580,15 @@ private class ProgramBuilder(private val random: Random, private val packageName
             val isProperty = allProperties || chance(60)
             val used = mutableSetOf<String>()
             if (isProperty && chance(50)) {
-                val pool = (Pools.property.filter { it in Pools.valueParameter } + "IntentionallyUndocumented") - forbidden
+                val pool = (Pools.property.filter { it in Pools.valueParameter } + "IntentionallyUndocumented" + "IntentionallyBooleanParameter") - forbidden
                 val annotation = pick(pool)
                 used += annotation
                 val target = pick(listOf("", "", "property:", "param:"))
-                if (target == "param:" && annotation !in Pools.valueParameter) exemption(annotation, "property:") else exemption(annotation, target)
+                when {
+                    target == "param:" && annotation !in Pools.valueParameter -> exemption(annotation, "property:")
+                    target == "property:" && annotation !in Pools.property -> exemption(annotation, "param:")
+                    else -> exemption(annotation, target)
+                }
                 raw(" ")
             } else if (!isProperty && chance(50)) {
                 val annotation = pick(Pools.valueParameter - forbidden)
@@ -783,9 +803,13 @@ private class ProgramBuilder(private val random: Random, private val packageName
             else -> visibility(scope)
         }
         marks?.member(propertyName, publicApi = visibility == "public" && !hidden)
+        if (scope == Scope.TOP_LEVEL && shape != "receiver" && visibility != "private") readableProperties += propertyName
         when (shape) {
             "jvmField" -> line("@JvmField")
             "jvmStatic" -> line("@JvmStatic")
+            "lateinit" -> if (chance(30)) {
+                startLine(); exemption(pick(Pools.valueParameter - declarationForbidden), siteTarget = pick(listOf("setparam:", "all:"))); endLine()
+            }
         }
         if (shape in setOf("plain", "const", "jvmField", "jvmStatic", "lateinit")) {
             marks?.annotations(propertyName, target = "field:")?.forEach { line(it) }
