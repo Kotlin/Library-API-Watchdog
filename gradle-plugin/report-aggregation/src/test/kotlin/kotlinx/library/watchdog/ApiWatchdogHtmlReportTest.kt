@@ -177,8 +177,8 @@ class ApiWatchdogHtmlReportTest {
             "src/a:b/Api.kt" to ("src/a:b/Api.kt" to "0"),
             "src/Api.kt:NaN" to ("src/Api.kt:NaN" to "0"),
             "src/Api.kt:2147483648" to ("src/Api.kt:2147483648" to "0"),
-            "src/Api.kt:0" to ("src/Api.kt:0" to "0"),
-            "src/Api.kt:-1" to ("src/Api.kt:-1" to "0"),
+            "src/Api.kt:0" to ("src/Api.kt" to "0"),
+            "src/Api.kt:-1" to ("src/Api.kt" to "0"),
             "src/Api.kt:" to ("src/Api.kt:" to "0"),
             "Api.kt" to ("Api.kt" to "0"),
             "" to ("" to "0"),
@@ -199,6 +199,27 @@ class ApiWatchdogHtmlReportTest {
         ))
         assertEquals(listOf("modules/library/src/Api.kt", "src/Api.kt"), document.select(".finding").map { it.attr("data-path") })
         assertEquals(listOf("Project :library", "Project :"), document.select(".project").map { it.text() })
+    }
+
+    @Test
+    fun `aggregate paths resolve the parent segments of a source directory outside the project`() {
+        val document = render(listOf(
+            report(entries = listOf(entry("../shared/src/Api.kt:1"))),
+            report(entries = listOf(entry("../shared/./src/Api.kt:1")), project = ":client", directory = "modules/client"),
+        ))
+        val path = "modules/shared/src/Api.kt"
+        assertEquals(listOf(path, path), document.select(".finding").map { it.attr("data-path") })
+    }
+
+    @Test
+    fun `aggregate paths have no project directory before an absolute source path`() {
+        val locations = listOf("D:\\gen\\Api.kt:1", "/gen/Api.kt:1", "\\\\server\\share\\Api.kt:1")
+        val document = render(listOf(report(entries = locations.map { entry(it) })), ideLinks = ideLinks())
+        assertEquals(
+            setOf("D:/gen/Api.kt", "/gen/Api.kt", "//server/share/Api.kt"),
+            document.select(".finding").map { it.attr("data-path") }.toSet(),
+        )
+        assertTrue(document.select(".open-in-ide").isEmpty())
     }
 
     @Test

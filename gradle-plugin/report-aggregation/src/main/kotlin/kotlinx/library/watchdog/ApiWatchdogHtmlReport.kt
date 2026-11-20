@@ -1,7 +1,6 @@
 package kotlinx.library.watchdog
 
 import java.io.File
-import java.net.URLEncoder
 import java.util.Base64
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
@@ -90,11 +89,11 @@ public object ApiWatchdogHtmlReport {
         val redundant: Boolean = false,
     ) {
         val title = diagnostics.joinToString(", ") { diagnosticTitle(it) }
-        val line = location.lineNumber()
-        val sourcePath = if (line == null) location else location.substringBeforeLast(':')
+        private val split = location.splitLocation()
+        val sourcePath = split.first
+        val line = split.second
 
-        fun path(aggregate: Boolean): String =
-            listOf(if (aggregate) report.projectDirectory else "", sourcePath).filter(String::isNotEmpty).joinToString("/").replace('\\', '/')
+        fun path(aggregate: Boolean): String = normalizedSourcePath(if (aggregate) report.projectDirectory else "", sourcePath)
     }
 
     private fun diagnosticTitle(name: String): String =
@@ -242,23 +241,7 @@ public object ApiWatchdogHtmlReport {
      */
     private fun idePath(finding: Finding): String? {
         if (finding.sourcePath.isEmpty()) return null
-        val path = normalizePath(
-            listOf(finding.report.projectDirectory, finding.sourcePath).filter(String::isNotEmpty).joinToString("/").replace('\\', '/'),
-        )
-        return path.takeUnless { ':' in it }
-    }
-
-    /** Removes the empty, `.`, and resolvable `..` segments of [path]. A leading `/` stays. */
-    private fun normalizePath(path: String): String {
-        val segments = ArrayDeque<String>()
-        for (segment in path.split('/')) {
-            when {
-                segment.isEmpty() || segment == "." -> {}
-                segment == ".." && segments.isNotEmpty() && segments.last() != ".." -> segments.removeLast()
-                else -> segments.addLast(segment)
-            }
-        }
-        return (if (path.startsWith('/')) "/" else "") + segments.joinToString("/")
+        return normalizedSourcePath(finding.report.projectDirectory, finding.sourcePath).takeUnless { ':' in it || it.startsWith('/') }
     }
 
     /**
@@ -293,7 +276,7 @@ public object ApiWatchdogHtmlReport {
             return
         }
         val numbered = snippet.startLine > 0
-        val line = sourceRange?.startLine ?: location.lineNumber()
+        val line = sourceRange?.startLine ?: location.splitLocation().second
         val highlightedLine = line?.takeIf {
             numbered && it >= snippet.startLine && it.toLong() < snippet.startLine.toLong() + snippet.code.lines().size
         }
@@ -330,10 +313,7 @@ public object ApiWatchdogHtmlReport {
     private fun countLabel(count: Int, singular: String): String =
         "$count $singular${if (count == 1) "" else "s"}"
 
-    private fun String.lineNumber(): Int? = substringAfterLast(':', "").toIntOrNull()?.takeIf { it > 0 }
-
-    private fun String.filterKey(): String =
-        if (isEmpty()) "~" else URLEncoder.encode(this, Charsets.UTF_8).replace("+", "%20")
+    private fun String.filterKey(): String = if (isEmpty()) "~" else percentEncoded()
 
     private fun resource(name: String): String =
         checkNotNull(ApiWatchdogHtmlReport::class.java.getResourceAsStream(name)).bufferedReader(Charsets.UTF_8).use { it.readText() }
