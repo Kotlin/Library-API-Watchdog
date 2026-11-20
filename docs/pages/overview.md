@@ -151,8 +151,8 @@ The [Java interop checks](./checks/java-interop/java-interop.md) run only in JVM
 ### Meaningful exemptions
 
 - [Exemptions without explanation](./checks/special/exemption-without-explanation.md):
-  `@Intentionally*` annotations with the default `OTHER` reason and a blank description. They
-  don't explain anything.
+  `@Intentionally*` annotations with a blank description and a reason that needs one. They don't
+  explain anything.
 - [Redundant exemptions](./checks/special/redundant-exemption.md): `@Intentionally*` annotations
   on declarations their check doesn't report.
 
