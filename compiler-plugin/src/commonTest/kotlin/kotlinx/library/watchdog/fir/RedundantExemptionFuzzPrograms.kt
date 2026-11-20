@@ -820,6 +820,8 @@ private class ProgramBuilder(private val random: Random, private val packageName
             else -> pick(listOf("plain", "plain", "getter", "lateinit", "inlineGetter"))
         }
         val visibility = when {
+            // An interface companion takes `@JvmStatic` on a public member only.
+            shape == "jvmStatic" && scope == Scope.INTERFACE_COMPANION -> "public"
             published.isNotEmpty() -> published
             scope == Scope.INTERFACE -> "public"
             shape == "jvmField" -> "public"
