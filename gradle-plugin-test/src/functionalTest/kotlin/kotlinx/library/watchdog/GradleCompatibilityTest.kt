@@ -15,6 +15,7 @@ import org.gradle.testkit.runner.TaskOutcome.FAILED
 import org.gradle.testkit.runner.TaskOutcome.FROM_CACHE
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
 import org.gradle.testkit.runner.TaskOutcome.UP_TO_DATE
+import org.jetbrains.kotlin.compiler.plugin.devkit.test.KotlinPlugins
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.TEST_COMPILER_VERSION
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.pluginUnderTestVersion
 import org.jetbrains.kotlin.tooling.core.toKotlinVersion
@@ -202,6 +203,57 @@ class GradleCompatibilityTest {
 
         val result = relocated.build(*tasks, "--build-cache")
         tasks.forEach { result.assertTaskOutcome(":$it", FROM_CACHE) }
+    }
+
+    @Test
+    fun `test fixtures compile task of an unnamed root project is cached for a checkout in another directory`() {
+        val project = jvmProject {
+            plugins(
+                KotlinPlugins.jvm("$TEST_COMPILER_VERSION"),
+                Plugin("java-test-fixtures"),
+                Plugin(WATCHDOG_PLUGIN_ID, pluginUnderTestVersion),
+            )
+            // An unnamed root project has the name of its directory. KGP has the project name in the module name
+            // and in the jar name of the friend paths, so both names are fixed here.
+            buildScript(
+                """
+                    kotlin { explicitApi() }
+                    base.archivesName = "fixture"
+                    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+                        compilerOptions.moduleName = "fixture"
+                    }
+                """
+            )
+            source(cleanMainFile)
+            source("/** A fixture. */\npublic class Fixture", "fixture", sourceSet = "testFixtures")
+        }
+        val settings = project.file("settings.gradle.kts")
+        settings.writeText(settings.readText().replace("rootProject.name = \"the-project\"", ""))
+        project.useLocalBuildCache()
+        val relocated = project.copyTo("${project.rootDir.name}-relocated")
+
+        project.build("compileTestFixturesKotlin", "--build-cache")
+
+        val result = relocated.build("compileTestFixturesKotlin", "--build-cache")
+        result.assertTaskOutcome(":compileTestFixturesKotlin", FROM_CACHE)
+    }
+
+    @Test
+    fun `cached compile task isn't reused after a dependency leaves the API`() {
+        val project = jvmProject {
+            consumerSource()
+            dependencies(api(":model"))
+            modelSubproject()
+        }
+        project.useLocalBuildCache()
+        project.build("compileKotlin", "--build-cache")
+        val script = project.file("build.gradle.kts")
+        script.writeText(script.readText().replace("api(project(\":model\"))", "implementation(project(\":model\"))"))
+
+        val result = project.buildAndFail("clean", "compileKotlin", "--build-cache")
+
+        result.assertTaskOutcome(":compileKotlin", FAILED)
+        result.assertErrors(PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY)
     }
 
     @Test
