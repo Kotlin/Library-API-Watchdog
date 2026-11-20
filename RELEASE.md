@@ -123,7 +123,8 @@ The merges use `GITHUB_TOKEN`, and a merge with `GITHUB_TOKEN` doesn't start oth
 docs deploy itself.
 
 Each job finds its finished work and skips it. **Re-run failed jobs** and a new run with the same version both
-continue a failed run.
+continue a failed run. After a timeout of the docs deploy job, cancel the docs run first. A second docs run waits for
+it in the same concurrency group.
 
 ## Development versions
 
