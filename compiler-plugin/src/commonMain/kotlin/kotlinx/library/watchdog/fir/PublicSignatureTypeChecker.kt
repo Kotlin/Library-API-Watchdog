@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.fir.declarations.FirMemberDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirNamedFunction
 import org.jetbrains.kotlin.fir.declarations.FirProperty
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
+import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.declarations.FirTypeAlias
 import org.jetbrains.kotlin.fir.declarations.FirTypeParameter
 import org.jetbrains.kotlin.fir.declarations.FirTypeParameterRef
@@ -18,10 +19,13 @@ import org.jetbrains.kotlin.fir.declarations.FirValueParameter
 import org.jetbrains.kotlin.fir.declarations.isLegacyContextReceiver
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
 import org.jetbrains.kotlin.fir.declarations.utils.correspondingValueParameterFromPrimaryConstructor
+import org.jetbrains.kotlin.fir.declarations.utils.isActual
 import org.jetbrains.kotlin.fir.declarations.utils.isOverride
 import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
+import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirValueParameterSymbol
+import org.jetbrains.kotlin.fir.symbols.lazyResolveToPhase
 import org.jetbrains.kotlin.fir.types.ConeClassLikeType
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.fir.types.FirResolvedTypeRef
@@ -116,10 +120,15 @@ internal abstract class PublicSignatureTypeChecker<Violation : Any>(
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     private fun checkProperty(declaration: FirProperty) {
-        if (!shouldCheck(declaration)) return
+        val constructorParameter = declaration.correspondingValueParameterFromPrimaryConstructor
+        if (!shouldCheck(declaration)) {
+            if (constructorParameter != null && !isDeclarationExempt(declaration)) {
+                checkParameterOfUncheckedProperty(constructorParameter)
+            }
+            return
+        }
 
         // An exemption on a val/var constructor parameter is on the parameter, not on the property.
-        val constructorParameter = declaration.correspondingValueParameterFromPrimaryConstructor
         if (constructorParameter != null && isParameterExempt(constructorParameter)) {
             return
         }
@@ -132,6 +141,19 @@ internal abstract class PublicSignatureTypeChecker<Violation : Any>(
         }
         declaration.contextParameters.forEach { checkParameter(it) }
         checkType(declaration.returnTypeRef, "property", declaration.name, declaration.source)
+    }
+
+    /**
+     * The redundancy check judges the exemptions of a val/var parameter on its property, so the
+     * property reports the type for the constructor too.
+     */
+    @OptIn(SymbolInternals::class)
+    context(context: CheckerContext, reporter: DiagnosticReporter)
+    private fun checkParameterOfUncheckedProperty(parameter: FirValueParameterSymbol) {
+        // In the IDE, the `fir` of a symbol doesn't resolve on demand.
+        parameter.containingDeclarationSymbol.lazyResolveToPhase(FirResolvePhase.BODY_RESOLVE)
+        val constructor = parameter.containingDeclarationSymbol.fir as? FirConstructor ?: return
+        if (!constructor.isActual && shouldCheck(constructor)) checkParameter(parameter.fir)
     }
 
     context(context: CheckerContext, reporter: DiagnosticReporter)

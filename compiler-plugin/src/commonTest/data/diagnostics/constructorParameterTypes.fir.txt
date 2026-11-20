@@ -1,0 +1,200 @@
+Module: lib
+FILE: models.kt
+    package com.example.models
+
+    public final class Model : R|kotlin/Any| {
+        public constructor(): R|com/example/models/Model| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+Module: main
+FILE: main.kt
+    package foo.bar
+
+    @R|kotlinx/library/watchdog/InternalAnnotationMarker|() @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|) [evaluated = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|)]) public final annotation class LibInternal : R|kotlin/Annotation| {
+        public constructor(): R|foo/bar/LibInternal| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    @R|foo/bar/LibInternal|() public final class Hidden : R|kotlin/Any| {
+        public constructor(): R|foo/bar/Hidden| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class PublicItems : R|kotlin/Any| {
+        public constructor(items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/PublicItems| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final class PrivateItems : R|kotlin/Any| {
+        public constructor(items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/PrivateItems| {
+            super<R|kotlin/Any|>()
+        }
+
+        private final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            private get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final class InternalItems : R|kotlin/Any| {
+        public constructor(items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/InternalItems| {
+            super<R|kotlin/Any|>()
+        }
+
+        internal final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            internal get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final class PrivateVarItems : R|kotlin/Any| {
+        public constructor(items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/PrivateVarItems| {
+            super<R|kotlin/Any|>()
+        }
+
+        private final var items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            private get(): R|kotlin/collections/MutableList<kotlin/Int>|
+            private set(value: R|kotlin/collections/MutableList<kotlin/Int>|): R|kotlin/Unit|
+
+    }
+    public final class PrivatePair : R|kotlin/Any| {
+        public constructor(pair: R|kotlin/Pair<kotlin/Int, kotlin/Int>|): R|foo/bar/PrivatePair| {
+            super<R|kotlin/Any|>()
+        }
+
+        private final val pair: R|kotlin/Pair<kotlin/Int, kotlin/Int>| = R|<local>/pair|
+            private get(): R|kotlin/Pair<kotlin/Int, kotlin/Int>|
+
+    }
+    public final class PrivateFlag : R|kotlin/Any| {
+        public constructor(flag: R|kotlin/Boolean?|): R|foo/bar/PrivateFlag| {
+            super<R|kotlin/Any|>()
+        }
+
+        private final val flag: R|kotlin/Boolean?| = R|<local>/flag|
+            private get(): R|kotlin/Boolean?|
+
+    }
+    public final class PrivateHidden : R|kotlin/Any| {
+        public constructor(hidden: R|foo/bar/Hidden|): R|foo/bar/PrivateHidden| {
+            super<R|kotlin/Any|>()
+        }
+
+        private final val hidden: R|foo/bar/Hidden| = R|<local>/hidden|
+            private get(): R|foo/bar/Hidden|
+
+    }
+    public abstract interface Source : R|kotlin/Any| {
+        public abstract val items: R|kotlin/collections/MutableList<kotlin/Int>|
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final class ListSource : R|foo/bar/Source| {
+        public constructor(items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/ListSource| {
+            super<R|kotlin/Any|>()
+        }
+
+        public open override val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final class ExemptItems : R|kotlin/Any| {
+        public constructor(@R|kotlinx/library/watchdog/IntentionallyMutableCollection|() items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/ExemptItems| {
+            super<R|kotlin/Any|>()
+        }
+
+        @R|kotlinx/library/watchdog/IntentionallyMutableCollection|() private final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            private get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final class ExemptPublicItems : R|kotlin/Any| {
+        public constructor(@R|kotlinx/library/watchdog/IntentionallyMutableCollection|() items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/ExemptPublicItems| {
+            super<R|kotlin/Any|>()
+        }
+
+        @R|kotlinx/library/watchdog/IntentionallyMutableCollection|() public final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final class InternalConstructor : R|kotlin/Any| {
+        internal constructor(items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/InternalConstructor| {
+            super<R|kotlin/Any|>()
+        }
+
+        private final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            private get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final class PublicPropertyOfInternalConstructor : R|kotlin/Any| {
+        internal constructor(items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/PublicPropertyOfInternalConstructor| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    internal final class InternalClass : R|kotlin/Any| {
+        public constructor(items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/InternalClass| {
+            super<R|kotlin/Any|>()
+        }
+
+        private final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            private get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final class PrivateModel : R|kotlin/Any| {
+        public constructor(@R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|() model: R|com/example/models/Model|): R|foo/bar/PrivateModel| {
+            super<R|kotlin/Any|>()
+        }
+
+        @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|() private final val model: R|com/example/models/Model| = R|<local>/model|
+            private get(): R|com/example/models/Model|
+
+    }
+    public final class InternalConstructorModel : R|kotlin/Any| {
+        internal constructor(@R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|() model: R|com/example/models/Model|): R|foo/bar/InternalConstructorModel| {
+            super<R|kotlin/Any|>()
+        }
+
+        @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|() private final val model: R|com/example/models/Model| = R|<local>/model|
+            private get(): R|com/example/models/Model|
+
+    }
+    @R|kotlinx/library/watchdog/InternalAnnotationMarker|() @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.PROPERTY|) [evaluated = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.PROPERTY|)]) public final annotation class LibInternalProperty : R|kotlin/Annotation| {
+        public constructor(): R|foo/bar/LibInternalProperty| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class MarkedProperty : R|kotlin/Any| {
+        public constructor(hidden: R|foo/bar/Hidden|): R|foo/bar/MarkedProperty| {
+            super<R|kotlin/Any|>()
+        }
+
+        @R|foo/bar/LibInternalProperty|() public final val hidden: R|foo/bar/Hidden| = R|<local>/hidden|
+            public get(): R|foo/bar/Hidden|
+
+    }
+    public final class DeprecatedProperty : R|kotlin/Any| {
+        public constructor(items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/DeprecatedProperty| {
+            super<R|kotlin/Any|>()
+        }
+
+        @R|kotlin/Deprecated|(message = String(Use another class.) [evaluated = String(Use another class.)]) public final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final class ExcludedProperty : R|kotlin/Any| {
+        public constructor(items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/ExcludedProperty| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
