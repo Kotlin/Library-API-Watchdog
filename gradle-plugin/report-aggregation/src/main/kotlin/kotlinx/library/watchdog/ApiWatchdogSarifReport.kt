@@ -71,7 +71,6 @@ public object ApiWatchdogSarifReport {
     private const val SOURCE_ROOT = "%SRCROOT%"
     private const val FILE_URI = "file:///"
     private val WINDOWS_DRIVE = Regex("^[A-Za-z]:/")
-    private val URI_PATH_CHARACTERS = (('a'..'z') + ('A'..'Z') + ('0'..'9') + "/-._~!$&'()*+,;=@".toList()).toSet()
 
     private fun NotAppliedExemptionReportEntry.message(): String = listOfNotNull(
         (WatchdogCheckDescriptions.checks[diagnostic]?.title ?: diagnostic) + ".",
@@ -85,14 +84,8 @@ public object ApiWatchdogSarifReport {
     }
 
     private fun String.toUri(): String {
-        val onDrive = WINDOWS_DRIVE.containsMatchIn(this)
-        val path = buildString {
-            for (byte in this@toUri.toByteArray(Charsets.UTF_8)) {
-                val character = byte.toInt().toChar()
-                if (character in URI_PATH_CHARACTERS || onDrive && character == ':') append(character) else append("%%%02X".format(byte))
-            }
-        }
-        return if (onDrive) FILE_URI + path else path
+        val path = split('/').joinToString("/") { it.percentEncoded() }
+        return if (WINDOWS_DRIVE.containsMatchIn(this)) FILE_URI + path.replaceFirst("%3A", ":") else path
     }
 
     private fun StringBuilder.appendJson(value: Any?, indent: Int) {

@@ -1,7 +1,6 @@
 package kotlinx.library.watchdog
 
 import java.io.File
-import java.net.URLEncoder
 import java.util.Base64
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
@@ -315,8 +314,7 @@ public object ApiWatchdogHtmlReport {
 
     private fun String.lineNumber(): Int? = substringAfterLast(':', "").toIntOrNull()?.takeIf { it > 0 }
 
-    private fun String.filterKey(): String =
-        if (isEmpty()) "~" else URLEncoder.encode(this, Charsets.UTF_8).replace("+", "%20")
+    private fun String.filterKey(): String = if (isEmpty()) "~" else percentEncoded()
 
     private fun resource(name: String): String =
         checkNotNull(ApiWatchdogHtmlReport::class.java.getResourceAsStream(name)).bufferedReader(Charsets.UTF_8).use { it.readText() }

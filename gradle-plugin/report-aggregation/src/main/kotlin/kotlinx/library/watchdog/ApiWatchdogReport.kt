@@ -1,6 +1,7 @@
 package kotlinx.library.watchdog
 
 import java.io.File
+import java.net.URLEncoder
 import org.gradle.api.attributes.Attribute
 
 @InternalWatchdogApi
@@ -78,6 +79,8 @@ public data class ApiWatchdogProjectReport(
     public val notApplied: List<NotAppliedExemptionReportEntry>,
     public val sourceSnippets: Map<String, ApiWatchdogSourceSnippet> = emptyMap(),
 )
+
+internal fun String.percentEncoded(): String = URLEncoder.encode(this, Charsets.UTF_8).replace("+", "%20")
 
 internal fun normalizedSourcePath(directory: String, sourcePath: String): String {
     val path = listOf(directory, sourcePath).filter(String::isNotEmpty).joinToString("/").replace('\\', '/')
