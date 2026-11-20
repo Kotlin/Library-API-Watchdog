@@ -1,9 +1,10 @@
 package kotlinx.library.watchdog.fixer
 
 /**
- * PSI parses only `\n` text, and the compiler records offsets on the original text. The fixer
- * resolves targets on [normalizedText] and maps each insertion offset back with [toRawOffset],
- * so the existing line endings stay. Inserted text uses [newline], the dominant separator.
+ * The compiler reads each `\r\n` and `\r` of a source file as one `\n`. It records offsets on that
+ * text, [normalizedText], and the fixer plans its edits on it. [toRawOffset] maps the offset of an
+ * edit to the file text, so the existing line endings stay. Inserted text uses [newline], the
+ * dominant separator.
  */
 internal class LineEndingMapping private constructor(
     val normalizedText: String,
@@ -11,18 +12,6 @@ internal class LineEndingMapping private constructor(
     private val rawOffsets: IntArray?,
     val newline: String,
 ) {
-    /** For the `\r` of a dropped `\r\n` pair, the offset of the `\n` that replaced the pair. */
-    fun toNormalizedOffset(rawOffset: Int): Int {
-        val offsets = rawOffsets ?: return rawOffset
-        var low = 0
-        var high = offsets.size - 1
-        while (low < high) {
-            val middle = (low + high) / 2
-            if (offsets[middle] < rawOffset) low = middle + 1 else high = middle
-        }
-        return low
-    }
-
     fun toRawOffset(normalizedOffset: Int): Int = rawOffsets?.get(normalizedOffset) ?: normalizedOffset
 
     companion object {

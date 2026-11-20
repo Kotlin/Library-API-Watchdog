@@ -13,7 +13,6 @@ class LineEndingMappingTest {
         assertEquals(text, mapping.normalizedText)
         assertEquals("\n", mapping.newline)
         for (offset in 0..text.length) {
-            assertEquals(offset, mapping.toNormalizedOffset(offset))
             assertEquals(offset, mapping.toRawOffset(offset))
         }
     }
@@ -26,10 +25,6 @@ class LineEndingMappingTest {
         assertEquals(
             listOf(0, 1, 3, 4, 5, 6, 7),
             (0..mapping.normalizedText.length).map(mapping::toRawOffset),
-        )
-        assertEquals(
-            listOf(0, 1, 2, 2, 3, 4, 5, 6),
-            (0..7).map(mapping::toNormalizedOffset),
         )
     }
 

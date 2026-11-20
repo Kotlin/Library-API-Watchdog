@@ -61,15 +61,14 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
 
         for (diagnostic in diagnostics.sortedWith(compareBy({ it.startOffset }, { it.name }))) {
             val name = diagnostic.name
-            val sourceOffset = diagnostic.startOffset.coerceAtLeast(0)
-            val startOffset = mapping.toNormalizedOffset(sourceOffset)
+            val startOffset = diagnostic.startOffset.coerceAtLeast(0)
 
             fun skip(reason: String) {
-                skipped += PlannedSkip(diagnostic, sourceOffset, reason)
+                skipped += PlannedSkip(diagnostic, startOffset, reason)
             }
 
             if (!fixes(name)) {
-                warnings += PlannedWarning(diagnostic, sourceOffset)
+                warnings += PlannedWarning(diagnostic, startOffset)
                 continue
             }
 
@@ -106,7 +105,7 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
         plannedFixes.values.forEach { it.collapseCombinedExemptions() }
 
         if (plannedFixes.isEmpty()) {
-            val locations = RewrittenLocations(originalText, originalText, emptyList())
+            val locations = RewrittenLocations(text, text, emptyList())
             return FileFixResult(
                 newText = null,
                 applied = emptyList(),
@@ -139,9 +138,9 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
         }
         val newText = applyEdits(originalText, rawEdits)
         val locations = if (rewriteLocations) {
-            RewrittenLocations(originalText, newText, rawEdits)
+            RewrittenLocations(text, applyEdits(text, edits), edits)
         } else {
-            RewrittenLocations(originalText, originalText, emptyList())
+            RewrittenLocations(text, text, emptyList())
         }
         return FileFixResult(
             newText = newText,
@@ -236,33 +235,28 @@ private class PlannedWarning(val diagnostic: RecordedDiagnostic, val sourceOffse
 
 private class RewrittenLocations(
     private val originalText: String,
-    rewrittenText: String,
+    private val rewrittenText: String,
     private val edits: List<TextEdit>,
 ) {
-    private val rewrittenMapping = LineEndingMapping.of(rewrittenText)
-
-    fun lineAt(sourceOffset: Int): Int {
-        val normalizedOffset = normalizedOffsetAt(sourceOffset)
-        return rewrittenMapping.normalizedText.take(normalizedOffset).count { it == '\n' } + 1
-    }
+    fun lineAt(sourceOffset: Int): Int =
+        rewrittenText.take(rewrittenOffsetAt(sourceOffset)).count { it == '\n' } + 1
 
     fun rangeOf(diagnostic: RecordedDiagnostic): DiagnosticSourceRange? {
         val start = diagnostic.reportedStartOffset ?: return null
         val end = diagnostic.reportedEndOffset ?: return null
         if (start < 0 || end <= start || end > originalText.length) return null
         if (edits.any { it.offset < it.endOffset && it.offset < end && it.endOffset > start }) return null
-        val normalizedStart = normalizedOffsetAt(start)
-        val normalizedEnd = normalizedOffsetAt(end, includeInsertionsAtOffset = false)
-        val text = rewrittenMapping.normalizedText
+        val rewrittenStart = rewrittenOffsetAt(start)
+        val rewrittenEnd = rewrittenOffsetAt(end, includeInsertionsAtOffset = false)
         return DiagnosticSourceRange(
-            text.take(normalizedStart).count { it == '\n' } + 1,
-            normalizedStart - text.lastIndexOf('\n', normalizedStart - 1),
-            text.take(normalizedEnd).count { it == '\n' } + 1,
-            normalizedEnd - text.lastIndexOf('\n', normalizedEnd - 1),
+            rewrittenText.take(rewrittenStart).count { it == '\n' } + 1,
+            rewrittenStart - rewrittenText.lastIndexOf('\n', rewrittenStart - 1),
+            rewrittenText.take(rewrittenEnd).count { it == '\n' } + 1,
+            rewrittenEnd - rewrittenText.lastIndexOf('\n', rewrittenEnd - 1),
         )
     }
 
-    private fun normalizedOffsetAt(sourceOffset: Int, includeInsertionsAtOffset: Boolean = true): Int {
+    private fun rewrittenOffsetAt(sourceOffset: Int, includeInsertionsAtOffset: Boolean = true): Int {
         val boundedOffset = sourceOffset.coerceIn(0, originalText.length)
         val rewrittenOffset = boundedOffset + edits.sumOf { edit ->
             // An edit that ends at the offset is in front of the token. An edit that covers the
@@ -271,8 +265,7 @@ private class RewrittenLocations(
                 (includeInsertionsAtOffset || edit.offset < edit.endOffset)
             ) edit.lengthDelta else 0
         }
-        return rewrittenMapping.toNormalizedOffset(rewrittenOffset.coerceAtLeast(0))
-            .coerceAtMost(rewrittenMapping.normalizedText.length)
+        return rewrittenOffset.coerceIn(0, rewrittenText.length)
     }
 }
 

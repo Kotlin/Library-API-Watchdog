@@ -6,6 +6,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -21,7 +22,7 @@ class ExemptionFixerTest {
     }
 
     private fun diagnostic(name: String, text: String, snippet: String): RecordedDiagnostic {
-        val start = text.indexOf(snippet)
+        val start = text.asCompilerText().indexOf(snippet)
         require(start >= 0) { "Snippet not found: $snippet" }
         return RecordedDiagnostic(name, FILE_PATH, start, start + snippet.length)
     }
@@ -54,15 +55,16 @@ class ExemptionFixerTest {
     @Test
     fun `reported name ranges follow source edits with each line ending`() {
         for (newline in listOf("\n", "\r\n", "\r")) {
-            val text = "package test\n\npublic open class Api\n".replace("\n", newline)
+            val compilerText = "package test\n\npublic open class Api\n"
+            val text = compilerText.replace("\n", newline)
             val diagnostics = listOf("OPEN_API_WITHOUT_SUBCLASS_OPT_IN", "UNDOCUMENTED_PUBLIC_API", "UNKNOWN_CHECK").map { name ->
                 diagnostic(name, text, "public open class Api").copy(
-                    reportedStartOffset = text.indexOf("Api"),
-                    reportedEndOffset = text.indexOf("Api") + 3,
+                    reportedStartOffset = compilerText.indexOf("Api"),
+                    reportedEndOffset = compilerText.indexOf("Api") + 3,
                 )
             }
             val result = fixer.fix(FILE_PATH, text, diagnostics, fixes = { it != "UNDOCUMENTED_PUBLIC_API" })
-            val rewrittenLine = lineOf(result.newText!!.replace("\r\n", "\n").replace('\r', '\n'), "public open class Api")
+            val rewrittenLine = lineOf(result.newText!!.asCompilerText(), "public open class Api")
             val expected = DiagnosticSourceRange(rewrittenLine, 19, rewrittenLine, 22)
             assertEquals(expected, result.applied.single().sourceRange, "applied, newline=$newline")
             assertEquals(expected, result.warnings.single().sourceRange, "warning, newline=$newline")
@@ -1785,9 +1787,33 @@ class ExemptionFixerTest {
         assertEquals("abcde", result)
     }
 
+    @Test
+    fun `recorded offsets are positions in the text without carriage returns`() {
+        val compilerText = "package p\n\npublic class A {\n    public fun c() {}\n}\n\npublic data class B(val x: Int)\n"
+        for (newline in listOf("\r\n", "\r")) {
+            val text = compilerText.replace("\n", newline)
+
+            val result = fix(text, diagnostic("DATA_CLASS_PUBLIC_API", text, "public data class B(val x: Int)"))
+
+            assertEquals(
+                "package p\n\n" +
+                        "import kotlinx.library.watchdog.ExemptionReason\n" +
+                        "import kotlinx.library.watchdog.IntentionallyDataClass\n\n" +
+                        "public class A {\n    public fun c() {}\n}\n\n" +
+                        "@IntentionallyDataClass(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n" +
+                        "public data class B(val x: Int)\n",
+                result.newText!!.asCompilerText(),
+                "newline=${newline.replace("\r", "\\r").replace("\n", "\\n")}",
+            )
+            assertEquals(11, result.applied.single().line)
+        }
+    }
+
     private companion object {
         const val FILE_PATH = "/project/src/main/kotlin/com/example/Sample.kt"
         const val PLACEHOLDER_KDOC = "/** TODO: Document this declaration */"
+
+        fun String.asCompilerText(): String = removePrefix("\uFEFF").replace("\r\n", "\n").replace('\r', '\n')
 
         fun lineOf(text: String, snippet: String): Int {
             val offset = text.indexOf(snippet)
