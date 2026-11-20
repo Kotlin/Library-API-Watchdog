@@ -28,7 +28,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.compiler.plugin.devkit.DevKitSupportPlugin
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.dsl.HasConfigurableKotlinCompilerOptions
@@ -74,7 +73,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         enabled.get() && !kotlinCompilation.isTestCompilation()
 
     override fun apply(target: Project) {
-        requireMinimumGradleVersion()
+        requireMinimumGradleVersion("library-api-watchdog")
         target.configurations.register(EXEMPT_NON_TRANSITIVE_CONFIGURATION_NAME) { configuration ->
             configuration.isCanBeConsumed = false
             configuration.isCanBeResolved = false
@@ -735,18 +734,6 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         private const val BCV_PLUGIN_ID = "org.jetbrains.kotlinx.binary-compatibility-validator"
 
         private const val DISABLED_TASK_REASON = "apiWatchdog.enabled is true"
-
-        /** The first version with `ProjectDependency.getPath`. */
-        private val MINIMUM_GRADLE_VERSION = GradleVersion.version("8.11")
-
-        private fun requireMinimumGradleVersion() {
-            val current = GradleVersion.current()
-            if (current.baseVersion >= MINIMUM_GRADLE_VERSION) return
-            throw GradleException(
-                "library-api-watchdog needs Gradle ${MINIMUM_GRADLE_VERSION.version} or later, and this build " +
-                        "runs on Gradle ${current.version}. Update the Gradle version of the build.",
-            )
-        }
 
         /** A comma splits a `-P` compiler argument. The compiler plugin restores the value. */
         private fun escapeCommas(value: String): String = value.replace("%", "%25").replace(",", "%2C")

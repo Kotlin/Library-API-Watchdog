@@ -330,6 +330,21 @@ class GradleCompatibilityTest {
         )
     }
 
+    @Test
+    fun `report aggregation fails on a Gradle version before the minimum`() {
+        assumeKotlinSupportsOlderGradle()
+        val project = jvmProject {
+            plugins(Plugin("org.jetbrains.kotlin.library.api-watchdog-report-aggregation", pluginUnderTestVersion))
+        }.withGradle("8.10.2")
+
+        val result = project.buildAndFail("help")
+
+        result.assertOutputHas(
+            "library-api-watchdog-report-aggregation needs Gradle $MINIMUM_GRADLE_VERSION or later, and this build " +
+                    "runs on Gradle 8.10.2."
+        )
+    }
+
     /** Kotlin 2.5.0 needs Gradle 8.14.4. */
     private fun assumeKotlinSupportsOlderGradle() {
         assumeTrue(TEST_COMPILER_VERSION.toKotlinVersion() < KotlinVersion(2, 5))
