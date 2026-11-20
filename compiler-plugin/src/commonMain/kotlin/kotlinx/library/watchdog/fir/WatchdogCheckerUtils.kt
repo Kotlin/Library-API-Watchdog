@@ -55,6 +55,7 @@ import org.jetbrains.kotlin.fir.types.ConeClassLikeType
 import org.jetbrains.kotlin.fir.types.ConeDefinitelyNotNullType
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.fir.types.ConeTypeParameterType
+import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.functionTypeKind
 import org.jetbrains.kotlin.fir.types.upperBoundIfFlexible
@@ -475,7 +476,7 @@ private fun FirTypeParameterSymbol.hasFunctionBounds(visited: MutableSet<FirType
         if (functionTypeKind != null) {
             !functionTypeKind.isReflectType
         } else {
-            expanded.lookupTag.classId == StandardClassIds.Function
+            expanded.classId == StandardClassIds.Function
         }
     }
 }
