@@ -82,17 +82,24 @@ public data class ApiWatchdogProjectReport(
 
 internal fun String.percentEncoded(): String = URLEncoder.encode(this, Charsets.UTF_8).replace("+", "%20")
 
+private val PATH_ROOT = Regex("^(//[^/]+/|[A-Za-z]:/|/)")
+
 internal fun normalizedSourcePath(directory: String, sourcePath: String): String {
-    val path = listOf(directory, sourcePath).filter(String::isNotEmpty).joinToString("/").replace('\\', '/')
+    val source = sourcePath.replace('\\', '/')
+    val path = if (PATH_ROOT.containsMatchIn(source)) source else {
+        listOf(directory.replace('\\', '/'), source).filter(String::isNotEmpty).joinToString("/")
+    }
+    val root = PATH_ROOT.find(path)?.value.orEmpty()
     val segments = ArrayDeque<String>()
-    for (segment in path.split('/')) {
+    for (segment in path.removePrefix(root).split('/')) {
         when {
             segment.isEmpty() || segment == "." -> {}
-            segment == ".." && segments.isNotEmpty() && segments.last() != ".." -> segments.removeLast()
-            else -> segments.addLast(segment)
+            segment != ".." -> segments.addLast(segment)
+            segments.isNotEmpty() && segments.last() != ".." -> segments.removeLast()
+            root.isEmpty() -> segments.addLast(segment)
         }
     }
-    return (if (path.startsWith('/')) "/" else "") + segments.joinToString("/")
+    return root + segments.joinToString("/")
 }
 
 @InternalWatchdogApi

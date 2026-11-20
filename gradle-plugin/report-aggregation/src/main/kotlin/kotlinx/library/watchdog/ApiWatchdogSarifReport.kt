@@ -36,7 +36,7 @@ public object ApiWatchdogSarifReport {
                         "physicalLocation" to linkedMapOf(
                             "artifactLocation" to linkedMapOf(
                                 "uri" to uri,
-                                "uriBaseId" to SOURCE_ROOT.takeUnless { uri.startsWith(FILE_URI) },
+                                "uriBaseId" to SOURCE_ROOT.takeUnless { uri.startsWith(FILE_SCHEME) },
                             ),
                             "region" to line?.takeIf { it > 0 }?.let { mapOf("startLine" to it) },
                         ),
@@ -69,7 +69,7 @@ public object ApiWatchdogSarifReport {
         "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json"
     private const val TOOL_NAME = "Library API Watchdog"
     private const val SOURCE_ROOT = "%SRCROOT%"
-    private const val FILE_URI = "file:///"
+    private const val FILE_SCHEME = "file:"
     private val WINDOWS_DRIVE = Regex("^[A-Za-z]:/")
 
     private fun NotAppliedExemptionReportEntry.message(): String = listOfNotNull(
@@ -85,7 +85,12 @@ public object ApiWatchdogSarifReport {
 
     private fun String.toUri(): String {
         val path = split('/').joinToString("/") { it.percentEncoded() }
-        return if (WINDOWS_DRIVE.containsMatchIn(this)) FILE_URI + path.replaceFirst("%3A", ":") else path
+        return when {
+            startsWith("//") -> FILE_SCHEME + path
+            startsWith('/') -> "$FILE_SCHEME//$path"
+            WINDOWS_DRIVE.containsMatchIn(this) -> "$FILE_SCHEME///" + path.replaceFirst("%3A", ":")
+            else -> path
+        }
     }
 
     private fun StringBuilder.appendJson(value: Any?, indent: Int) {

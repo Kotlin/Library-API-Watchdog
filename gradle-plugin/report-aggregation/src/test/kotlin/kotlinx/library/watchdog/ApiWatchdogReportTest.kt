@@ -402,6 +402,10 @@ class ApiWatchdogReportTest {
         class Case(val directory: String, val location: String, val uri: String, val path: String)
         val cases = listOf(
             Case("D:/libs/core", "src/A.kt:3", "file:///D:/libs/core/src/A.kt", "/D:/libs/core/src/A.kt"),
+            Case("D:/libs", "../../x/A.kt:3", "file:///D:/x/A.kt", "/D:/x/A.kt"),
+            Case("modules/library", "D:\\gen\\Foo.kt:3", "file:///D:/gen/Foo.kt", "/D:/gen/Foo.kt"),
+            Case("modules/library", "/gen/Foo.kt:3", "file:///gen/Foo.kt", "/gen/Foo.kt"),
+            Case("modules/library", "\\\\server\\share\\Foo.kt:3", "file://server/share/Foo.kt", "/share/Foo.kt"),
             Case("", "gen:kotlin/Foo.kt:3", "gen%3Akotlin/Foo.kt", "gen:kotlin/Foo.kt"),
             Case("", "my dir:x/A.kt:3", "my%20dir%3Ax/A.kt", "my dir:x/A.kt"),
             Case("modules/my lib", "src/Öl 日本.kt:3", "modules/my%20lib/src/%C3%96l%20%E6%97%A5%E6%9C%AC.kt", "modules/my lib/src/Öl 日本.kt"),

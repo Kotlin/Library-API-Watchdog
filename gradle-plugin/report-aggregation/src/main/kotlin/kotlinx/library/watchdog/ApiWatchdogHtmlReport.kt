@@ -240,7 +240,7 @@ public object ApiWatchdogHtmlReport {
      */
     private fun idePath(finding: Finding): String? {
         if (finding.sourcePath.isEmpty()) return null
-        return normalizedSourcePath(finding.report.projectDirectory, finding.sourcePath).takeUnless { ':' in it }
+        return normalizedSourcePath(finding.report.projectDirectory, finding.sourcePath).takeUnless { ':' in it || it.startsWith('/') }
     }
 
     /**

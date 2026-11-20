@@ -212,6 +212,17 @@ class ApiWatchdogHtmlReportTest {
     }
 
     @Test
+    fun `aggregate paths have no project directory before an absolute source path`() {
+        val locations = listOf("D:\\gen\\Api.kt:1", "/gen/Api.kt:1", "\\\\server\\share\\Api.kt:1")
+        val document = render(listOf(report(entries = locations.map { entry(it) })), ideLinks = ideLinks())
+        assertEquals(
+            setOf("D:/gen/Api.kt", "/gen/Api.kt", "//server/share/Api.kt"),
+            document.select(".finding").map { it.attr("data-path") }.toSet(),
+        )
+        assertTrue(document.select(".open-in-ide").isEmpty())
+    }
+
+    @Test
     fun `open in IDE buttons give root-relative paths and 1-based positions`() {
         val applied = AppliedExemptionReportEntry("IntentionallyOpen", "src/Api.kt:3")
         val ranged = entry("src\\Api.kt:12", range = ApiWatchdogSourceRange(12, 5, 12, 9))
