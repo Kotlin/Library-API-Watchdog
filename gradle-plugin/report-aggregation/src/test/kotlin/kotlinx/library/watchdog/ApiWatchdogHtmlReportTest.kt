@@ -202,6 +202,16 @@ class ApiWatchdogHtmlReportTest {
     }
 
     @Test
+    fun `aggregate paths resolve the parent segments of a source directory outside the project`() {
+        val document = render(listOf(
+            report(entries = listOf(entry("../shared/src/Api.kt:1"))),
+            report(entries = listOf(entry("../shared/./src/Api.kt:1")), project = ":client", directory = "modules/client"),
+        ))
+        val path = "modules/shared/src/Api.kt"
+        assertEquals(listOf(path, path), document.select(".finding").map { it.attr("data-path") })
+    }
+
+    @Test
     fun `open in IDE buttons give root-relative paths and 1-based positions`() {
         val applied = AppliedExemptionReportEntry("IntentionallyOpen", "src/Api.kt:3")
         val ranged = entry("src\\Api.kt:12", range = ApiWatchdogSourceRange(12, 5, 12, 9))

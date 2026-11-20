@@ -26,7 +26,7 @@ public object ApiWatchdogSarifReport {
         }
         val results = entries.map { (report, entry) ->
             val (path, line) = entry.location.splitLocation()
-            val uri = listOf(report.projectDirectory, path).filter(String::isNotEmpty).joinToString("/")
+            val uri = normalizedSourcePath(report.projectDirectory, path)
             linkedMapOf<String, Any?>(
                 "ruleId" to entry.diagnostic,
                 "ruleIndex" to ruleIds.indexOf(entry.diagnostic),
@@ -82,7 +82,7 @@ public object ApiWatchdogSarifReport {
         return if (line == null) this to null else substringBeforeLast(':') to line
     }
 
-    private fun String.toUriPath(): String = URI(null, null, replace(File.separatorChar, '/'), null).rawPath
+    private fun String.toUriPath(): String = URI(null, null, this, null).rawPath
 
     private fun StringBuilder.appendJson(value: Any?, indent: Int) {
         when (value) {

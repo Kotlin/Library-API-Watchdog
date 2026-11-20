@@ -384,4 +384,40 @@ class ApiWatchdogReportTest {
             file.toPath().deleteIfExists()
         }
     }
+
+    @Test
+    fun `SARIF resolves parent segments, so two projects give one URI for a shared file`() {
+        val locations = sarifLocations(
+            sarifReport("modules/client", "../shared/./src/A.kt:3", project = ":client"),
+            sarifReport("modules/library", "../shared/src/A.kt:3"),
+        )
+        val uri = "modules/shared/src/A.kt"
+        assertEquals(listOf(uri, uri), locations.map { it.uri })
+    }
+
+    private class SarifLocation(val uri: String, val uriBaseId: String?, val startLine: Int?)
+
+    private fun sarifReport(directory: String, location: String, project: String = ":library") = ApiWatchdogProjectReport(
+        projectPath = project,
+        projectDirectory = directory,
+        applied = emptyList(),
+        notApplied = listOf(NotAppliedExemptionReportEntry(null, "UNDOCUMENTED_PUBLIC_API", location, "", "warning")),
+    )
+
+    private fun sarifLocations(vararg reports: ApiWatchdogProjectReport): List<SarifLocation> {
+        val file = Files.createTempFile("exempts-report", ".sarif").toFile()
+        try {
+            ApiWatchdogSarifReport.write(reports.toList(), file)
+            val run = ((Json.parse(file.readText()) as Map<*, *>)["runs"] as List<*>).single() as Map<*, *>
+            return (run["results"] as List<*>).map { result ->
+                val location = ((result as Map<*, *>)["locations"] as List<*>).single() as Map<*, *>
+                val physical = location["physicalLocation"] as Map<*, *>
+                val artifact = physical["artifactLocation"] as Map<*, *>
+                val region = physical["region"] as Map<*, *>?
+                SarifLocation(artifact["uri"] as String, artifact["uriBaseId"] as String?, (region?.get("startLine") as Double?)?.toInt())
+            }
+        } finally {
+            file.toPath().deleteIfExists()
+        }
+    }
 }

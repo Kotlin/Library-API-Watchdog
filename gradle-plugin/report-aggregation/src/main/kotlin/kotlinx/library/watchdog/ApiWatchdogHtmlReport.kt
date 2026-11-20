@@ -93,8 +93,7 @@ public object ApiWatchdogHtmlReport {
         val line = location.lineNumber()
         val sourcePath = if (line == null) location else location.substringBeforeLast(':')
 
-        fun path(aggregate: Boolean): String =
-            listOf(if (aggregate) report.projectDirectory else "", sourcePath).filter(String::isNotEmpty).joinToString("/").replace('\\', '/')
+        fun path(aggregate: Boolean): String = normalizedSourcePath(if (aggregate) report.projectDirectory else "", sourcePath)
     }
 
     private fun diagnosticTitle(name: String): String =
@@ -242,23 +241,7 @@ public object ApiWatchdogHtmlReport {
      */
     private fun idePath(finding: Finding): String? {
         if (finding.sourcePath.isEmpty()) return null
-        val path = normalizePath(
-            listOf(finding.report.projectDirectory, finding.sourcePath).filter(String::isNotEmpty).joinToString("/").replace('\\', '/'),
-        )
-        return path.takeUnless { ':' in it }
-    }
-
-    /** Removes the empty, `.`, and resolvable `..` segments of [path]. A leading `/` stays. */
-    private fun normalizePath(path: String): String {
-        val segments = ArrayDeque<String>()
-        for (segment in path.split('/')) {
-            when {
-                segment.isEmpty() || segment == "." -> {}
-                segment == ".." && segments.isNotEmpty() && segments.last() != ".." -> segments.removeLast()
-                else -> segments.addLast(segment)
-            }
-        }
-        return (if (path.startsWith('/')) "/" else "") + segments.joinToString("/")
+        return normalizedSourcePath(finding.report.projectDirectory, finding.sourcePath).takeUnless { ':' in it }
     }
 
     /**

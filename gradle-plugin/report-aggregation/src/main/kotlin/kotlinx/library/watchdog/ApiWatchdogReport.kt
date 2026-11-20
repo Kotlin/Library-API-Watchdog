@@ -79,6 +79,19 @@ public data class ApiWatchdogProjectReport(
     public val sourceSnippets: Map<String, ApiWatchdogSourceSnippet> = emptyMap(),
 )
 
+internal fun normalizedSourcePath(directory: String, sourcePath: String): String {
+    val path = listOf(directory, sourcePath).filter(String::isNotEmpty).joinToString("/").replace('\\', '/')
+    val segments = ArrayDeque<String>()
+    for (segment in path.split('/')) {
+        when {
+            segment.isEmpty() || segment == "." -> {}
+            segment == ".." && segments.isNotEmpty() && segments.last() != ".." -> segments.removeLast()
+            else -> segments.addLast(segment)
+        }
+    }
+    return (if (path.startsWith('/')) "/" else "") + segments.joinToString("/")
+}
+
 @InternalWatchdogApi
 public object ApiWatchdogReportData {
     private const val VERSION = "6"
