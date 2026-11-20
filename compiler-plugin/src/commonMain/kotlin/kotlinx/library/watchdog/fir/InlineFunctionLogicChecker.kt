@@ -170,7 +170,7 @@ internal class InlineFunctionLogicChecker(
             } == true && rValue.isPlain()
         is FirTypeOperatorCall -> arguments.all { it.isPlain() }
         is FirAnonymousFunctionExpression -> anonymousFunction.body?.isThinWrapper() == true
-        else -> false
+        else -> functionTypeConversionArgument?.isPlain() == true
     }
 
     private fun FirFunctionCall.isPlainCall(): Boolean {

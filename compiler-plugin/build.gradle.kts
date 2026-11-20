@@ -63,6 +63,10 @@ pluginDevKit {
         split("DiagnosticFactoryPsiType") {
             it < KotlinToolingVersion("2.5.20-dev-5899")
         }
+        // `pre`: a SAM conversion is a `FirSamConversionExpression`. `post`: it is a `FirFunctionTypeConversionExpression`.
+        split("FunctionTypeConversion") {
+            it < KotlinToolingVersion("2.4.0-Beta2")
+        }
     }
 }
 
