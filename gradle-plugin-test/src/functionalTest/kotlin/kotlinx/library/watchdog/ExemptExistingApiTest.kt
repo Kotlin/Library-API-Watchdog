@@ -325,6 +325,32 @@ class ExemptExistingApiTest {
     }
 
     @Test
+    fun `allWarningsAsErrors doesn't fail the exempt task`() {
+        val project = jvmProject {
+            buildScript(ALL_WARNINGS_AS_ERRORS_BUILD_SCRIPT)
+            source(openClass("ExistingApi") + " {\n    public fun undocumented(): Int = 0\n}", "existingApi")
+        }
+
+        project.build(EXEMPT_TASK)
+
+        project.assertExempted("src/main/kotlin/test/existingApi.kt", "ExistingApi")
+        // The undocumented function is still a warning, and the flag is on outside the task.
+        project.buildAndFail("compileKotlin").assertOutputHas("-Werror")
+    }
+
+    @Test
+    fun `allWarningsAsErrors doesn't fail the report task in a multiplatform project`() {
+        val project = kmpProject("jvm()\njs { nodejs() }") {
+            buildScript(ALL_WARNINGS_AS_ERRORS_BUILD_SCRIPT)
+            source(openClass("SharedApi"), "sharedApi")
+        }
+
+        project.build(REPORT_TASK)
+
+        assertContains(project.report().readText(), "sharedApi.kt:")
+    }
+
+    @Test
     fun `keeps the configured explicit API mode`() {
         val project = kmpProject { source(openClass("SharedApi"), "sharedApi") }
 
@@ -1025,6 +1051,7 @@ class ExemptExistingApiTest {
         const val EXEMPT_TASK = "exemptExistingApi"
         const val REPORT_TASK = "generateApiWatchdogReport"
         const val PLACEHOLDER_KDOC = "/** TODO: Document this declaration */"
+        const val ALL_WARNINGS_AS_ERRORS_BUILD_SCRIPT = "kotlin { compilerOptions { allWarningsAsErrors = true } }"
         const val CONTEXT_PARAMETERS_BUILD_SCRIPT = """kotlin { compilerOptions.freeCompilerArgs.add("-Xcontext-parameters") }"""
     }
 }

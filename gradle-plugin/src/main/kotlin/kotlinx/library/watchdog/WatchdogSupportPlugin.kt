@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.KotlinTargetsContainer
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileTool
 
 /**
@@ -218,6 +219,11 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
             val collecting = exemptsTaskPaths.any(graph::hasTask)
             collectDiagnostics.set(collecting)
             if (!collecting) return@whenReady
+            checkedCompileTaskPaths.filter(graph::hasTask).forEach { path ->
+                tasks.named(path.substringAfterLast(':'), KotlinCompilationTask::class.java).configure { task ->
+                    task.compilerOptions.allWarningsAsErrors.set(false)
+                }
+            }
             // `graph.allTasks` fails under project isolation.
             val kotlin = extensions.findByName("kotlin") as? KotlinTargetsContainer
             tasksInGraph = kotlin?.targets.orEmpty().asSequence()
