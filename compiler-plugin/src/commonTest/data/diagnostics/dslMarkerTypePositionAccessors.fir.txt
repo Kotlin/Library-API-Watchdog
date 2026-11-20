@@ -1,0 +1,44 @@
+FILE: dslMarkerTypePositionAccessors.kt
+    package foo.bar
+
+    @R|kotlin/DslMarker|() @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|, Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.TYPE|) [evaluated = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|, Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.TYPE|)]) public final annotation class TreeDsl : R|kotlin/Annotation| {
+        public constructor(): R|foo/bar/TreeDsl| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public open class Tag : R|kotlin/Any| {
+        public constructor(): R|foo/bar/Tag| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final var current: R|@R|foo/bar/TreeDsl|()  foo/bar/Tag|
+        public get(): R|@R|foo/bar/TreeDsl|()  foo/bar/Tag| {
+            ^ R|foo/bar/Tag.Tag|()
+        }
+        public set(value: R|@R|foo/bar/TreeDsl|()  foo/bar/Tag|): R|kotlin/Unit| {
+        }
+    public final val computed: R|@R|foo/bar/TreeDsl|()  foo/bar/Tag|
+        public get(): R|@R|foo/bar/TreeDsl|()  foo/bar/Tag| {
+            ^ R|foo/bar/Tag.Tag|()
+        }
+    public final class Holder : R|kotlin/Any| {
+        public constructor(): R|foo/bar/Holder| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final var member: R|@R|foo/bar/TreeDsl|()  foo/bar/Tag|
+            public get(): R|@R|foo/bar/TreeDsl|()  foo/bar/Tag| {
+                ^ R|foo/bar/Tag.Tag|()
+            }
+            public set(value: R|@R|foo/bar/TreeDsl|()  foo/bar/Tag|): R|kotlin/Unit| {
+            }
+
+    }
+    public final var explicitGetter: R|foo/bar/Tag|
+        public get(): R|@R|foo/bar/TreeDsl|()  foo/bar/Tag| {
+            ^ R|foo/bar/Tag.Tag|()
+        }
+        public set(value: R|@R|foo/bar/TreeDsl|()  foo/bar/Tag|): R|kotlin/Unit| {
+        }
