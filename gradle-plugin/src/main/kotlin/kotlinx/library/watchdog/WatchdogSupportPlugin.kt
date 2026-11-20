@@ -60,7 +60,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
     /** The compile tasks that have checks when the project turns explicit API mode on. */
     private val checkedCompileTaskPaths = mutableSetOf<String>()
 
-    private val feedsReportByCompileTaskPath = mutableMapOf<String, Lazy<Boolean>>()
+    private val feedsReportByCompileTaskPath = mutableMapOf<String, Provider<Boolean>>()
 
     @Volatile
     private var tasksInGraph: Set<String>? = null
@@ -227,7 +227,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
             collectDiagnostics.set(collecting)
             if (!collecting) return@whenReady
             for ((path, feedsReport) in feedsReportByCompileTaskPath) {
-                if (!graph.hasTask(path) || !feedsReport.value) continue
+                if (!graph.hasTask(path) || !feedsReport.get()) continue
                 tasks.named(path.substringAfterLast(':'), KotlinCompilationTask::class.java).configure { task ->
                     task.compilerOptions.allWarningsAsErrors.set(false)
                 }
@@ -278,18 +278,15 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         kotlinCompilation: KotlinCompilation<*>
     ): Provider<List<SubpluginOption>> {
         val extension = extensions.getByType(WatchdogGradleExtension::class.java)
-        val feedsReportWithoutTaskFlag = feedsReport(kotlinCompilation)
-        val feedsReport = lazy {
-            feedsReportWithoutTaskFlag ||
-                    hasRawExplicitApiFlag(kotlinCompilation.compileTaskProvider.get().compilerOptions)
+        val withoutTaskFlag = feedsReportWithoutTaskFlag(kotlinCompilation)
+        val feedsReport = providers.provider {
+            withoutTaskFlag || hasRawExplicitApiFlag(kotlinCompilation.compileTaskProvider.get().compilerOptions)
         }
         feedsReportByCompileTaskPath[taskPath(kotlinCompilation.compileKotlinTaskName)] = feedsReport
-        val collect = collectDiagnosticsForExempts.map { it && feedsReport.value }
+        val collect = collectDiagnosticsForExempts.map { it && feedsReport.get() }
         // KGP already sets `-Xexplicit-api`. A different value causes a warning about repeated flags.
         // `feedsReport` reads the compiler arguments, so this value can't use it.
-        val forceExplicitApi = collectDiagnosticsForExempts.map {
-            it && feedsReportWithoutTaskFlag && !hasExplicitApiMode()
-        }
+        val forceExplicitApi = collectDiagnosticsForExempts.map { it && withoutTaskFlag && !hasExplicitApiMode() }
         val compileDependencies = configurations.named(compileDependenciesName(kotlinCompilation))
         val transitiveDependencies = transitiveDependenciesFor(kotlinCompilation, compileDependencies)
         val exemptNonTransitiveDependencies = exemptNonTransitiveDependenciesFor(kotlinCompilation, compileDependencies)
@@ -299,7 +296,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         // `whenReady` sets `tasksInGraph`.
         val roles = lazy { if (collect.get()) sourceSetRoles(kotlinCompilation) else SourceSetRoles.NONE }
 
-        if (feedsReportWithoutTaskFlag) checkedCompileTaskPaths += taskPath(kotlinCompilation.compileKotlinTaskName)
+        if (withoutTaskFlag) checkedCompileTaskPaths += taskPath(kotlinCompilation.compileKotlinTaskName)
         val exemptTask = tasks.named(
             EXEMPT_EXISTING_API_TASK_NAME,
             ExemptExistingApiTask::class.java,
@@ -308,18 +305,22 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
             GENERATE_REPORT_TASK_NAME,
             GenerateApiWatchdogReportTask::class.java,
         )
+        fun <T : Any> ifFeedsReport(values: () -> List<T>): Provider<List<T>> =
+            feedsReport.map { if (it) values() else emptyList() }
         fun ApiWatchdogReportTask.addCompilation() {
-            compilationNames.add(kotlinCompilation.compileKotlinTaskName)
-            sourceFiles.from(kotlinCompilation.allKotlinSourceSets.map { it.kotlin })
+            compilationNames.addAll(ifFeedsReport { listOf(kotlinCompilation.compileKotlinTaskName) })
+            sourceFiles.from(ifFeedsReport { kotlinCompilation.allKotlinSourceSets.map { it.kotlin } })
             // The built-in Kotlin of AGP 9 doesn't register a Kotlin source set on the compilation.
-            sourceFiles.from(kotlinCompilation.compileTaskProvider.map { task ->
-                (task as? KotlinCompileTool)?.sources ?: objects.fileCollection()
+            sourceFiles.from(ifFeedsReport {
+                listOf(kotlinCompilation.compileTaskProvider.map { task ->
+                    (task as? KotlinCompileTool)?.sources ?: objects.fileCollection()
+                })
             })
-            diagnosticReports.from(reportFile)
-            dependsOn(kotlinCompilation.compileTaskProvider)
+            diagnosticReports.from(ifFeedsReport { listOf(reportFile) })
+            dependsOn(ifFeedsReport { listOf(kotlinCompilation.compileTaskProvider) })
         }
-        exemptTask.configure { task -> if (feedsReport.value) task.addCompilation() }
-        reportTask.configure { task -> if (feedsReport.value) task.addCompilation() }
+        exemptTask.configure { task -> task.addCompilation() }
+        reportTask.configure { task -> task.addCompilation() }
 
         kotlinCompilation.compileTaskProvider.configure { task ->
             task.inputs.property("apiWatchdog.collectDiagnosticsForExempts", collect)
@@ -567,14 +568,11 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                     compilation.name == KotlinCompilation.MAIN_COMPILATION_NAME
             // The task graph check comes first, because a `feedsReport` value can realize the compile task.
             compileTaskPath in graph && isApplicable(compilation) && !skippedMetadata &&
-                    feedsReportByCompileTaskPath[compileTaskPath]?.value == true
+                    feedsReportByCompileTaskPath[compileTaskPath]?.get() == true
         }
 
-    /**
-     * Whether the compiler plugin checks [compilation], without the `-Xexplicit-api` flag of its compile task. The
-     * function doesn't read the task, so the task stays unrealized.
-     */
-    private fun Project.feedsReport(compilation: KotlinCompilation<*>): Boolean {
+    /** Doesn't read the compile task, so the task stays unrealized. */
+    private fun Project.feedsReportWithoutTaskFlag(compilation: KotlinCompilation<*>): Boolean {
         if (compilation.isTestCompilation()) return false
         val requirement = extensions.getByType(WatchdogGradleExtension::class.java).explicitApiRequirement.get()
         return requirement != ExplicitApiRequirement.FAIL || compilation.hasExplicitApiFromExtension() ||
