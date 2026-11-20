@@ -3,6 +3,7 @@ package kotlinx.library.watchdog
 import java.io.File
 import org.gradle.api.Action
 import org.gradle.api.GradleException
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
@@ -113,16 +114,16 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
 
     /** KGP adds the annotations library only through [applyToCompilation], which a disabled watchdog never reaches. */
     private fun Project.addExemptionAnnotationsWithoutChecks() {
-        val compilations = when (val kotlin = extensions.findByName("kotlin")) {
-            is KotlinJvmExtension -> kotlin.target.compilations
-            is KotlinAndroidExtension -> kotlin.target.compilations
-            is KotlinTargetsContainer -> kotlin.targets.flatMap { it.compilations }
-            else -> return
-        }
-        compilations.filterNot { it.isTestCompilation() }.forEach { compilation ->
+        fun NamedDomainObjectContainer<out KotlinCompilation<*>>.addAnnotations() = all { compilation ->
+            if (compilation.isTestCompilation()) return@all
             compilation.defaultSourceSet.dependencies {
                 info.companionLibraryCoordinates.forEach(::implementation)
             }
+        }
+        when (val kotlin = extensions.findByName("kotlin")) {
+            is KotlinJvmExtension -> kotlin.target.compilations.addAnnotations()
+            is KotlinAndroidExtension -> kotlin.target.compilations.addAnnotations()
+            is KotlinTargetsContainer -> kotlin.targets.all { it.compilations.addAnnotations() }
         }
     }
 
