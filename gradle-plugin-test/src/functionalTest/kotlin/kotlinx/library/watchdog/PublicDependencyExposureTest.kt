@@ -6,6 +6,7 @@ import com.autonomousapps.kit.gradle.Dependency.Companion.api
 import com.autonomousapps.kit.gradle.Dependency.Companion.compileOnly
 import com.autonomousapps.kit.gradle.Dependency.Companion.implementation
 import com.autonomousapps.kit.gradle.Plugin
+import kotlin.test.assertContains
 import kotlinx.library.watchdog.AgpVersion.AGP8
 import kotlinx.library.watchdog.AgpVersion.AGP9
 import kotlinx.library.watchdog.Diagnostic.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY
@@ -700,6 +701,50 @@ class PublicDependencyExposureTest {
             "        implementation(\"$COROUTINES\")\n        apiWatchdogExemptNonTransitive(\"$COROUTINES\")"
         )
     }
+
+    @Test
+    fun `a version range of a dependency shows in the exemption snippet`() {
+        val range = "org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.10.0,1.10.2]"
+        val project = kmpProject(JVM_AND_JS_TARGETS) {
+            source(exposesCoroutinesTypeFile, "Jobs", "test.consumer")
+            dependencies(implementation(range))
+        }
+
+        val result = project.buildAndFail("compileKotlinJvm", "compileKotlinJs", "--continue")
+        result.assertTaskOutcome(":compileKotlinJvm", FAILED)
+        result.assertTaskOutcome(":compileKotlinJs", FAILED)
+        result.assertNonTransitiveExposureReported("kotlinx.coroutines.Job")
+        result.assertOutputHas("apiWatchdogExemptNonTransitive(\"$range\")")
+    }
+
+    @Test
+    fun `a comma in the checkout path keeps the dependency check`() {
+        val project = jvmProject {
+            consumerSource()
+            dependencies(implementation(":model"))
+            modelSubproject()
+        }.inDirectoryWithCommas()
+
+        val result = project.buildAndFail("compileKotlin")
+        result.assertNonTransitiveExposureReported("test.model.ExternalModel")
+        result.assertOutputHas("        implementation(project(\":model\"))")
+    }
+
+    @Test
+    fun `a comma in the checkout path keeps the exempt task working`() {
+        val project = jvmProject {
+            source("/** An existing open API. */\npublic open class ExistingApi", "existingApi")
+        }.inDirectoryWithCommas()
+
+        project.build("exemptExistingApi")
+
+        assertContains(
+            project.file("src/main/kotlin/test/existingApi.kt").readText(),
+            "@IntentionallyOpen(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\npublic open class ExistingApi",
+        )
+    }
+
+    private fun WatchdogBuild.inDirectoryWithCommas(): WatchdogBuild = copyTo("${rootDir.name},with,commas")
 
     @Test
     fun `exempt non-transitive dependencies aren't on the compile classpath`() {

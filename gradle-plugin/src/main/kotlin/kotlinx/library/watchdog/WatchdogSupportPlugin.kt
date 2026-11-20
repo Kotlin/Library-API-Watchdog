@@ -384,7 +384,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 add(
                     SubpluginOption(
                         "diagnosticsOutputFile",
-                        lazy { if (collect.get()) reportFile.get().asFile.path else "" },
+                        lazy { if (collect.get()) escapeCommas(reportFile.get().asFile.path) else "" },
                     ),
                 )
                 add(SubpluginOption("exemptingExistingApi", lazy { collect.get().toString() }))
@@ -407,7 +407,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                         "compileDependencyPaths",
                         lazy {
                             if (!checkDependencyExposure.get()) return@lazy ""
-                            dependencyFiles(compileDependencies.get(), compilesForAndroid.get()).asPath
+                            escapeCommas(dependencyFiles(compileDependencies.get(), compilesForAndroid.get()).asPath)
                         },
                     ),
                 )
@@ -421,7 +421,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                             val android = compilesForAndroid.get()
                             val files = dependencyFiles(transitiveDependencies.get(), android).files +
                                     dependencyFiles(exemptNonTransitiveDependencies.get(), android).files
-                            files.joinToString(File.pathSeparator, transform = File::getPath)
+                            escapeCommas(files.joinToString(File.pathSeparator, transform = File::getPath))
                         },
                     ),
                 )
@@ -430,7 +430,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                         "dependencyDeclarations",
                         lazy {
                             if (!checkDependencyExposure.get()) return@lazy ""
-                            dependencyDeclarations(compileDependencies.get(), compilesForAndroid.get())
+                            escapeCommas(dependencyDeclarations(compileDependencies.get(), compilesForAndroid.get()))
                         },
                     ),
                 )
@@ -720,6 +720,9 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
         private const val BCV_PLUGIN_ID = "org.jetbrains.kotlinx.binary-compatibility-validator"
 
         private const val DISABLED_TASK_REASON = "apiWatchdog.enabled is true"
+
+        /** A comma splits a `-P` compiler argument. The compiler plugin restores the value. */
+        private fun escapeCommas(value: String): String = value.replace("%", "%25").replace(",", "%2C")
 
         private fun Project.kotlinPluginVersion(): String =
             plugins.withType(KotlinBasePlugin::class.java)
