@@ -53,7 +53,8 @@ kotlin {
 
 `explicitApiWarning()` and the `-Xexplicit-api` compiler flag also count. `explicitApi()` reaches the
 `main` compilations, the metadata compilations, and the Android variants. A custom compilation such as
-`testFixtures` doesn't have checks without the `-Xexplicit-api` flag.
+`testFixtures` has checks only with the `-Xexplicit-api` flag or with `explicitApiRequirement` set to
+`WARN` or `SKIP`.
 
 `explicitApiRequirement` in the `apiWatchdog` extension sets what the plugin does when explicit API mode
 is off. It holds an `ExplicitApiRequirement`. Without explicit API mode, a declaration without a
