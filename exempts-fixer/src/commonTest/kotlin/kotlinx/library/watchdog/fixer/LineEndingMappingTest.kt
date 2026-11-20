@@ -39,6 +39,15 @@ class LineEndingMappingTest {
     }
 
     @Test
+    fun `byte order mark is dropped and offsets map past it`() {
+        val mapping = LineEndingMapping.of("\uFEFFa\r\nb")
+
+        assertEquals("a\nb", mapping.normalizedText)
+        assertEquals(listOf(1, 2, 4, 5), (0..3).map(mapping::toRawOffset))
+        assertEquals(listOf(1, 2), (0..1).map(LineEndingMapping.of("\uFEFFa")::toRawOffset))
+    }
+
+    @Test
     fun `CRLF is used for insertions only when it is strictly dominant`() {
         val cases = listOf(
             "a\r\nb\r\nc\n" to "\r\n",

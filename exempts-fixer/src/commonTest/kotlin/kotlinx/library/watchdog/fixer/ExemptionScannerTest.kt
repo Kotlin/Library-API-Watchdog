@@ -151,6 +151,32 @@ class ExemptionScannerTest {
         assertEquals(emptyList(), scanner.scan(FILE_PATH, text))
     }
 
+    @Test
+    fun `lines follow the line endings and the byte order mark that the compiler reads`() {
+        val compilerText = """
+            @file:IntentionallyDefaultFacadeName(reason = ExemptionReason.API_DESIGN)
+
+            package example
+
+            import kotlinx.library.watchdog.ExemptionReason
+            import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
+            import kotlinx.library.watchdog.IntentionallyOpen
+
+            @IntentionallyOpen(reason = ExemptionReason.API_DESIGN)
+            public open class Designed
+        """.trimIndent()
+
+        for (newline in listOf("\n", "\r\n", "\r")) {
+            assertEquals(
+                listOf(
+                    AppliedExemption("IntentionallyDefaultFacadeName", FILE_PATH, 1),
+                    AppliedExemption("IntentionallyOpen", FILE_PATH, 9),
+                ),
+                scanner.scan(FILE_PATH, "\uFEFF" + compilerText.replace("\n", newline)),
+            )
+        }
+    }
+
     private companion object {
         const val FILE_PATH = "/project/Existing.kt"
     }

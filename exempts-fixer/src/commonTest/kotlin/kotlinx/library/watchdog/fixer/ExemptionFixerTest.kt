@@ -1809,6 +1809,30 @@ class ExemptionFixerTest {
         }
     }
 
+    @Test
+    fun `a byte order mark stays at the file start`() {
+        val text = "\uFEFFpackage p\n\npublic fun topLevel(): Int = 0\n\npublic data class B(val x: Int)\n"
+
+        val result = fix(
+            text,
+            diagnostic("TOP_LEVEL_API_WITHOUT_JVM_NAME", text, "public fun topLevel(): Int = 0"),
+            diagnostic("DATA_CLASS_PUBLIC_API", text, "public data class B(val x: Int)"),
+        )
+
+        assertEquals(
+            "\uFEFF@file:IntentionallyDefaultFacadeName(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n\n" +
+                    "package p\n\n" +
+                    "import kotlinx.library.watchdog.ExemptionReason\n" +
+                    "import kotlinx.library.watchdog.IntentionallyDataClass\n" +
+                    "import kotlinx.library.watchdog.IntentionallyDefaultFacadeName\n\n" +
+                    "public fun topLevel(): Int = 0\n\n" +
+                    "@IntentionallyDataClass(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n" +
+                    "public data class B(val x: Int)\n",
+            result.newText,
+        )
+        assertEquals(listOf(9, 12), result.applied.map { it.line })
+    }
+
     private companion object {
         const val FILE_PATH = "/project/src/main/kotlin/com/example/Sample.kt"
         const val PLACEHOLDER_KDOC = "/** TODO: Document this declaration */"

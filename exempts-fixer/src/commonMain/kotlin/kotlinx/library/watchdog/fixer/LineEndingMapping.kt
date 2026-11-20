@@ -1,22 +1,25 @@
 package kotlinx.library.watchdog.fixer
 
 /**
- * The compiler reads each `\r\n` and `\r` of a source file as one `\n`. It records offsets on that
- * text, [normalizedText], and the fixer plans its edits on it. [toRawOffset] maps the offset of an
- * edit to the file text, so the existing line endings stay. Inserted text uses [newline], the
- * dominant separator.
+ * The compiler reads a source file without its byte order mark and with each `\r\n` and `\r` as
+ * one `\n`. It records offsets on that text, [normalizedText], and the fixer plans its edits on it.
+ * [toRawOffset] maps the offset of an edit to the file text, so the byte order mark and the
+ * existing line endings stay. Inserted text uses [newline], the dominant separator.
  */
 internal class LineEndingMapping private constructor(
     val normalizedText: String,
-    /** Null when the text doesn't have a `\r`. */
+    /** Null when the file text is [normalizedText]. */
     private val rawOffsets: IntArray?,
     val newline: String,
 ) {
     fun toRawOffset(normalizedOffset: Int): Int = rawOffsets?.get(normalizedOffset) ?: normalizedOffset
 
     companion object {
+        private const val BYTE_ORDER_MARK = '\uFEFF'
+
         fun of(text: String): LineEndingMapping {
-            if ('\r' !in text) {
+            val start = if (text.startsWith(BYTE_ORDER_MARK)) 1 else 0
+            if (start == 0 && '\r' !in text) {
                 return LineEndingMapping(text, rawOffsets = null, newline = "\n")
             }
 
@@ -28,7 +31,7 @@ internal class LineEndingMapping private constructor(
 
             val normalized = StringBuilder(text.length)
             val rawOffsets = IntArray(text.length + 1)
-            var rawIndex = 0
+            var rawIndex = start
             while (rawIndex < text.length) {
                 val char = text[rawIndex]
                 if (char == '\r' && rawIndex + 1 < text.length && text[rawIndex + 1] == '\n') {

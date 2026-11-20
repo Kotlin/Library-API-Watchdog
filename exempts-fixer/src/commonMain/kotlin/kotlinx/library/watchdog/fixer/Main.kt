@@ -23,7 +23,7 @@ fun main(args: Array<String>) {
     response.writeTo(request.responseFile)
 }
 
-private fun run(request: FixerRequest, response: FixerResponse) {
+internal fun run(request: FixerRequest, response: FixerResponse) {
     val (pairs, recorded) = RecordedDiagnostic.parseReports(request.reportFiles).partition { it.name == EXPECT_ACTUAL_PAIR }
     val diagnostics = recorded.redundantCopiesAsRemovals()
     if (diagnostics.isEmpty() && request.sourceFiles.isEmpty()) {
