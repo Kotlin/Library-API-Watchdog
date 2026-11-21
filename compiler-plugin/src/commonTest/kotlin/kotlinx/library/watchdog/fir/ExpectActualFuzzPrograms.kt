@@ -141,7 +141,6 @@ private class Prop(id: String) : Decl(id) {
     var shape: String = "field"
     val jvmAnnotations = mutableListOf<String>()
 
-    /** An exemption with the `setparam:` target. */
     var setterParameter: Ann? = null
 }
 
