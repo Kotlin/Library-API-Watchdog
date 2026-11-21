@@ -379,7 +379,6 @@ private class ProgramBuilder(private val random: Random, private val packageName
 
     private val readableProperties = mutableListOf<String>()
 
-    /** A property with the inferred type of another property, which has the type annotations of that property. */
     private fun FileBuilder.inferredProperty() {
         if (readableProperties.isEmpty()) return property(Scope.TOP_LEVEL, forbidden = emptySet())
         val source = pick(readableProperties)

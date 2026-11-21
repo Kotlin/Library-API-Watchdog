@@ -3,7 +3,7 @@
 // EXPLICIT_API_MODE: WARNING
 // DIAGNOSTICS: -UNDOCUMENTED_PUBLIC_API -TOP_LEVEL_API_WITHOUT_JVM_NAME -STATEFUL_CLASS_WITHOUT_EQUALS -STATEFUL_CLASS_WITHOUT_HASH_CODE -STATEFUL_CLASS_WITHOUT_TO_STRING -ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT
 
-// A class exemption of an `actual` class covers the exemptions of an `expect` member, so it isn't redundant.
+// The class exemption and the member exemptions cover each other. The check reports the member exemptions only.
 
 // MODULE: common
 // FILE: common.kt
