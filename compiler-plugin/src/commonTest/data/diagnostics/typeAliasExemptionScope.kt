@@ -6,8 +6,8 @@
 // DEPENDENCY_DECLARATIONS: ../messages/nonTransitiveDependency.deps/models implementation "com.example:models:1.0"
 
 // A type-usage exemption inside a type alias doesn't exempt a use of the type alias.
-// The fixer test can't resolve dependencies, so this file hides `PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY`,
-// and each use of `Models` needs its own exemption.
+// The fixer test can't resolve dependencies, so this file hides `PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY`.
+// The exemptions on the uses of `Models` show that each use needs its own exemption.
 
 // MODULE: lib
 // FILE: models.kt
