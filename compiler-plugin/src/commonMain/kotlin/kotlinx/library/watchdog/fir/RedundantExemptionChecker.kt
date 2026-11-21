@@ -759,9 +759,6 @@ private class ExemptionCandidateCollector(
     /**
      * `vararg x: Boolean` resolves to `BooleanArray` without a type argument, so the cone type has no
      * annotations of the element type. The written type reference still has them.
-     *
-     * The position of a nested annotation ends with the indices of its type arguments, so an `actual` pairs
-     * each copy with its original.
      */
     fun types(typeRef: FirTypeRef?, group: Any? = null, position: String) {
         typeRef?.coneTypeOrNull?.let { coneTypes(it, group, "$position/type") }
