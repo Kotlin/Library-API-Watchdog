@@ -1,0 +1,123 @@
+Module: common
+FILE: common.kt
+    package foo.bar
+
+    @R|kotlinx/library/watchdog/InternalAnnotationMarker|() @R|kotlin/annotation/Target|(allowedTargets = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|) [evaluated = vararg(Q|kotlin/annotation/AnnotationTarget|.R|kotlin/annotation/AnnotationTarget.CLASS|)]) public final annotation class LibInternal : R|kotlin/Annotation| {
+        public constructor(): R|foo/bar/LibInternal| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    @R|foo/bar/LibInternal|() public open class HiddenBase : R|kotlin/Any| {
+        public constructor(): R|foo/bar/HiddenBase| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    @R|foo/bar/LibInternal|() public abstract interface HiddenContract : R|kotlin/Any| {
+    }
+    public abstract interface Contract : R|kotlin/Any| {
+    }
+    public abstract interface Box<A, B> : R|kotlin/Any| {
+    }
+    public final expect class Client : R|kotlin/Any| {
+    }
+    public final expect class Service : R|foo/bar/HiddenContract| {
+    }
+    public final expect class Plain : R|foo/bar/Contract| {
+    }
+    public final expect class Exempt : R|kotlin/Any| {
+    }
+    public final expect class ExemptSupertype : R|kotlin/Any| {
+    }
+    @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final expect class Paired : R|kotlin/Any| {
+    }
+    @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final expect class ExpectOnly : R|kotlin/Any| {
+    }
+    public final expect class Shifted : R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/Contract| {
+    }
+    @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final expect class OwnAlias : R|kotlin/Any| {
+    }
+    public final expect class Bounded<T : R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/Contract|> : R|kotlin/Any| {
+    }
+    public final expect class Args : R|foo/bar/Box<@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/HiddenContract, @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/Contract>| {
+    }
+    public final expect class Paths : R|foo/bar/Box<@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/HiddenContract, foo/bar/Contract>| {
+    }
+Module: jvm
+FILE: jvm.kt
+    package foo.bar
+
+    public final actual class Client : R|foo/bar/HiddenBase| {
+        public constructor(): R|foo/bar/Client| {
+            super<R|foo/bar/HiddenBase|>()
+        }
+
+    }
+    public final actual class Service : R|foo/bar/HiddenBase|, R|foo/bar/HiddenContract| {
+        public constructor(): R|foo/bar/Service| {
+            super<R|foo/bar/HiddenBase|>()
+        }
+
+    }
+    public final actual class Plain : R|foo/bar/Contract| {
+        public constructor(): R|foo/bar/Plain| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final actual class Exempt : R|foo/bar/HiddenBase| {
+        public constructor(): R|foo/bar/Exempt| {
+            super<R|foo/bar/HiddenBase|>()
+        }
+
+    }
+    public final actual class ExemptSupertype : R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/HiddenBase| {
+        public constructor(): R|foo/bar/ExemptSupertype| {
+            super<R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/HiddenBase|>()
+        }
+
+    }
+    @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final actual class Paired : R|foo/bar/HiddenBase| {
+        public constructor(): R|foo/bar/Paired| {
+            super<R|foo/bar/HiddenBase|>()
+        }
+
+    }
+    public final actual class ExpectOnly : R|foo/bar/HiddenBase| {
+        public constructor(): R|foo/bar/ExpectOnly| {
+            super<R|foo/bar/HiddenBase|>()
+        }
+
+    }
+    public final actual class Shifted : R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/HiddenBase|, R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/Contract| {
+        public constructor(): R|foo/bar/Shifted| {
+            super<R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/HiddenBase|>()
+        }
+
+    }
+    @R|foo/bar/LibInternal|() public final class HiddenOne : R|kotlin/Any| {
+        public constructor(): R|foo/bar/HiddenOne| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|() public final actual typealias OwnAlias = R|foo/bar/HiddenOne|
+    public final actual class Bounded<T : R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/Contract|> : R|kotlin/Any| {
+        public constructor<T : R|@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/Contract|>(): R|foo/bar/Bounded<T>| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final actual class Args : R|foo/bar/Box<@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/HiddenContract, @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/Contract>| {
+        public constructor(): R|foo/bar/Args| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final actual class Paths : R|foo/bar/Box<@R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/HiddenContract, @R|kotlinx/library/watchdog/IntentionallyExposedInternalApiForBackwardsCompatibility|()  foo/bar/Contract>| {
+        public constructor(): R|foo/bar/Paths| {
+            super<R|kotlin/Any|>()
+        }
+
+    }

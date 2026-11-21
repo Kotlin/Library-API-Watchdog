@@ -571,6 +571,45 @@ class ExemptExistingApiTest {
     }
 
     @Test
+    fun `a redundant type argument exemption of an expect supertype is removed with its own copy only`() {
+        val annotation = "@IntentionallyExposedInternalApiForBackwardsCompatibility"
+        val project = kmpProject {
+            apiWatchdog { severity(NONE, UNDOCUMENTED_PUBLIC_API) }
+            source(
+                """
+                    @InternalAnnotationMarker
+                    public annotation class LibInternal
+
+                    @LibInternal
+                    public interface HiddenContract
+
+                    public interface Contract
+
+                    public interface Box<A, B>
+
+                    public expect class Args : Box<$annotation HiddenContract, $annotation Contract>
+                """.trimIndent(),
+                "args",
+            )
+            source(
+                "public actual class Args : Box<$annotation HiddenContract, $annotation Contract>",
+                "argsJvm",
+                sourceSet = "jvmMain",
+            )
+        }
+
+        project.build(EXEMPT_TASK).assertTaskOutcome(":$EXEMPT_TASK", SUCCESS)
+
+        val common = project.file("src/commonMain/kotlin/test/args.kt").readText()
+        val jvm = project.file("src/jvmMain/kotlin/test/argsJvm.kt").readText()
+        assertContains(common, "Box<$annotation HiddenContract, Contract>")
+        assertContains(jvm, "Box<$annotation HiddenContract, Contract>")
+        val compilation = project.build("compileKotlinJvm")
+        compilation.assertNoWatchdogDiagnostics()
+        assertFalse("is missing on actual declaration" in compilation.output, compilation.output)
+    }
+
+    @Test
     fun `Android library is fixed through both variants`() = androidLibraryIsFixedThroughBothVariantsCase(AgpVersion.AGP8)
 
     @Test
