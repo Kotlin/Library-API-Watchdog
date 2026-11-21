@@ -390,13 +390,10 @@ private class ProgramBuilder(private val random: Random, private val packageName
         line("${visibility(Scope.TOP_LEVEL)} val $propertyName = $source")
     }
 
-    /** The exemptions in the expansion of each public type alias. */
     private val publicTypeAliases = mutableMapOf<String, List<String>>()
 
-    /**
-     * A property with the type of a public type alias. [ApiFiltersFuzzTest] gets none, because the exposure
-     * check reports an excluded type alias, but not a type alias outside the inclusion rules.
-     */
+    // `ApiFiltersFuzzTest` gets no such property, because the exposure check reports an excluded type alias,
+    // but not a type alias outside the inclusion rules.
     private fun FileBuilder.aliasProperty() {
         if (marks != null || publicTypeAliases.isEmpty()) return inferredProperty()
         val propertyName = name("v")
@@ -406,6 +403,7 @@ private class ProgramBuilder(private val random: Random, private val packageName
         val alias = pick(publicTypeAliases.keys.toList())
         startLine(); raw("${visibility(Scope.TOP_LEVEL)} val $propertyName: ")
         // The same annotation on the alias reference and at the top of its expansion doesn't compile.
+        // The reference gets no annotation that the expansion has at any depth.
         val exemption = (Pools.typeUsage - own.toSet() - publicTypeAliases.getValue(alias).toSet()).takeIf { chance(30) }?.let(::pick)
         if (exemption != null) { exemption(exemption); raw(" ") }
         raw(alias); endLine()
