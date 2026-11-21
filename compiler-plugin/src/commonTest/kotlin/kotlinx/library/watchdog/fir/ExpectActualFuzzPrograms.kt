@@ -73,7 +73,7 @@ internal class ExpectActualProgram(
 
 private const val REASON = "(reason = ExemptionReason.API_DESIGN)"
 
-/** The exemption of the internal API types. It has no `reason` parameter. */
+// This exemption has no `reason` parameter.
 private const val EXPOSED = "IntentionallyExposedInternalApiForBackwardsCompatibility"
 
 private const val PREAMBLE = """
@@ -189,7 +189,6 @@ private class Cls(id: String, val kind: Kind) : Decl(id) {
     /** The `expect` class with an `actual typealias` to this class. */
     var aliasOf: Cls? = null
 
-    /** The `actual` class implements `HiddenContract`, with [contractExemption] on that supertype. */
     var actualContract = false
     var contractExemption: Ann? = null
 }

@@ -798,9 +798,6 @@ private class ExemptionCandidateCollector(
     /**
      * A source declaration gives the annotations of its written type reference only. Its cone type also
      * has the annotations of the declaration that an inferred type comes from, and of an expanded type alias.
-     *
-     * The position of a nested annotation ends with the indices of its type arguments, so an `actual` pairs
-     * each copy with its original.
      */
     fun types(typeRef: FirTypeRef?, group: Any? = null, position: String) {
         if (fromLibrary) typeRef?.coneTypeOrNull?.let { coneTypes(it, group, "$position/type") }
