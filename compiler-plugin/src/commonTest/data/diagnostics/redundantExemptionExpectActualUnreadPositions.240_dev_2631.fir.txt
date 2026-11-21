@@ -1,0 +1,108 @@
+Module: common
+FILE: common.kt
+    package foo.bar
+
+    public final expect enum class Copied : R|kotlin/Enum<foo/bar/Copied>| {
+        @R|kotlinx/library/watchdog/IntentionallyUndocumented|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final expect static enum entry A: R|foo/bar/Copied| = object : R|foo/bar/Copied| {
+            private expect constructor(): R|foo/bar/<anonymous>|
+
+        }
+
+        public final expect static enum entry B: R|foo/bar/Copied|
+        public final expect static fun values(): R|kotlin/Array<foo/bar/Copied>| {
+        }
+
+        public final expect static fun valueOf(value: R|kotlin/String|): R|foo/bar/Copied| {
+        }
+
+        public final expect static val entries: R|kotlin/enums/EnumEntries<foo/bar/Copied>|
+            public get(): R|kotlin/enums/EnumEntries<foo/bar/Copied>|
+
+    }
+    public final expect enum class Uncopied : R|kotlin/Enum<foo/bar/Uncopied>| {
+        @R|kotlinx/library/watchdog/IntentionallyUndocumented|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final expect static enum entry A: R|foo/bar/Uncopied| = object : R|foo/bar/Uncopied| {
+            private expect constructor(): R|foo/bar/<anonymous>|
+
+        }
+
+        public final expect static enum entry B: R|foo/bar/Uncopied|
+        public final expect static fun values(): R|kotlin/Array<foo/bar/Uncopied>| {
+        }
+
+        public final expect static fun valueOf(value: R|kotlin/String|): R|foo/bar/Uncopied| {
+        }
+
+        public final expect static val entries: R|kotlin/enums/EnumEntries<foo/bar/Uncopied>|
+            public get(): R|kotlin/enums/EnumEntries<foo/bar/Uncopied>|
+
+    }
+    public final expect class Settings : R|kotlin/Any| {
+        public expect constructor(): R|foo/bar/Settings|
+
+        public final expect var copied: R|kotlin/Boolean|
+            public get(): R|kotlin/Boolean|
+            public set(@SETTER_PARAMETER:R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) value: R|kotlin/Boolean|): R|kotlin/Unit|
+
+        public final expect var uncopied: R|kotlin/Boolean|
+            public get(): R|kotlin/Boolean|
+            public set(@SETTER_PARAMETER:R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) value: R|kotlin/Boolean|): R|kotlin/Unit|
+
+    }
+Module: jvm
+FILE: jvm.kt
+    package foo.bar
+
+    public final actual enum class Copied : R|kotlin/Enum<foo/bar/Copied>| {
+        private constructor(): R|foo/bar/Copied| {
+            super<R|kotlin/Enum<foo/bar/Copied>|>()
+        }
+
+        @R|kotlinx/library/watchdog/IntentionallyUndocumented|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final static enum entry A: R|foo/bar/Copied| = object : R|foo/bar/Copied| {
+            private constructor(): R|foo/bar/<anonymous>| {
+                super<R|foo/bar/Copied|>()
+            }
+
+        }
+
+        public final static enum entry B: R|foo/bar/Copied|
+        public final static fun values(): R|kotlin/Array<foo/bar/Copied>| {
+        }
+
+        public final static fun valueOf(value: R|kotlin/String|): R|foo/bar/Copied| {
+        }
+
+        public final static val entries: R|kotlin/enums/EnumEntries<foo/bar/Copied>|
+            public get(): R|kotlin/enums/EnumEntries<foo/bar/Copied>|
+
+    }
+    public final actual enum class Uncopied : R|kotlin/Enum<foo/bar/Uncopied>| {
+        private constructor(): R|foo/bar/Uncopied| {
+            super<R|kotlin/Enum<foo/bar/Uncopied>|>()
+        }
+
+        public final static enum entry A: R|foo/bar/Uncopied|
+        public final static enum entry B: R|foo/bar/Uncopied|
+        public final static fun values(): R|kotlin/Array<foo/bar/Uncopied>| {
+        }
+
+        public final static fun valueOf(value: R|kotlin/String|): R|foo/bar/Uncopied| {
+        }
+
+        public final static val entries: R|kotlin/enums/EnumEntries<foo/bar/Uncopied>|
+            public get(): R|kotlin/enums/EnumEntries<foo/bar/Uncopied>|
+
+    }
+    public final actual class Settings : R|kotlin/Any| {
+        public actual constructor(): R|foo/bar/Settings| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final actual var copied: R|kotlin/Boolean| = Boolean(false)
+            public get(): R|kotlin/Boolean|
+            public set(@SETTER_PARAMETER:R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) value: R|kotlin/Boolean|): R|kotlin/Unit|
+
+        public final actual var uncopied: R|kotlin/Boolean| = Boolean(false)
+            public get(): R|kotlin/Boolean|
+            public set(value: R|kotlin/Boolean|): R|kotlin/Unit|
+
+    }

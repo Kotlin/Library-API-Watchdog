@@ -16,6 +16,10 @@ Six mechanisms exclude a declaration from a check while the check stays enabled 
 An `@Intentionally*` annotation exempts one declaration from one check. Use it when the
 declaration has a reason to break the rule of the check, and state the reason on the annotation.
 
+An exemption on a type usage exempts the declaration with that type usage. An exemption inside a type
+alias also exempts the declarations that use the type alias. A declaration with an inferred type needs
+its own exemption.
+
 The "Exemption" section of each check page names the exemption annotation
 ([example for data classes](./checks/data-class-public-api.md#exemption)).
 

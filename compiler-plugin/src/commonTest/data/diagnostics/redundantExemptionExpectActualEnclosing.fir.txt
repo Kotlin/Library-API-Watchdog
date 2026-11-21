@@ -1,0 +1,33 @@
+Module: common
+FILE: common.kt
+    package foo.bar
+
+    @R|kotlin/jvm/JvmInline|() public final inline value class V : R|kotlin/Any| {
+        public constructor(raw: R|kotlin/Int|): R|foo/bar/V| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val raw: R|kotlin/Int| = R|<local>/raw|
+            public get(): R|kotlin/Int|
+
+    }
+    public final expect class Holder : R|kotlin/Any| {
+        @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public expect constructor(@R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) v: R|foo/bar/V|): R|foo/bar/Holder|
+
+        public final expect val v: R|foo/bar/V|
+            public get(): R|foo/bar/V|
+
+    }
+Module: jvm
+FILE: jvm.kt
+    package foo.bar
+
+    @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final actual class Holder : R|kotlin/Any| {
+        @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public actual constructor(@R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) v: R|foo/bar/V|): R|foo/bar/Holder| {
+            super<R|kotlin/Any|>()
+        }
+
+        @R|kotlinx/library/watchdog/IntentionallyMangledJvmName|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final actual val v: R|foo/bar/V| = R|<local>/v|
+            public get(): R|foo/bar/V|
+
+    }

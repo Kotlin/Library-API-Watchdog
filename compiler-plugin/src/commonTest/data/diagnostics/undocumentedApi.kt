@@ -193,7 +193,7 @@ public enum class DocumentedEnumWithEntries {
 
     UNDOCUMENTED_ENTRY,
 
-    @IntentionallyUndocumented
+    <!REDUNDANT_EXEMPTION!>@IntentionallyUndocumented<!>
     ACKNOWLEDGED_ENTRY,
 }
 

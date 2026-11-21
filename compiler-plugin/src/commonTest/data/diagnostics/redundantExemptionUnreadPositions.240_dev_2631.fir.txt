@@ -1,0 +1,99 @@
+FILE: declarations.kt
+    package foo.bar
+
+    public final class Flags : R|kotlin/Any| {
+        public constructor(@R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) on: R|kotlin/Boolean|): R|foo/bar/Flags| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val on: R|kotlin/Boolean| = R|<local>/on|
+            public get(): R|kotlin/Boolean|
+
+    }
+    public final class BareFlags : R|kotlin/Any| {
+        public constructor(on: R|kotlin/Boolean|): R|foo/bar/BareFlags| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val on: R|kotlin/Boolean| = R|<local>/on|
+            public get(): R|kotlin/Boolean|
+
+    }
+    public final class PlainFlags : R|kotlin/Any| {
+        public constructor(@R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) on: R|kotlin/Boolean|): R|foo/bar/PlainFlags| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class TargetedFlags : R|kotlin/Any| {
+        public constructor(@CONSTRUCTOR_PARAMETER:R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) on: R|kotlin/Boolean|, @R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) items: R|kotlin/collections/MutableList<kotlin/Int>|): R|foo/bar/TargetedFlags| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final var on: R|kotlin/Boolean| = R|<local>/on|
+            public get(): R|kotlin/Boolean|
+            public set(value: R|kotlin/Boolean|): R|kotlin/Unit|
+
+        @R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final val items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+
+    }
+    public final enum class Mode : R|kotlin/Enum<foo/bar/Mode>| {
+        private constructor(): R|foo/bar/Mode| {
+            super<R|kotlin/Enum<foo/bar/Mode>|>()
+        }
+
+        @R|kotlinx/library/watchdog/IntentionallyUndocumented|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final static enum entry FAST: R|foo/bar/Mode| = object : R|foo/bar/Mode| {
+            private constructor(): R|foo/bar/<anonymous>| {
+                super<R|foo/bar/Mode|>()
+            }
+
+        }
+
+        @R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) public final static enum entry SAFE: R|foo/bar/Mode| = object : R|foo/bar/Mode| {
+            private constructor(): R|foo/bar/<anonymous>| {
+                super<R|foo/bar/Mode|>()
+            }
+
+        }
+
+        public final static fun values(): R|kotlin/Array<foo/bar/Mode>| {
+        }
+
+        public final static fun valueOf(value: R|kotlin/String|): R|foo/bar/Mode| {
+        }
+
+        public final static val entries: R|kotlin/enums/EnumEntries<foo/bar/Mode>|
+            public get(): R|kotlin/enums/EnumEntries<foo/bar/Mode>|
+
+    }
+    public final class Settings : R|kotlin/Any| {
+        public constructor(): R|foo/bar/Settings| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final var items: R|kotlin/collections/MutableList<kotlin/Int>| = R|kotlin/collections/mutableListOf|<R|kotlin/Int|>()
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+            public set(@SETTER_PARAMETER:R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) value: R|kotlin/collections/MutableList<kotlin/Int>|): R|kotlin/Unit|
+
+        public final var exemptItems: R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>| = R|kotlin/collections/mutableListOf|<R|kotlin/Int|>()
+            public get(): R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|
+            public set(value: R|@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|])  kotlin/collections/MutableList<kotlin/Int>|): R|kotlin/Unit|
+
+        public final var on: R|kotlin/Boolean| = Boolean(false)
+            public get(): R|kotlin/Boolean|
+            public set(@SETTER_PARAMETER:R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) value: R|kotlin/Boolean|): R|kotlin/Unit|
+
+        public final var explicit: R|kotlin/Boolean| = Boolean(false)
+            public get(): R|kotlin/Boolean|
+            public set(@R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) value: R|kotlin/Boolean|): R|kotlin/Unit| {
+                this@R|foo/bar/Settings|.F|foo/bar/Settings.explicit| = R|<local>/value|
+            }
+
+        public final var explicitItems: R|kotlin/collections/List<kotlin/Int>| = R|kotlin/collections/emptyList|<R|kotlin/Int|>()
+            public get(): R|kotlin/collections/List<kotlin/Int>|
+            public set(@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN| [evaluated = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|]) value: R|kotlin/collections/List<kotlin/Int>|): R|kotlin/Unit| {
+                this@R|foo/bar/Settings|.F|foo/bar/Settings.explicitItems| = R|<local>/value|
+            }
+
+    }

@@ -1,0 +1,31 @@
+FILE: all.kt
+    package foo.bar
+
+    public final class Store : R|kotlin/Any| {
+        public constructor(): R|foo/bar/Store| {
+            super<R|kotlin/Any|>()
+        }
+
+        @ALL:R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public final var items: R|kotlin/collections/MutableList<kotlin/Int>| = R|kotlin/collections/mutableListOf|<R|kotlin/Int|>()
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+            public set(@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) value: R|kotlin/collections/MutableList<kotlin/Int>|): R|kotlin/Unit|
+
+        @ALL:R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public final var views: R|kotlin/collections/List<kotlin/Int>| = R|kotlin/collections/emptyList|<R|kotlin/Int|>()
+            public get(): R|kotlin/collections/List<kotlin/Int>|
+            public set(@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) value: R|kotlin/collections/List<kotlin/Int>|): R|kotlin/Unit|
+
+    }
+    public final class Holder : R|kotlin/Any| {
+        public constructor(@ALL:R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) items: R|kotlin/collections/MutableList<kotlin/Int>|, @ALL:R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) on: R|kotlin/Boolean|): R|foo/bar/Holder| {
+            super<R|kotlin/Any|>()
+        }
+
+        @ALL:R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public final var items: R|kotlin/collections/MutableList<kotlin/Int>| = R|<local>/items|
+            public get(): R|kotlin/collections/MutableList<kotlin/Int>|
+            public set(@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) value: R|kotlin/collections/MutableList<kotlin/Int>|): R|kotlin/Unit|
+
+        public final var on: R|kotlin/Boolean| = R|<local>/on|
+            public get(): R|kotlin/Boolean|
+            public set(@R|kotlinx/library/watchdog/IntentionallyBooleanParameter|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) value: R|kotlin/Boolean|): R|kotlin/Unit|
+
+    }
