@@ -1,0 +1,17 @@
+Module: common
+FILE: common.kt
+    package foo.bar
+
+    public open expect class Store<E> : R|kotlin/Any| {
+    }
+Module: jvm
+FILE: jvm.kt
+    package foo.bar
+
+    public final actual typealias Store<E> = R|java/util/ArrayList<E>|
+    public final fun exempt(): R|{@R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|)  foo/bar/Store<kotlin/Int>=} @R|kotlinx/library/watchdog/IntentionallyMutableCollection|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|)  java/util/ArrayList<kotlin/Int>| {
+        ^exempt R|java/util/ArrayList.ArrayList|<R|kotlin/Int|>()
+    }
+    public final fun bare(): R|{foo/bar/Store<kotlin/Int>=} java/util/ArrayList<kotlin/Int>| {
+        ^bare R|java/util/ArrayList.ArrayList|<R|kotlin/Int|>()
+    }
