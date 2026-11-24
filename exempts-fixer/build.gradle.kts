@@ -20,6 +20,8 @@ kotlin {
     val compilerIntegrationTest = sourceSets.create("compilerIntegrationTest") {
         dependsOn(sourceSets.commonTest.get())
         resources.srcDir(isolated.rootProject.projectDirectory.dir("compiler-plugin/src/commonTest/data"))
+        // The source of the directives that `CompilerPluginTestDataFixerTest` copies.
+        resources.srcDir(isolated.rootProject.projectDirectory.dir("compiler-plugin/src/commonTestFixtures/kotlin/kotlinx/library/watchdog/services"))
         dependencies {
             implementation(pluginDevKit("compiler-plugin-runtime"))
             implementation(project(":library-api-watchdog-compiler-plugin"))

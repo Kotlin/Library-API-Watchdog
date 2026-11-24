@@ -38,6 +38,9 @@ import org.opentest4j.AssertionFailedError
 private val PATH_SEPARATOR = File.pathSeparator
 private const val REDUNDANT_EXEMPTION = "REDUNDANT_EXEMPTION"
 
+/** The fixed fixtures are in a temporary directory, so the dependency paths resolve against the original one. */
+private const val TEST_DATA_DIRECTORY_PROPERTY = "watchdog.fixer.testDataDirectory"
+
 /**
  * A callable fix can make parameter exemptions redundant, so the verification run hides `REDUNDANT_EXEMPTION`.
  */
@@ -73,7 +76,15 @@ class CompilerPluginTestDataFixerTest {
             val generatedExpectation = fixFixture(fixture)
             tempDir.resolve(fixture.fileName).also { Files.writeString(it, generatedExpectation) }
         }
-        validateWithCompilerPlugin(generatedFiles)
+        validateWithCompilerPlugin(generatedFiles, diagnosticsDirectory)
+    }
+
+    @Test
+    fun `the copy of the directives has every directive of the compiler plugin`() {
+        val source = assertNotNull(javaClass.getResource("/WatchdogTestDirectives.kt"), "The directives of the compiler plugin are missing").readText()
+        val names = Regex("""val (\w+) by \w*[dD]irective\(""").findAll(source).map { it.groupValues[1] }.toList()
+        assertTrue(names.isNotEmpty(), "No directives found in the source of the compiler plugin")
+        assertEquals(emptyList(), names.filter { WatchdogTestDirectives[it] == null })
     }
 
     private fun fixFixture(fixture: Path): String {
@@ -175,7 +186,7 @@ class CompilerPluginTestDataFixerTest {
      * diagnostics framework runs in a child JVM. The child JVM compiles each file with LF and then with CRLF
      * line endings.
      */
-    private fun validateWithCompilerPlugin(generatedFiles: List<Path>) {
+    private fun validateWithCompilerPlugin(generatedFiles: List<Path>, testDataDirectory: Path) {
         val runtimeClasspath = System.getProperty("java.class.path")
             .split(PATH_SEPARATOR)
             .map(Paths::get)
@@ -191,6 +202,7 @@ class CompilerPluginTestDataFixerTest {
             javaExecutable.toAbsolutePath().toString(),
             "-DdefaultTestDataLibraries.jvm.classpath=$annotationsClasspath",
             "-DdefaultTestDataLibraries.js.classpath=$annotationsClasspath",
+            "-D$TEST_DATA_DIRECTORY_PROPERTY=${testDataDirectory.toAbsolutePath()}",
         )
         command += standardLibraryProperties(runtimeClasspath)
         command += listOf(
@@ -376,6 +388,18 @@ private object WatchdogTestDirectives : SimpleDirectivesContainer() {
     val SOURCE_SETS_WITH_PLATFORM_CHECKS by stringDirective(
         description = "Common modules with the platform checks (sourceSetsWithPlatformChecks option)",
     )
+
+    val COMPILE_DEPENDENCY_PATHS by stringDirective(
+        description = "Compile classpath roots relative to the test data directory (compileDependencyPaths option)",
+    )
+
+    val TRANSITIVE_DEPENDENCY_PATHS by stringDirective(
+        description = "Transitive classpath roots relative to the test data directory (transitiveDependencyPaths option)",
+    )
+
+    val DEPENDENCY_DECLARATIONS by stringDirective(
+        description = "Root, configuration, and notation triples (dependencyDeclarations option)",
+    )
 }
 
 private class WatchdogOptionsConfigurator(testServices: TestServices) : EnvironmentConfigurator(testServices) {
@@ -434,7 +458,19 @@ private class WatchdogOptionsConfigurator(testServices: TestServices) : Environm
         if (platformChecked.isNotEmpty()) {
             configuration.put(WatchdogConfigurationKeys.SOURCE_SETS_WITH_PLATFORM_CHECKS, platformChecked.toSet())
         }
+        val compileRoots = module.directives[WatchdogTestDirectives.COMPILE_DEPENDENCY_PATHS]
+        if (compileRoots.isNotEmpty()) {
+            configuration.put(WatchdogConfigurationKeys.COMPILE_DEPENDENCY_PATHS, compileRoots.mapTo(linkedSetOf(), ::absolutePath))
+            configuration.put(
+                WatchdogConfigurationKeys.TRANSITIVE_DEPENDENCY_PATHS,
+                module.directives[WatchdogTestDirectives.TRANSITIVE_DEPENDENCY_PATHS].mapTo(linkedSetOf(), ::absolutePath),
+            )
+            // DEPENDENCY_DECLARATIONS is internal to the compiler plugin. It changes only the message text, which this test doesn't compare.
+        }
     }
+
+    private fun absolutePath(relativePath: String): String =
+        File(System.getProperty(TEST_DATA_DIRECTORY_PROPERTY), relativePath).absolutePath
 }
 
 private data class TestDataSection(
