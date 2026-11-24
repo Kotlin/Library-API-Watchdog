@@ -79,17 +79,24 @@ enum class KmpAndroidTarget(
 
 /** A generated Gradle build on disk. */
 class WatchdogBuild internal constructor(
-    val gradleProject: GradleProject,
+    val rootDir: File,
     private val gradleVersion: GradleVersion,
 ) {
-    val rootDir: File get() = gradleProject.rootDir
-
     fun build(vararg arguments: String): BuildResult = GradleBuilder.build(gradleVersion, rootDir, *arguments)
 
     fun buildAndFail(vararg arguments: String): BuildResult =
         GradleBuilder.buildAndFail(gradleVersion, rootDir, *arguments)
 
     fun file(relativePath: String): File = rootDir.resolve(relativePath)
+
+    /** A second checkout of the build in the sibling directory [directoryName]. */
+    fun copyTo(directoryName: String): WatchdogBuild {
+        val copy = rootDir.resolveSibling(directoryName)
+        rootDir.copyRecursively(copy)
+        return WatchdogBuild(copy, gradleVersion)
+    }
+
+    fun withGradle(version: String): WatchdogBuild = WatchdogBuild(rootDir, GradleVersion.version(version))
 }
 
 /** The declarations of one module of a generated build. */
@@ -222,7 +229,7 @@ open class ProjectSpec internal constructor(
     }
 
     internal fun write(kind: ProjectKind): WatchdogBuild =
-        WatchdogBuild(WatchdogFixture(kind, this).gradleProject, kind.gradleVersion)
+        WatchdogBuild(WatchdogFixture(kind, this).gradleProject.rootDir.absoluteFile, kind.gradleVersion)
 }
 
 class AndroidLibrarySpec internal constructor() : ProjectSpec(sourceSet = "main") {
