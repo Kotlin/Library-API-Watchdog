@@ -59,6 +59,10 @@ pluginDevKit {
         split("SyntaxComponent") {
             it < KotlinToolingVersion("2.5.20-dev-5318")
         }
+        // `pre`: the constructor of a diagnostic factory takes the PSI type. `post`: it doesn't.
+        split("DiagnosticFactoryPsiType") {
+            it < KotlinToolingVersion("2.5.20-dev-5899")
+        }
     }
 }
 

@@ -221,7 +221,7 @@ FILE: inlineFunctionResolution.kt
         ^javaVararg Q|java/util/Objects|.R|java/util/Objects.hash*s|(vararg(Int(1), Int(2)))
     }
     public final inline fun javaFormat(): R|kotlin/Int| {
-        ^javaFormat Q|kotlin/String|.R|kotlin/text/format|(String(%d), vararg(Int(1))).R|kotlin/String.length|
+        ^javaFormat Q|kotlin/String(.<companion>)|.R|kotlin/text/format|(String(%d), vararg(Int(1))).R|kotlin/String.length|
     }
     public final inline fun javaSynthetic(): R|kotlin/Int| {
         ^javaSynthetic R|java/lang/StringBuilder.StringBuilder|().R|java/lang/AbstractStringBuilder.length|
