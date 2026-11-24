@@ -11,10 +11,13 @@ import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotation
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtClassOrObject
+import org.jetbrains.kotlin.psi.KtConstructorCalleeExpression
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtEnumEntry
+import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFileAnnotationList
 import org.jetbrains.kotlin.psi.KtImportDirective
@@ -26,9 +29,14 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 import org.jetbrains.kotlin.psi.KtSecondaryConstructor
 import org.jetbrains.kotlin.psi.KtSimpleNameExpression
+import org.jetbrains.kotlin.psi.KtSuperTypeListEntry
 import org.jetbrains.kotlin.psi.KtTypeAlias
 import org.jetbrains.kotlin.psi.KtTypeParameter
+import org.jetbrains.kotlin.psi.KtTypeReference
+import org.jetbrains.kotlin.psi.psiUtil.allChildren
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
+import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
+import org.jetbrains.kotlin.psi.psiUtil.hasActualModifier
 
 internal class FileFixResult(
     /** Null when no fix applies. */
@@ -47,6 +55,9 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
      *   into [FileFixResult.warnings].
      * @param skipReason when it isn't null, the fixer doesn't edit the file. Each diagnostic that it
      *   fixes goes into [FileFixResult.skipped] with this reason.
+     * @param removesCoveredExemptions whether the fixer removes the exemptions that a new class exemption covers. A run
+     *   that doesn't edit the sources must not list these removals, because the class doesn't get its exemption.
+     * @param expectOf the `expect` declaration of an `actual` declaration, or null when the reports don't pair them.
      */
     fun fix(
         filePath: String,
@@ -55,6 +66,8 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
         rewriteLocations: Boolean = true,
         fixes: (String) -> Boolean = { true },
         skipReason: String? = null,
+        removesCoveredExemptions: Boolean = true,
+        expectOf: (KtDeclaration) -> KtDeclaration? = { null },
     ): FileFixResult {
         val mapping = LineEndingMapping.of(originalText)
         val text = mapping.normalizedText
@@ -109,17 +122,20 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
         // An annotation that this run removes doesn't make a fix unnecessary.
         val removedEntries = resolved.mapNotNullTo(hashSetOf()) { (it.target as? FixTarget.RemovedAnnotation)?.entry }
         val plannedFixes = mutableMapOf<FixTarget, MutableMap<String, PlannedFix>>()
-        for ((diagnostic, target, fix) in resolved) {
+        val copiesOnAnnotatedTargets = mutableListOf<ResolvedFix>()
+        for (resolvedFix in resolved) {
+            val (diagnostic, target, fix) = resolvedFix
             if (target.alreadyHas(fix, removedEntries)) {
-                skipped += PlannedSkip(diagnostic, diagnostic.startOffset.coerceAtLeast(0), "The target already has ${fix.describe()}")
+                if (diagnostic.isExpectCopy) copiesOnAnnotatedTargets += resolvedFix else skipped += resolvedFix.alreadyThere()
                 continue
             }
-            plannedFixes.getOrPut(target) { mutableMapOf() }
-                .getOrPut(fix.id) { PlannedFix(fix) }
-                .reports.getOrPut(diagnostic.name) { diagnostic }
+            plannedFixes.plan(resolvedFix)
         }
-        skipped.sortWith(compareBy(order) { it.diagnostic })
         plannedFixes.values.forEach { it.collapseCombinedExemptions() }
+        plannedFixes.mergeIntoCoveringClasses(filePath, removesCoveredExemptions, expectOf, copiesOnAnnotatedTargets, removedEntries)
+            .mapTo(skipped) { it.alreadyThere() }
+        skipped.sortWith(compareBy(order) { it.diagnostic })
+        plannedFixes.keys.filterIsInstance<FixTarget.RemovedAnnotation>().mapTo(removedEntries) { it.entry }
 
         if (plannedFixes.isEmpty()) {
             val locations = RewrittenLocations(text, text, emptyList())
@@ -189,9 +205,23 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
 
 internal class PlannedFix(val fix: Fix) {
     val reports: MutableMap<String, RecordedDiagnostic> = linkedMapOf()
+
+    /**
+     * Whether a report is the copy of the fix of an `expect` declaration. [reports] can hide such a report, because it
+     * holds one report for each diagnostic name.
+     */
+    var hasExpectCopy: Boolean = false
 }
 
-private data class ResolvedFix(val diagnostic: RecordedDiagnostic, val target: FixTarget, val fix: Fix)
+private data class ResolvedFix(val diagnostic: RecordedDiagnostic, val target: FixTarget, val fix: Fix) {
+    fun alreadyThere() = PlannedSkip(diagnostic, diagnostic.startOffset.coerceAtLeast(0), "The target already has ${fix.describe()}")
+}
+
+private fun MutableMap<FixTarget, MutableMap<String, PlannedFix>>.plan(resolved: ResolvedFix) {
+    val planned = getOrPut(resolved.target) { mutableMapOf() }.getOrPut(resolved.fix.id) { PlannedFix(resolved.fix) }
+    planned.reports.getOrPut(resolved.diagnostic.name) { resolved.diagnostic }
+    if (resolved.diagnostic.isExpectCopy) planned.hasExpectCopy = true
+}
 
 private fun Fix.describe(): String = when (this) {
     is ExemptionFix -> "@$annotationShortName"
@@ -234,6 +264,7 @@ private fun MutableMap<String, PlannedFix>.collapseCombinedExemptions() {
         val merged = PlannedFix(
             ExemptionFix(combined, individual.first().fix.targetStrategy, hasReasonParameter = true)
         )
+        merged.hasExpectCopy = individual.any { it.hasExpectCopy }
         individual.forEach { planned ->
             planned.reports.forEach { (name, diagnostic) -> merged.reports.getOrPut(name) { diagnostic } }
         }
@@ -241,6 +272,141 @@ private fun MutableMap<String, PlannedFix>.collapseCombinedExemptions() {
         put(combined, merged)
     }
 }
+
+private class CoveringClass(val declaration: KtClassOrObject, val annotations: List<String>, val expectAnnotatedToo: Boolean)
+
+/**
+ * An exemption on a class that covers the nested declarations makes the same exemption inside the class redundant. So
+ * when this run annotates such a class, it doesn't annotate the declarations inside it and removes their exemptions.
+ *
+ * A copy of an exemption of an `expect` declaration has to match its original. When the run annotates the `expect`
+ * class too, it removes the original or doesn't add it, so it does the same with the copy. Otherwise the copy stays,
+ * and a new copy replaces a covered exemption of its target. Returns the copies that this run doesn't add, because
+ * their target already has the exemption.
+ */
+private fun MutableMap<FixTarget, MutableMap<String, PlannedFix>>.mergeIntoCoveringClasses(
+    filePath: String,
+    removesCoveredExemptions: Boolean,
+    expectOf: (KtDeclaration) -> KtDeclaration?,
+    copiesOnAnnotatedTargets: List<ResolvedFix>,
+    removedEntries: Set<KtAnnotationEntry>,
+): List<ResolvedFix> {
+    val coveringClasses = mapNotNull { (target, fixesById) ->
+        val declaration = (target as? FixTarget.BeforeDeclaration)?.declaration as? KtClassOrObject ?: return@mapNotNull null
+        val covering = fixesById.values.filter { (it.fix as? ExemptionFix)?.coversNestedDeclarations == true }
+        if (covering.isEmpty()) return@mapNotNull null
+        CoveringClass(
+            declaration,
+            covering.map { (it.fix as ExemptionFix).annotationShortName },
+            expectAnnotatedToo = covering.any { it.hasExpectCopy },
+        )
+    }
+    if (coveringClasses.isEmpty()) return copiesOnAnnotatedTargets
+    fun coveringOf(target: FixTarget, annotation: String): List<CoveringClass> {
+        val element = target.annotatedElement() ?: return emptyList()
+        return coveringClasses.filter { annotation in it.annotations && PsiTreeUtil.isAncestor(it.declaration, element, true) }
+    }
+
+    for ((target, fixesById) in this) {
+        fixesById.values.removeAll { planned ->
+            val annotation = (planned.fix as? ExemptionFix)?.annotationShortName ?: return@removeAll false
+            coveringOf(target, annotation).any { it.expectAnnotatedToo || !planned.hasExpectCopy }
+        }
+    }
+    values.removeAll { it.isEmpty() }
+
+    val covered = linkedMapOf<KtAnnotationEntry, String>()
+    for (covering in coveringClasses) {
+        for (entry in covering.declaration.collectDescendantsOfType<KtAnnotationEntry>()) {
+            val name = entry.shortName?.asString() ?: continue
+            if (name !in covering.annotations || !entry.isReadOnApi(covering.declaration)) continue
+            if (!covering.expectAnnotatedToo && entry.isExpectCopy(expectOf)) continue
+            covered[entry] = name
+        }
+    }
+
+    val skippedCopies = copiesOnAnnotatedTargets.filter { copy ->
+        val annotation = (copy.fix as ExemptionFix).annotationShortName
+        val covering = coveringOf(copy.target, annotation)
+        when {
+            covering.any { it.expectAnnotatedToo } -> false
+            covering.isNotEmpty() &&
+                copy.target.annotatedElement().exemptionsNamed(annotation).all { it in covered || it in removedEntries } -> {
+                plan(copy)
+                false
+            }
+            else -> true
+        }
+    }
+
+    if (removesCoveredExemptions) {
+        for ((entry, name) in covered) {
+            val kind = if (entry.parent.ancestorsWithSelf().takeWhile { it !is KtDeclaration }.any { it is KtTypeReference }) "type usage" else "declaration"
+            val removal = RecordedDiagnostic(
+                WatchdogChecks.REDUNDANT_EXEMPTION.name,
+                filePath,
+                entry.textRange.startOffset,
+                entry.textRange.endOffset,
+                listOf(name, kind),
+            )
+            getOrPut(FixTarget.RemovedAnnotation(entry)) { mutableMapOf() }
+                .getOrPut(RemoveAnnotationFix.id) { PlannedFix(RemoveAnnotationFix) }
+                .reports.getOrPut(removal.name) { removal }
+        }
+    }
+    return skippedCopies
+}
+
+/** The declaration that the fix annotates. */
+private fun FixTarget.annotatedElement(): KtDeclaration? = when (this) {
+    is FixTarget.BeforeDeclaration -> declaration
+    is FixTarget.InlineBefore -> element as? KtDeclaration
+    is FixTarget.ImplicitPrimaryConstructor -> constructor
+    else -> null
+}
+
+/**
+ * Whether [this] is the copy of an exemption of an `expect` declaration. A copy is in the signature of an `actual`
+ * declaration, and the `expect` declaration has the same annotation at the same place.
+ */
+private fun KtAnnotationEntry.isExpectCopy(expectOf: (KtDeclaration) -> KtDeclaration?): Boolean =
+    parent.ancestorsWithSelf().takeWhile { it !is KtClassBody }.filterIsInstance<KtDeclaration>().any { actual ->
+        if (!actual.hasActualModifier()) return@any false
+        val expect = expectOf(actual) ?: return@any true
+        val place = placeIn(actual) ?: return@any false
+        expect.collectDescendantsOfType<KtAnnotationEntry>().any { it.placeIn(expect) == place }
+    }
+
+/**
+ * The place of [this] in the signature of [declaration], the same for the `expect` and the `actual` declaration, or null
+ * outside the signature. A step is the class of a PSI element with its index among the elements of that class. A
+ * supertype step is the name of the supertype, because an `actual` class can declare more supertypes. The constructor
+ * call of a supertype has no step, because an `expect` class can't call a constructor.
+ */
+private fun KtAnnotationEntry.placeIn(declaration: KtDeclaration): String? {
+    val steps = mutableListOf("$shortName@${useSiteTarget?.getAnnotationUseSiteTarget()}")
+    var element: PsiElement = getStrictParentOfType<KtModifierList>()?.parent ?: return null
+    while (element != declaration) {
+        val parent = element.parent
+        if (parent == null || parent is KtClassBody || parent is KtFile) return null
+        when (element) {
+            is KtConstructorCalleeExpression -> {}
+            is KtSuperTypeListEntry -> steps += "super:${element.typeAsUserType?.referencedName}"
+            else -> {
+                val sameClass = parent.allChildren.filter { it.javaClass == element.javaClass }
+                steps += "${element.javaClass.simpleName}:${sameClass.indexOf(element)}"
+            }
+        }
+        element = parent
+    }
+    return steps.joinToString("/")
+}
+
+/** A check doesn't read an annotation in a body or an initializer, or with another use-site target. */
+private fun KtAnnotationEntry.isReadOnApi(container: KtClassOrObject): Boolean =
+    useSiteTarget?.getAnnotationUseSiteTarget()?.renderName in CHECKED_USE_SITE_TARGETS &&
+            parent.ancestorsWithSelf().takeWhile { it != container }
+                .none { it is KtExpression && it !is KtDeclaration && it !is KtConstructorCalleeExpression }
 
 private class PlannedSkip(val diagnostic: RecordedDiagnostic, val sourceOffset: Int, val reason: String) {
     fun toDiagnostic(filePath: String, locations: RewrittenLocations) =
@@ -559,9 +725,11 @@ private fun KtFileAnnotationList.hasExemptionNamed(shortName: String, removedEnt
 private val CHECKED_USE_SITE_TARGETS = setOf(null, "property", "param", "all")
 
 private fun KtAnnotated.hasExemptionNamed(shortName: String, removedEntries: Set<KtAnnotationEntry>): Boolean =
-    annotationEntries.any {
-        it.shortName?.asString() == shortName && it !in removedEntries &&
-                it.useSiteTarget?.getAnnotationUseSiteTarget()?.renderName in CHECKED_USE_SITE_TARGETS
+    exemptionsNamed(shortName).any { it !in removedEntries }
+
+private fun KtAnnotated?.exemptionsNamed(shortName: String): List<KtAnnotationEntry> =
+    this?.annotationEntries.orEmpty().filter {
+        it.shortName?.asString() == shortName && it.useSiteTarget?.getAnnotationUseSiteTarget()?.renderName in CHECKED_USE_SITE_TARGETS
     }
 
 private fun KtAnnotationEntry.annotatedDeclaration(): KtAnnotated? =

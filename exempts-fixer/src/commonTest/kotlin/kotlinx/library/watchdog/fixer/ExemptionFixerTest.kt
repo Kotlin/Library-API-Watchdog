@@ -11,6 +11,11 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.intellij.lang.annotations.Language
+import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtConstructor
+import org.jetbrains.kotlin.psi.KtNamedDeclaration
+import org.jetbrains.kotlin.psi.KtPrimaryConstructor
+import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 
 class ExemptionFixerTest {
     private val parser = KotlinFileParser()
@@ -1143,6 +1148,356 @@ class ExemptionFixerTest {
         assertContains(newText, "import kotlinx.library.watchdog.IntentionallyExposedInternalApiForBackwardsCompatibility")
         assertTrue(newText.lines().none { "ExemptionReason" in it })
         assertEquals(emptyList(), result.skipped)
+    }
+
+    @Test
+    fun `non-transitive dependency fix goes on the reported declaration`() {
+        @Language("kotlin")
+        val text = """
+            package com.example
+
+            import com.example.models.Model
+
+            /** Returns a model. */
+            public fun load(): Model = Model()
+
+            /** Reads a model. */
+            public val current: Model = Model()
+
+            /** Takes two models. */
+            public fun store(first: Model, second: Model) {}
+
+            /** Holds a model. */
+            public class Holder(public val model: Model, count: Int)
+
+            /** Takes a model. */
+            public class Taker(model: Model)
+
+            /** Names a model. */
+            public typealias Alias = Model
+
+            /** Bounds a model. */
+            public fun <T : Model> bound(value: T) {}
+
+            /** Bounds a model in a class. */
+            public class Box<T : Model> {}
+        """.trimIndent()
+
+        val result = fix(
+            text,
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model = Model()\n\n/** Reads"),
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model = Model()\n\n/** Takes"),
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model, second"),
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model) {}\n\n/** Holds"),
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model, count"),
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model)\n\n/** Names"),
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model\n\n/** Bounds a model. */"),
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model> bound"),
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model> {}"),
+        )
+
+        val newText = result.newText!!
+        val annotation = "@IntentionallyNonTransitiveDependency(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)"
+        assertContains(newText, "$annotation\npublic fun load(): Model")
+        assertContains(newText, "$annotation\npublic val current: Model")
+        assertEquals(1, newText.split("$annotation\npublic fun store(").size - 1)
+        assertContains(newText, "public class Holder($annotation public val model: Model, count: Int)")
+        assertContains(newText, "public class Taker $annotation constructor(model: Model)")
+        assertContains(newText, "$annotation\npublic typealias Alias = Model")
+        assertContains(newText, "$annotation\npublic fun <T : Model> bound(value: T) {}")
+        assertContains(newText, "$annotation\npublic class Box<T : Model> {}")
+        assertContains(newText, "import kotlinx.library.watchdog.IntentionallyNonTransitiveDependency")
+        assertContains(newText, "import kotlinx.library.watchdog.ExemptionReason")
+        assertEquals(emptyList(), result.skipped)
+    }
+
+    @Test
+    fun `non-transitive dependency fix on a class covers its nested declarations`() {
+        @Language("kotlin")
+        val text = """
+            package com.example
+
+            import com.example.models.Model
+            import kotlinx.library.watchdog.ExemptionReason
+            import kotlinx.library.watchdog.IntentionallyNonTransitiveDependency
+
+            /** Extends a model. */
+            public class Special(public val model: Model) : Model() {
+                /** Returns a model. */
+                public fun load(): Model = Model()
+
+                /** Reads a model. */
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "The host ships it.")
+                public fun read(): Model = Model()
+
+                /** Copies a model. */
+                public fun copy(): @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "The host ships it.") Model {
+                    val local: @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Code.") Model = Model()
+                    return local
+                }
+
+                /** A nested holder. */
+                public class Nested {
+                    /** Reads a model. */
+                    @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "The host ships it.")
+                    public val current: Model = Model()
+                }
+
+                /** The factory. */
+                public companion object {
+                    /** Creates a model. */
+                    public fun create(@IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "The host ships it.") model: Model): Model = model
+                }
+            }
+
+            /** Holds a model. */
+            public class Holder {
+                /** Returns a model. */
+                public fun fetch(): Model = Model()
+
+                /** Reads a model. */
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "The host ships it.")
+                public fun read(): Model = Model()
+            }
+        """.trimIndent()
+
+        val fetchType = text.indexOf("Model", text.indexOf("fun fetch()"))
+        val result = fix(
+            text,
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model) : Model()"),
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model() {"),
+            diagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", text, "Model = Model()\n\n    /** Reads"),
+            RecordedDiagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", FILE_PATH, fetchType, fetchType + 5),
+            diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "Model = Model()\n\n    /** Reads"),
+        )
+
+        val newText = result.newText!!
+        val annotation = "@IntentionallyNonTransitiveDependency(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)"
+        assertContains(newText, "$annotation\npublic class Special(public val model: Model) : Model() {")
+        // The class exemption replaces the exemptions inside the class, except one in a function body.
+        assertEquals(listOf("Code."), Regex("description = \"([^\"]*)\"").findAll(newText.substringBefore("/** Holds")).map { it.groupValues[1] }.toList())
+        assertContains(newText, "    public fun copy(): Model {")
+        assertContains(newText, "    public fun create(model: Model): Model = model")
+        // Another exemption on a nested declaration stays.
+        assertContains(newText, "@IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n    public fun load()")
+        // Without a class exemption, each member has its own.
+        assertContains(newText, "    $annotation\n    public fun fetch(): Model = Model()\n\n    /** Reads a model. */\n    @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP")
+        assertEquals(2, newText.split(annotation).size - 1, newText)
+        assertEquals(
+            listOf("IntentionallyMutableCollection", "IntentionallyNonTransitiveDependency", "IntentionallyNonTransitiveDependency"),
+            result.applied.filter { it.diagnostic != "REDUNDANT_EXEMPTION" }.mapNotNull { it.annotation }.sorted(),
+        )
+        assertEquals(4, result.applied.count { it.diagnostic == "REDUNDANT_EXEMPTION" })
+        assertEquals(emptyList(), result.skipped)
+    }
+
+    @Test
+    fun `an actual class keeps the copies of the exemptions that its expect class keeps`() {
+        @Language("kotlin")
+        val text = """
+            package com.example
+
+            import com.example.models.Model
+            import kotlinx.library.watchdog.ExemptionReason
+            import kotlinx.library.watchdog.IntentionallyNonTransitiveDependency
+
+            public actual class Copied : Model() {
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Copy.")
+                public actual fun read(): Model = Model()
+
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Own.")
+                public fun extra(): Model = Model()
+            }
+
+            public actual class Own : Model() {
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Copy.")
+                public actual fun read(): Model = Model()
+
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Own.")
+                public fun extra(): Model = Model()
+            }
+        """.trimIndent()
+        val copiedName = text.indexOf("Copied")
+        val ownSupertype = text.indexOf("Model()", text.indexOf("class Own"))
+
+        val result = fixer.fix(
+            FILE_PATH,
+            text,
+            listOf(
+                // The copy of the fix of the `expect` class.
+                RecordedDiagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", FILE_PATH, copiedName, copiedName, isExpectCopy = true),
+                RecordedDiagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", FILE_PATH, ownSupertype, ownSupertype + 7),
+            ),
+        )
+
+        val newText = result.newText!!
+        val copied = newText.substringBefore("public actual class Own")
+        val own = newText.substringAfter("public actual class Own")
+        assertFalse("description" in copied, copied)
+        assertContains(own, "description = \"Copy.\")\n    public actual fun read()")
+        assertFalse("\"Own.\"" in own, own)
+        assertEquals(3, result.applied.count { it.diagnostic == "REDUNDANT_EXEMPTION" })
+        assertEquals(emptyList(), result.skipped)
+    }
+
+    @Test
+    fun `an actual class keeps only the exemptions that are at the same place in its expect class`() {
+        @Language("kotlin")
+        val expectText = """
+            package com.example
+
+            public expect class Placed {
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Copy.")
+                public fun read(): Model
+
+                public fun take(model: @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Copy.") Model)
+
+                public class Inner
+
+                public class Copied : @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Copy.") Model
+            }
+        """.trimIndent()
+        @Language("kotlin")
+        val text = """
+            package com.example
+
+            import com.example.models.Model
+            import kotlinx.library.watchdog.ExemptionReason
+            import kotlinx.library.watchdog.IntentionallyNonTransitiveDependency
+
+            public actual class Placed : Model() {
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Copy.")
+                public actual fun read(): @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Own.") Model = Model()
+
+                public actual fun take(model: @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Copy.") Model) {}
+
+                public actual class Inner : @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Own.") Model() {
+                    @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Own.")
+                    public fun load(): Model = Model()
+                }
+
+                public actual class Copied : @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Copy.") Model()
+            }
+        """.trimIndent()
+        val expects = parser.parse("Expect.kt", expectText).collectDescendantsOfType<KtNamedDeclaration>().associateBy { it.name }
+        val supertype = text.indexOf("Model()")
+        val diagnostic = RecordedDiagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", FILE_PATH, supertype, supertype + 7)
+        fun fix(removesCoveredExemptions: Boolean) = fixer.fix(
+            FILE_PATH,
+            text,
+            listOf(diagnostic),
+            removesCoveredExemptions = removesCoveredExemptions,
+            expectOf = { expects[(it as? KtNamedDeclaration)?.name] },
+        )
+
+        val result = fix(removesCoveredExemptions = true)
+
+        val newText = result.newText!!
+        assertContains(newText, "@IntentionallyNonTransitiveDependency(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\npublic actual class Placed")
+        assertEquals(listOf("Copy.", "Copy.", "Copy."), Regex("description = \"([^\"]*)\"").findAll(newText).map { it.groupValues[1] }.toList())
+        assertEquals(3, result.applied.count { it.diagnostic == "REDUNDANT_EXEMPTION" })
+        // A run that doesn't edit the sources doesn't list the exemptions that the class exemption makes redundant.
+        assertEquals(0, fix(removesCoveredExemptions = false).applied.count { it.diagnostic == "REDUNDANT_EXEMPTION" })
+    }
+
+    @Test
+    fun `an actual class that the run annotates gets the copies of the new exemptions of its expect class`() {
+        val result = annotatedActualClassCase(expectAnnotated = false)
+
+        val newText = result.newText!!
+        val annotation = "@IntentionallyNonTransitiveDependency(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)"
+        assertContains(newText, "$annotation\npublic actual class Holder $annotation actual constructor(model: Model)")
+        assertContains(newText, "    $annotation\n    public actual fun read()")
+        // A new copy replaces an exemption that the class exemption covers.
+        assertContains(newText, "    $annotation\n    public actual fun write()")
+        assertContains(newText, "Model = Model()\n\n    public fun extra()")
+        assertContains(newText, "Model = Model()\n\n    public fun other()")
+        assertContains(newText, "    $annotation\n    public actual class Inner")
+        assertEquals(listOf("Copy."), Regex("description = \"([^\"]*)\"").findAll(newText).map { it.groupValues[1] }.toList())
+        assertEquals(emptyList(), result.skipped)
+    }
+
+    @Test
+    fun `an actual class that the run annotates with its expect class gets no copies inside`() {
+        val result = annotatedActualClassCase(expectAnnotated = true)
+
+        val newText = result.newText!!
+        val annotation = "@IntentionallyNonTransitiveDependency(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)"
+        assertContains(newText, "$annotation\npublic actual class Holder actual constructor(model: Model)")
+        assertEquals(1, newText.split(annotation).size - 1, newText)
+        assertFalse("description" in newText, newText)
+        assertEquals(emptyList(), result.skipped)
+    }
+
+    /**
+     * Fixes an `actual` class with an own supertype diagnostic and the copies of new fixes of its `expect` class: on
+     * the class when [expectAnnotated], and on the constructor, `read`, `write`, and `Inner`.
+     */
+    private fun annotatedActualClassCase(expectAnnotated: Boolean): FileFixResult {
+        @Language("kotlin")
+        val expectText = """
+            package com.example
+
+            public expect class Holder(model: Model) {
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Copy.")
+                public fun load(): Model
+
+                public fun read(): Model
+
+                public fun write(): Model
+
+                public class Inner
+            }
+        """.trimIndent()
+        @Language("kotlin")
+        val text = """
+            package com.example
+
+            import com.example.models.Model
+            import kotlinx.library.watchdog.ExemptionReason
+            import kotlinx.library.watchdog.IntentionallyNonTransitiveDependency
+
+            public actual class Holder actual constructor(model: Model) : Model() {
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Copy.")
+                public actual fun load(): Model = Model()
+
+                public actual fun read(): Model = Model()
+
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Own.")
+                public actual fun write(): Model = Model()
+
+                @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "Own.")
+                public fun extra(): Model = Model()
+
+                public fun other(): Model = Model()
+
+                public actual class Inner : Model()
+            }
+        """.trimIndent()
+        val expectClass = parser.parse("Expect.kt", expectText).declarations.single() as KtClass
+        val expects = expectClass.collectDescendantsOfType<KtNamedDeclaration>().filter { it !is KtConstructor<*> }.associateBy { it.name }
+        fun copy(anchor: String): RecordedDiagnostic {
+            val offset = text.indexOf(anchor)
+            return RecordedDiagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", FILE_PATH, offset, offset, isExpectCopy = true)
+        }
+        val supertype = text.indexOf("Model() {")
+        val otherType = text.indexOf("Model", text.indexOf("fun other()"))
+        val diagnostics = listOfNotNull(
+            copy("Holder actual").takeIf { expectAnnotated },
+            copy("constructor(model"),
+            RecordedDiagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", FILE_PATH, supertype, supertype + 7),
+            copy("read()"),
+            copy("write()"),
+            RecordedDiagnostic("PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY", FILE_PATH, otherType, otherType + 5),
+            copy("Inner :"),
+        )
+
+        return fixer.fix(
+            FILE_PATH,
+            text,
+            diagnostics,
+            expectOf = { if (it is KtPrimaryConstructor) expectClass.primaryConstructor else expects[(it as? KtNamedDeclaration)?.name] },
+        )
     }
 
     @Test

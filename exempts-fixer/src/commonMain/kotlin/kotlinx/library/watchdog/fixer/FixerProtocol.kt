@@ -17,6 +17,8 @@ internal data class RecordedDiagnostic(
     val messageParameters: List<String> = emptyList(),
     val reportedStartOffset: Int? = null,
     val reportedEndOffset: Int? = null,
+    /** The copy of a fix of an `expect` declaration for its `actual` declaration. */
+    val isExpectCopy: Boolean = false,
 ) {
     companion object {
         /** A multiplatform build reports a common source file for each target, so the result doesn't have duplicates. */
