@@ -55,11 +55,6 @@ aggregate reports of the root project.
 Review the diff and commit it. The checks then report only the API that you add later. For a new
 declaration, fix the shape or pick the exemption reason by hand.
 
-For a supertype or a type parameter bound of a class, the task exempts the whole class from
-[Public types from non-transitive dependencies](./checks/special/public-type-from-non-transitive-dependency.md).
-This exemption also covers the members that you add to the class later. To check new members, replace it
-with an exemption on each declaration or type usage that needs one.
-
 A second run doesn't add anything, because an exempted declaration doesn't report a diagnostic.
 
 ## Collection mode
@@ -79,8 +74,7 @@ six things:
   report a warning, and `exemptExistingApi` exempts them. The second check is off in a source set that
   several targets share, such as `commonMain` with `jvm()` and `js()` or with `jvm()` and an Android
   target. The task doesn't add or remove its exemptions there.
-- [`EXEMPTION_WITHOUT_EXPLANATION`](./checks/special/exemption-without-explanation.md) is off, because
-  only the author of the exemption can write its reason.
+- [`EXEMPTION_WITHOUT_EXPLANATION`](./checks/special/exemption-without-explanation.md) is off.
 - In a multiplatform project, one compilation prints the diagnostics of a shared source set, so the
   build output has each of them once. A regular build prints them in every compilation of the source
   set. With an `androidTarget()`, a diagnostic in `androidMain` still prints once for each build
@@ -91,7 +85,5 @@ six things:
 copies on the `actual` declarations with the exemption on the `expect` declaration.
 
 Any other compilation error still fails the task. Fix unresolved references and syntax errors first.
-The compilations outside collection mode still report the checks that are off. Fix them after you commit
-the generated exemptions. For a dependency type in a shared source set, declare the dependency with `api`
-or exempt it on
-[`apiWatchdogExemptNonTransitive`](./checks/special/public-type-from-non-transitive-dependency.md#exempting-a-dependency).
+The compilations outside collection mode still report the checks that are off for the `exemptExistingApi`
+and `generateApiWatchdogReport` tasks. Fix them after you commit the generated exemptions.
