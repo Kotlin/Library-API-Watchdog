@@ -53,6 +53,9 @@ public abstract class ApiWatchdogReportTask internal constructor() : DefaultTask
     @get:Internal
     internal abstract val projectDirectory: DirectoryProperty
 
+    @get:Internal
+    internal abstract val buildDirectory: DirectoryProperty
+
     @get:Input
     internal abstract val projectIdentityPath: Property<String>
 
@@ -112,6 +115,7 @@ public abstract class ApiWatchdogReportTask internal constructor() : DefaultTask
                 temporaryDirectory = temporaryDir,
                 diagnosticReports = diagnosticReports.files,
                 sourceFiles = sourceFiles.files,
+                buildDirectory = buildDirectory.get().asFile,
                 fixerArtifact = fixerArtifact,
                 fixerClasspath = fixerClasspath,
                 diagnosticSeverities = diagnosticSeverities.get(),

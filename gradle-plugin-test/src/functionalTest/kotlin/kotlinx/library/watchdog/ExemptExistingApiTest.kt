@@ -351,6 +351,68 @@ class ExemptExistingApiTest {
     }
 
     @Test
+    fun `CRLF line endings and a byte order mark stay and don't move the exemptions`() = crlfAndByteOrderMarkCase()
+
+    @Test
+    fun `CRLF line endings and a byte order mark stay and don't move the exemptions with the PSI parser`() =
+        crlfAndByteOrderMarkCase("""kotlin { compilerOptions.freeCompilerArgs.add("-Xuse-fir-lt=false") }""")
+
+    private fun crlfAndByteOrderMarkCase(script: String? = null) {
+        val a = "/** A class. */\npublic class A {\n    /** A function. */\n    public fun c() {}\n}\n\n"
+        val b = "public data class B(val x: Int)\n\n"
+        val topLevel = "/** A top-level function. */\npublic fun topLevel(): Int = 0\n"
+        val text = "package test\n\n$a/** A data class. */\n$b$topLevel"
+        val project = jvmProject {
+            script?.let(::buildScript)
+            kotlinFile("crlf", text = text)
+        }
+        val file = project.mainSource("crlf")
+        val byteOrderMark = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
+        file.writeBytes(byteOrderMark + text.replace("\n", "\r\n").toByteArray())
+
+        project.build(EXEMPT_TASK).assertOutputHas("Added 2 backwards-compatibility exemption(s) in 1 file(s).")
+
+        val reason = "reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY"
+        assertEquals(
+            "\uFEFF@file:IntentionallyDefaultFacadeName($reason)\n\n" +
+                    "package test\n\n" +
+                    "import kotlinx.library.watchdog.ExemptionReason\n" +
+                    "import kotlinx.library.watchdog.IntentionallyDataClass\n" +
+                    "import kotlinx.library.watchdog.IntentionallyDefaultFacadeName\n\n" +
+                    "$a/** A data class. */\n@IntentionallyDataClass($reason)\n$b$topLevel",
+            file.readText().replace("\r\n", "\n"),
+        )
+        assertFalse(Regex("(?<!\r)\n").containsMatchIn(file.readText()))
+
+        project.build("build").assertNoWatchdogDiagnostics()
+    }
+
+    @Test
+    fun `generated sources in the build directory aren't edited`() {
+        val generated = "package test\n\n/** A generated open API. */\npublic open class GeneratedApi\n"
+        val project = jvmProject {
+            buildScript(
+                """
+                    val generateApi = tasks.register("generateApi") {
+                        val output = layout.buildDirectory.dir("generated/api")
+                        outputs.dir(output)
+                        doLast { output.get().file("generated.kt").asFile.writeText("${generated.replace("\n", "\\n")}") }
+                    }
+                    kotlin.sourceSets.getByName("main").kotlin.srcDir(generateApi)
+                """
+            )
+            source(openClass("MainApi"), "mainApi")
+        }
+
+        val result = project.build(EXEMPT_TASK)
+
+        project.assertExempted("src/main/kotlin/test/mainApi.kt", "MainApi")
+        assertEquals(generated, project.file("build/generated/api/generated.kt").readText())
+        result.assertOutputHas("1 backwards-compatibility exemption(s) in 1 file(s). 1 diagnostic(s) need manual attention.")
+        result.assertOutputHas("needs manual attention: `exemptExistingApi` doesn't edit a file in the build directory.")
+    }
+
+    @Test
     fun `unfixable diagnostics are reported for manual attention`() {
         val project = jvmProject { source(unfixableFile, "manual") }
 

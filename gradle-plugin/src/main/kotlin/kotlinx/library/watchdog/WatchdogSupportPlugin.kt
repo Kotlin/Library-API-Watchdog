@@ -179,6 +179,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
             task.description = description
             task.compilationNames.convention(emptyList())
             task.projectDirectory.set(layout.projectDirectory)
+            task.buildDirectory.set(layout.buildDirectory)
             @Suppress("UnstableApiUsage")
             task.projectIdentityPath.set(isolated.buildTreePath)
             task.projectDirectoryFromRoot.set(projectDirectoryFromRoot)

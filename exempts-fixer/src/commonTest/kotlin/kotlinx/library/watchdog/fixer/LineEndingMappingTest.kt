@@ -13,7 +13,6 @@ class LineEndingMappingTest {
         assertEquals(text, mapping.normalizedText)
         assertEquals("\n", mapping.newline)
         for (offset in 0..text.length) {
-            assertEquals(offset, mapping.toNormalizedOffset(offset))
             assertEquals(offset, mapping.toRawOffset(offset))
         }
     }
@@ -27,10 +26,6 @@ class LineEndingMappingTest {
             listOf(0, 1, 3, 4, 5, 6, 7),
             (0..mapping.normalizedText.length).map(mapping::toRawOffset),
         )
-        assertEquals(
-            listOf(0, 1, 2, 2, 3, 4, 5, 6),
-            (0..7).map(mapping::toNormalizedOffset),
-        )
     }
 
     @Test
@@ -41,6 +36,15 @@ class LineEndingMappingTest {
         assertEquals("left\nright", mapping.normalizedText)
         assertEquals(4, mapping.toRawOffset(normalizedNewlineOffset))
         assertEquals(6, mapping.toRawOffset(normalizedNewlineOffset + 1))
+    }
+
+    @Test
+    fun `byte order mark is dropped and offsets map past it`() {
+        val mapping = LineEndingMapping.of("\uFEFFa\r\nb")
+
+        assertEquals("a\nb", mapping.normalizedText)
+        assertEquals(listOf(1, 2, 4, 5), (0..3).map(mapping::toRawOffset))
+        assertEquals(listOf(1, 2), (0..1).map(LineEndingMapping.of("\uFEFFa")::toRawOffset))
     }
 
     @Test

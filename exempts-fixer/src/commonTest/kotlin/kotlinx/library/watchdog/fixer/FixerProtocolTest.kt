@@ -35,6 +35,7 @@ class FixerProtocolTest {
                     sourceFile=/project/src/commonMain/kotlin/Common.kt
                     diagnosticSeverity=UNDOCUMENTED_PUBLIC_API:warning
                     diagnosticSeverity=DATA_CLASS_PUBLIC_API:error
+                    buildDirectory=/project/build
                     updateSources=false
                     responseFile=/tmp/response.txt
                 """.trimIndent(),
@@ -58,6 +59,7 @@ class FixerProtocolTest {
         )
         assertEquals(false, request.updateSources)
         assertEquals(Paths.get("/tmp/response.txt"), request.responseFile)
+        assertEquals(Paths.get("/project/build"), request.buildDirectory)
     }
 
     @Test

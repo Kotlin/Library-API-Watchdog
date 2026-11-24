@@ -6,7 +6,8 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 
 internal class ExemptionScanner(private val parser: KotlinFileParser) {
-    fun scan(filePath: String, text: String): List<AppliedExemption> {
+    fun scan(filePath: String, originalText: String): List<AppliedExemption> {
+        val text = LineEndingMapping.of(originalText).normalizedText
         val file = parser.parse(Paths.get(filePath).fileName.toString(), text)
         return file.collectDescendantsOfType<KtAnnotationEntry>()
             .mapNotNull { annotation ->

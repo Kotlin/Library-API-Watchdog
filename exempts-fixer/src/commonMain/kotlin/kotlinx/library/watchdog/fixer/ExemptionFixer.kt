@@ -5,6 +5,7 @@ import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.kdoc.psi.impl.KDocName
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtAnnotation
@@ -17,6 +18,7 @@ import org.jetbrains.kotlin.psi.KtEnumEntry
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFileAnnotationList
 import org.jetbrains.kotlin.psi.KtImportDirective
+import org.jetbrains.kotlin.psi.KtModifierList
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
@@ -43,6 +45,8 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
     /**
      * @param fixes whether the fixer fixes the named diagnostic. A diagnostic it doesn't fix goes
      *   into [FileFixResult.warnings].
+     * @param skipReason when it isn't null, the fixer doesn't edit the file. Each diagnostic that it
+     *   fixes goes into [FileFixResult.skipped] with this reason.
      */
     fun fix(
         filePath: String,
@@ -50,6 +54,7 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
         diagnostics: List<RecordedDiagnostic>,
         rewriteLocations: Boolean = true,
         fixes: (String) -> Boolean = { true },
+        skipReason: String? = null,
     ): FileFixResult {
         val mapping = LineEndingMapping.of(originalText)
         val text = mapping.normalizedText
@@ -57,19 +62,23 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
 
         val skipped = mutableListOf<PlannedSkip>()
         val warnings = mutableListOf<PlannedWarning>()
-        val plannedFixes = mutableMapOf<FixTarget, MutableMap<String, PlannedFix>>()
+        val resolved = mutableListOf<ResolvedFix>()
+        val order = compareBy<RecordedDiagnostic>({ it.startOffset }, { it.name })
 
-        for (diagnostic in diagnostics.sortedWith(compareBy({ it.startOffset }, { it.name }))) {
+        for (diagnostic in diagnostics.sortedWith(order)) {
             val name = diagnostic.name
-            val sourceOffset = diagnostic.startOffset.coerceAtLeast(0)
-            val startOffset = mapping.toNormalizedOffset(sourceOffset)
+            val startOffset = diagnostic.startOffset.coerceAtLeast(0)
 
             fun skip(reason: String) {
-                skipped += PlannedSkip(diagnostic, sourceOffset, reason)
+                skipped += PlannedSkip(diagnostic, startOffset, reason)
             }
 
             if (!fixes(name)) {
-                warnings += PlannedWarning(diagnostic, sourceOffset)
+                warnings += PlannedWarning(diagnostic, startOffset)
+                continue
+            }
+            if (skipReason != null) {
+                skip(skipReason)
                 continue
             }
 
@@ -94,19 +103,26 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
                 skip("No declaration that accepts ${fix.describe()} encloses the reported position")
                 continue
             }
-            if (target.alreadyHas(fix)) {
-                skip("The target already has ${fix.describe()}")
+            resolved += ResolvedFix(diagnostic, target, fix)
+        }
+
+        // An annotation that this run removes doesn't make a fix unnecessary.
+        val removedEntries = resolved.mapNotNullTo(hashSetOf()) { (it.target as? FixTarget.RemovedAnnotation)?.entry }
+        val plannedFixes = mutableMapOf<FixTarget, MutableMap<String, PlannedFix>>()
+        for ((diagnostic, target, fix) in resolved) {
+            if (target.alreadyHas(fix, removedEntries)) {
+                skipped += PlannedSkip(diagnostic, diagnostic.startOffset.coerceAtLeast(0), "The target already has ${fix.describe()}")
                 continue
             }
-
             plannedFixes.getOrPut(target) { mutableMapOf() }
                 .getOrPut(fix.id) { PlannedFix(fix) }
-                .reports.getOrPut(name) { diagnostic }
+                .reports.getOrPut(diagnostic.name) { diagnostic }
         }
+        skipped.sortWith(compareBy(order) { it.diagnostic })
         plannedFixes.values.forEach { it.collapseCombinedExemptions() }
 
         if (plannedFixes.isEmpty()) {
-            val locations = RewrittenLocations(originalText, originalText, emptyList())
+            val locations = RewrittenLocations(text, text, emptyList())
             return FileFixResult(
                 newText = null,
                 applied = emptyList(),
@@ -118,13 +134,15 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
         val imports = ImportResolver(ktFile)
         val edits = mutableListOf<TextEdit>()
         val applied = mutableListOf<PlannedFix>()
-        val removedEntries = plannedFixes.keys.filterIsInstance<FixTarget.RemovedAnnotation>().mapTo(hashSetOf()) { it.entry }
+        val annotatedConstructors = plannedFixes.keys.mapNotNullTo(hashSetOf()) {
+            (it as? FixTarget.BeforeDeclaration)?.declaration as? KtPrimaryConstructor
+        }
         for ((target, fixesById) in plannedFixes) {
             val fixes = fixesById.values.sortedWith(compareBy({ it.fix !is PlaceholderKdocFix }, { it.fix.id }))
             edits += if (target is FixTarget.RemovedAnnotation) {
-                target.entry.removal(text, removedEntries)
+                target.entry.removal(text, removedEntries, annotatedConstructors)
             } else {
-                target.render(fixes, text, imports)
+                target.render(fixes, text, imports, removedEntries)
             }
             applied += fixes
         }
@@ -135,13 +153,14 @@ internal class ExemptionFixer(private val parser: KotlinFileParser) {
                 mapping.toRawOffset(it.offset),
                 mapping.toRawOffset(it.endOffset),
                 it.text.replace("\n", mapping.newline),
+                it.order,
             )
         }
         val newText = applyEdits(originalText, rawEdits)
         val locations = if (rewriteLocations) {
-            RewrittenLocations(originalText, newText, rawEdits)
+            RewrittenLocations(text, applyEdits(text, edits), edits)
         } else {
-            RewrittenLocations(originalText, originalText, emptyList())
+            RewrittenLocations(text, text, emptyList())
         }
         return FileFixResult(
             newText = newText,
@@ -172,6 +191,8 @@ internal class PlannedFix(val fix: Fix) {
     val reports: MutableMap<String, RecordedDiagnostic> = linkedMapOf()
 }
 
+private data class ResolvedFix(val diagnostic: RecordedDiagnostic, val target: FixTarget, val fix: Fix)
+
 private fun Fix.describe(): String = when (this) {
     is ExemptionFix -> "@$annotationShortName"
     PlaceholderKdocFix -> "a KDoc"
@@ -192,6 +213,7 @@ private fun unusedImports(
                     removedEntries.none { PsiTreeUtil.isAncestor(it, reference, false) }
         }
         .mapTo(hashSetOf()) { it.getReferencedName() }
+    ktFile.collectDescendantsOfType<KDocName>().mapTo(remainingNames) { it.text.substringBefore('.') }
     // The entry references its annotation class and, in the `reason` argument, `ExemptionReason`.
     val removedNames = removedEntries.flatMapTo(linkedSetOf()) { entry ->
         entry.collectDescendantsOfType<KtSimpleNameExpression>().map { it.getReferencedName() }
@@ -236,33 +258,28 @@ private class PlannedWarning(val diagnostic: RecordedDiagnostic, val sourceOffse
 
 private class RewrittenLocations(
     private val originalText: String,
-    rewrittenText: String,
+    private val rewrittenText: String,
     private val edits: List<TextEdit>,
 ) {
-    private val rewrittenMapping = LineEndingMapping.of(rewrittenText)
-
-    fun lineAt(sourceOffset: Int): Int {
-        val normalizedOffset = normalizedOffsetAt(sourceOffset)
-        return rewrittenMapping.normalizedText.take(normalizedOffset).count { it == '\n' } + 1
-    }
+    fun lineAt(sourceOffset: Int): Int =
+        rewrittenText.take(rewrittenOffsetAt(sourceOffset)).count { it == '\n' } + 1
 
     fun rangeOf(diagnostic: RecordedDiagnostic): DiagnosticSourceRange? {
         val start = diagnostic.reportedStartOffset ?: return null
         val end = diagnostic.reportedEndOffset ?: return null
         if (start < 0 || end <= start || end > originalText.length) return null
         if (edits.any { it.offset < it.endOffset && it.offset < end && it.endOffset > start }) return null
-        val normalizedStart = normalizedOffsetAt(start)
-        val normalizedEnd = normalizedOffsetAt(end, includeInsertionsAtOffset = false)
-        val text = rewrittenMapping.normalizedText
+        val rewrittenStart = rewrittenOffsetAt(start)
+        val rewrittenEnd = rewrittenOffsetAt(end, includeInsertionsAtOffset = false)
         return DiagnosticSourceRange(
-            text.take(normalizedStart).count { it == '\n' } + 1,
-            normalizedStart - text.lastIndexOf('\n', normalizedStart - 1),
-            text.take(normalizedEnd).count { it == '\n' } + 1,
-            normalizedEnd - text.lastIndexOf('\n', normalizedEnd - 1),
+            rewrittenText.take(rewrittenStart).count { it == '\n' } + 1,
+            rewrittenStart - rewrittenText.lastIndexOf('\n', rewrittenStart - 1),
+            rewrittenText.take(rewrittenEnd).count { it == '\n' } + 1,
+            rewrittenEnd - rewrittenText.lastIndexOf('\n', rewrittenEnd - 1),
         )
     }
 
-    private fun normalizedOffsetAt(sourceOffset: Int, includeInsertionsAtOffset: Boolean = true): Int {
+    private fun rewrittenOffsetAt(sourceOffset: Int, includeInsertionsAtOffset: Boolean = true): Int {
         val boundedOffset = sourceOffset.coerceIn(0, originalText.length)
         val rewrittenOffset = boundedOffset + edits.sumOf { edit ->
             // An edit that ends at the offset is in front of the token. An edit that covers the
@@ -271,14 +288,16 @@ private class RewrittenLocations(
                 (includeInsertionsAtOffset || edit.offset < edit.endOffset)
             ) edit.lengthDelta else 0
         }
-        return rewrittenMapping.toNormalizedOffset(rewrittenOffset.coerceAtLeast(0))
-            .coerceAtMost(rewrittenMapping.normalizedText.length)
+        return rewrittenOffset.coerceIn(0, rewrittenText.length)
     }
 }
 
+/** The order of the insertions at one offset. */
+internal enum class EditOrder { FILE_ANNOTATION, IMPORT, DECLARATION }
+
 /** [text] replaces the range `[offset, endOffset)`. Edits never overlap. */
-internal class TextEdit(val offset: Int, val endOffset: Int, val text: String) {
-    constructor(offset: Int, text: String) : this(offset, offset, text)
+internal class TextEdit(val offset: Int, val endOffset: Int, val text: String, val order: EditOrder = EditOrder.DECLARATION) {
+    constructor(offset: Int, text: String, order: EditOrder = EditOrder.DECLARATION) : this(offset, offset, text, order)
 
     val lengthDelta: Int get() = text.length - (endOffset - offset)
 }
@@ -289,37 +308,43 @@ internal class TextEdit(val offset: Int, val endOffset: Int, val text: String) {
  */
 internal fun applyEdits(text: String, edits: List<TextEdit>): String {
     val builder = StringBuilder(text)
+    var appliedFrom = text.length
     edits
         .sortedWith(
             compareByDescending<TextEdit> { it.offset }
                 .thenByDescending { it.endOffset }
+                .thenByDescending { it.order }
                 .thenByDescending { it.text }
         )
-        .forEach { builder.replace(it.offset, it.endOffset, it.text) }
+        .forEach {
+            check(it.endOffset <= appliedFrom) { "The edits at the offsets ${it.offset} and $appliedFrom overlap" }
+            builder.replace(it.offset, it.endOffset, it.text)
+            appliedFrom = it.offset
+        }
     return builder.toString()
 }
 
 internal sealed interface FixTarget {
-    fun alreadyAnnotated(annotationShortName: String): Boolean
+    fun alreadyAnnotated(annotationShortName: String, removedEntries: Set<KtAnnotationEntry>): Boolean
 
     fun alreadyDocumented(): Boolean = false
 
-    fun alreadyHas(fix: Fix): Boolean = when (fix) {
-        is ExemptionFix -> alreadyAnnotated(fix.annotationShortName)
+    fun alreadyHas(fix: Fix, removedEntries: Set<KtAnnotationEntry>): Boolean = when (fix) {
+        is ExemptionFix -> alreadyAnnotated(fix.annotationShortName, removedEntries)
         PlaceholderKdocFix -> alreadyDocumented()
         RemoveAnnotationFix -> false
     }
 
     /** Fixes that share an insertion point go into one edit, so [applyEdits] can't reorder them. */
-    fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit>
+    fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit>
 
     data class BeforeDeclaration(val declaration: KtDeclaration) : FixTarget {
-        override fun alreadyAnnotated(annotationShortName: String) =
-            declaration.hasAnnotationNamed(annotationShortName)
+        override fun alreadyAnnotated(annotationShortName: String, removedEntries: Set<KtAnnotationEntry>) =
+            declaration.hasExemptionNamed(annotationShortName, removedEntries)
 
         override fun alreadyDocumented() = declaration.docComment != null
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> {
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
             var anchor: PsiElement = declaration
             var child = declaration.firstChild
             while (child is PsiComment || child is PsiWhiteSpace) {
@@ -341,20 +366,22 @@ internal sealed interface FixTarget {
     }
 
     data class InlineBefore(val element: KtElement) : FixTarget {
-        override fun alreadyAnnotated(annotationShortName: String) =
-            (element as? KtDeclaration)?.hasAnnotationNamed(annotationShortName) ?: false
+        override fun alreadyAnnotated(annotationShortName: String, removedEntries: Set<KtAnnotationEntry>) =
+            (element as? KtDeclaration)?.hasExemptionNamed(annotationShortName, removedEntries) ?: false
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> =
-            listOf(TextEdit(element.textRange.startOffset, fixes.joinToString("") { it.insertionText(imports) + " " }))
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
+            val offset = (element.firstKeptChild(removedEntries) ?: element).textRange.startOffset
+            return listOf(TextEdit(offset, fixes.joinToString("") { it.insertionText(imports) + " " }))
+        }
     }
 
     /** The exemption replaces the reported annotation. */
     data class ReplacedAnnotation(val entry: KtAnnotationEntry) : FixTarget {
-        override fun alreadyAnnotated(annotationShortName: String) = false
+        override fun alreadyAnnotated(annotationShortName: String, removedEntries: Set<KtAnnotationEntry>) = false
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> {
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
             val owner = entry.annotatedDeclaration()
-            val missing = fixes.filterNot { owner?.hasAnnotationNamed(it.exemption.annotationShortName) == true }
+            val missing = fixes.filterNot { owner?.hasExemptionNamed(it.exemption.annotationShortName, removedEntries) == true }
             if (missing.isEmpty()) {
                 return entry.removal(text, setOf(entry))
             }
@@ -368,52 +395,83 @@ internal sealed interface FixTarget {
 
     /** The apply loop calls `removal` with every removed entry instead of `render`, so a fully removed list takes its brackets too. */
     data class RemovedAnnotation(val entry: KtAnnotationEntry) : FixTarget {
-        override fun alreadyAnnotated(annotationShortName: String) = false
+        override fun alreadyAnnotated(annotationShortName: String, removedEntries: Set<KtAnnotationEntry>) = false
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> =
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> =
             entry.removal(text, setOf(entry))
     }
 
     data class ImplicitPrimaryConstructor(val constructor: KtPrimaryConstructor) : FixTarget {
-        override fun alreadyAnnotated(annotationShortName: String) =
-            constructor.hasAnnotationNamed(annotationShortName)
+        override fun alreadyAnnotated(annotationShortName: String, removedEntries: Set<KtAnnotationEntry>) =
+            constructor.hasExemptionNamed(annotationShortName, removedEntries)
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> {
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
             val annotations = fixes.joinToString(" ") { it.insertionText(imports) }
             return listOf(TextEdit(constructor.textRange.startOffset, " $annotations constructor"))
         }
     }
 
     data class WholeFile(val file: KtFile) : FixTarget {
-        override fun alreadyAnnotated(annotationShortName: String) =
-            file.fileAnnotationList?.hasAnnotationNamed(annotationShortName) ?: false
+        override fun alreadyAnnotated(annotationShortName: String, removedEntries: Set<KtAnnotationEntry>) =
+            file.fileAnnotationList?.hasExemptionNamed(annotationShortName, removedEntries) ?: false
 
-        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver): List<TextEdit> {
+        override fun render(fixes: List<PlannedFix>, text: String, imports: ImportResolver, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
             val annotationList = file.fileAnnotationList
             if (annotationList != null) {
                 return fixes.map {
-                    TextEdit(annotationList.textRange.startOffset, it.annotationText(imports, useSite = "file:") + "\n")
+                    TextEdit(
+                        annotationList.textRange.startOffset,
+                        it.annotationText(imports, useSite = "file:") + "\n",
+                        EditOrder.FILE_ANNOTATION,
+                    )
                 }
             }
             val anchorOffset = file.packageDirective?.takeIf { it.textLength > 0 }?.textRange?.startOffset
                 ?: run {
+                    // A file without a package has an empty package directive in front of its header comment.
                     var child = file.firstChild
-                    while (child is PsiComment || child is PsiWhiteSpace) child = child.nextSibling
-                    child?.textRange?.startOffset ?: 0
+                    while (child != null && (child is PsiComment || child is PsiWhiteSpace || child.textLength == 0)) {
+                        child = child.nextSibling
+                    }
+                    text.lineStartIfIndented(child?.textRange?.startOffset ?: 0)
                 }
 
             return fixes.map {
-                TextEdit(anchorOffset, it.annotationText(imports, useSite = "file:") + "\n\n")
+                TextEdit(anchorOffset, it.annotationText(imports, useSite = "file:") + "\n\n", EditOrder.FILE_ANNOTATION)
             }
         }
     }
 }
 
+private fun PsiElement.firstKeptChild(removedEntries: Set<KtAnnotationEntry>): PsiElement? {
+    var child = firstChild
+    while (child != null) {
+        val kept = when (child) {
+            is PsiComment, is PsiWhiteSpace -> null
+            is KtAnnotationEntry -> child.takeUnless { it in removedEntries }
+            is KtAnnotation -> child.takeUnless { list -> list.entries.all { it in removedEntries } }
+            is KtModifierList -> child.firstKeptChild(removedEntries)
+            else -> child
+        }
+        if (kept != null) return kept
+        child = child.nextSibling
+    }
+    return null
+}
+
 private val KtAnnotationEntry.annotationList: KtAnnotation? get() = parent as? KtAnnotation
 
-/** [removedEntries] holds every entry that this run removes, this one included. */
-private fun KtAnnotationEntry.removal(text: String, removedEntries: Set<KtAnnotationEntry>): List<TextEdit> {
-    val constructor = (annotatedDeclaration() as? KtPrimaryConstructor)?.takeIf { it.keywordGoesWith(removedEntries) }
+/**
+ * [removedEntries] holds every entry that this run removes, this one included.
+ * [annotatedConstructors] holds the constructors that get an annotation in this run.
+ */
+private fun KtAnnotationEntry.removal(
+    text: String,
+    removedEntries: Set<KtAnnotationEntry>,
+    annotatedConstructors: Set<KtPrimaryConstructor> = emptySet(),
+): List<TextEdit> {
+    val constructor = (annotatedDeclaration() as? KtPrimaryConstructor)
+        ?.takeIf { it !in annotatedConstructors && it.keywordGoesWith(removedEntries) }
     if (constructor != null) {
         // The fixer wrote the keyword for the annotations, so the first removed entry takes the keyword too.
         if (constructor.modifierList?.annotationEntries?.firstOrNull() != this) return emptyList()
@@ -445,6 +503,11 @@ private fun KtAnnotationEntry.removedElement(removedEntries: Set<KtAnnotationEnt
     val list = annotationList?.takeIf { annotationList -> annotationList.entries.all { it in removedEntries } }
     if (list != null && list.entries.first() != this) return null
     return list ?: this
+}
+
+internal fun String.lineStartIfIndented(offset: Int): Int {
+    val lineStart = lastIndexOf('\n', offset - 1) + 1
+    return if (substring(lineStart, offset).isBlank()) lineStart else offset
 }
 
 private fun PsiElement.wholeLine(text: String): IntRange? {
@@ -489,11 +552,17 @@ private fun PlannedFix.annotationCall(imports: ImportResolver): String {
     return "$name$arguments"
 }
 
-private fun KtFileAnnotationList.hasAnnotationNamed(shortName: String): Boolean =
-    annotationEntries.any { it.shortName?.asString() == shortName }
+private fun KtFileAnnotationList.hasExemptionNamed(shortName: String, removedEntries: Set<KtAnnotationEntry>): Boolean =
+    annotationEntries.any { it.shortName?.asString() == shortName && it !in removedEntries }
 
-private fun KtAnnotated.hasAnnotationNamed(shortName: String): Boolean =
-    annotationEntries.any { it.shortName?.asString() == shortName }
+/** The checks read an exemption on the declaration and on the parameter of a constructor property. */
+private val CHECKED_USE_SITE_TARGETS = setOf(null, "property", "param", "all")
+
+private fun KtAnnotated.hasExemptionNamed(shortName: String, removedEntries: Set<KtAnnotationEntry>): Boolean =
+    annotationEntries.any {
+        it.shortName?.asString() == shortName && it !in removedEntries &&
+                it.useSiteTarget?.getAnnotationUseSiteTarget()?.renderName in CHECKED_USE_SITE_TARGETS
+    }
 
 private fun KtAnnotationEntry.annotatedDeclaration(): KtAnnotated? =
     parent.ancestorsWithSelf().filterIsInstance<KtDeclaration>().firstOrNull()
@@ -537,7 +606,7 @@ internal fun resolveTarget(element: PsiElement, fix: Fix, ktFile: KtFile): FixTa
 private fun PsiElement.resolveDeclarationTarget(): FixTarget? {
     for (candidate in ancestorsWithSelf()) {
         when (candidate) {
-            // No exemption annotation has the `ENUM_ENTRY` target.
+            // No check reports an enum entry, and the exemption must not go to the enum class.
             is KtEnumEntry -> return null
             is KtParameter -> if (candidate.hasValOrVar()) return FixTarget.InlineBefore(candidate)
             is KtPropertyAccessor -> return FixTarget.BeforeDeclaration(candidate.property)

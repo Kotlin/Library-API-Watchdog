@@ -6,6 +6,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -21,7 +22,7 @@ class ExemptionFixerTest {
     }
 
     private fun diagnostic(name: String, text: String, snippet: String): RecordedDiagnostic {
-        val start = text.indexOf(snippet)
+        val start = text.asCompilerText().indexOf(snippet)
         require(start >= 0) { "Snippet not found: $snippet" }
         return RecordedDiagnostic(name, FILE_PATH, start, start + snippet.length)
     }
@@ -54,15 +55,16 @@ class ExemptionFixerTest {
     @Test
     fun `reported name ranges follow source edits with each line ending`() {
         for (newline in listOf("\n", "\r\n", "\r")) {
-            val text = "package test\n\npublic open class Api\n".replace("\n", newline)
+            val compilerText = "package test\n\npublic open class Api\n"
+            val text = compilerText.replace("\n", newline)
             val diagnostics = listOf("OPEN_API_WITHOUT_SUBCLASS_OPT_IN", "UNDOCUMENTED_PUBLIC_API", "UNKNOWN_CHECK").map { name ->
                 diagnostic(name, text, "public open class Api").copy(
-                    reportedStartOffset = text.indexOf("Api"),
-                    reportedEndOffset = text.indexOf("Api") + 3,
+                    reportedStartOffset = compilerText.indexOf("Api"),
+                    reportedEndOffset = compilerText.indexOf("Api") + 3,
                 )
             }
             val result = fixer.fix(FILE_PATH, text, diagnostics, fixes = { it != "UNDOCUMENTED_PUBLIC_API" })
-            val rewrittenLine = lineOf(result.newText!!.replace("\r\n", "\n").replace('\r', '\n'), "public open class Api")
+            val rewrittenLine = lineOf(result.newText!!.asCompilerText(), "public open class Api")
             val expected = DiagnosticSourceRange(rewrittenLine, 19, rewrittenLine, 22)
             assertEquals(expected, result.applied.single().sourceRange, "applied, newline=$newline")
             assertEquals(expected, result.warnings.single().sourceRange, "warning, newline=$newline")
@@ -1486,6 +1488,85 @@ class ExemptionFixerTest {
     }
 
     @Test
+    fun `an exemption on the property or on the constructor parameter skips the fix`() {
+        for (useSite in listOf("", "property:", "param:")) {
+            val text = "$MUTABLE_COLLECTION_IMPORTS" +
+                    "public class Holder(@${useSite}IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN) public val items: MutableList<Int>)\n"
+
+            val result = fix(text, diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "items:"))
+
+            assertNull(result.newText, "useSite=$useSite")
+            assertContains(result.skipped.single().reason, "already has")
+        }
+    }
+
+    @Test
+    fun `a setparam exemption doesn't skip the fix of a member property`() {
+        val text = "$MUTABLE_COLLECTION_IMPORTS" + """
+            public class Holder {
+                @setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN)
+                public var items: MutableList<Int> = mutableListOf()
+            }
+        """.trimIndent()
+
+        val result = fix(text, diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "public var items"))
+
+        assertEquals(
+            "$MUTABLE_COLLECTION_IMPORTS" + """
+                public class Holder {
+                    @IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+                    @setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN)
+                    public var items: MutableList<Int> = mutableListOf()
+                }
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `a setparam exemption doesn't skip the fix of a constructor property`() {
+        val text = "$MUTABLE_COLLECTION_IMPORTS" +
+                "public class Holder(@setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN) public var items: MutableList<Int>)\n"
+
+        val result = fix(text, diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "items:"))
+
+        assertEquals(
+            "$MUTABLE_COLLECTION_IMPORTS" +
+                    "public class Holder(@IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY) " +
+                    "@setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN) public var items: MutableList<Int>)\n",
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `an exemption that the run removes doesn't skip the fix of the same annotation class`() {
+        val text = "$MUTABLE_COLLECTION_IMPORTS" + """
+            public class Holder {
+                @setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN)
+                public var items: MutableList<Int> = mutableListOf()
+            }
+        """.trimIndent()
+
+        val result = fix(
+            text,
+            diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "public var items"),
+            diagnostic("REDUNDANT_EXEMPTION", text, "@setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN)")
+                .copy(messageParameters = listOf("IntentionallyMutableCollection", "declaration")),
+        )
+
+        assertEquals(
+            "$MUTABLE_COLLECTION_IMPORTS" + """
+                public class Holder {
+                    @IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+                    public var items: MutableList<Int> = mutableListOf()
+                }
+            """.trimIndent(),
+            result.newText,
+        )
+        assertEquals(emptyList(), result.skipped)
+    }
+
+    @Test
     fun `secondary constructor is annotated in place`() {
         @Language("kotlin")
         val text = """
@@ -1785,9 +1866,374 @@ class ExemptionFixerTest {
         assertEquals("abcde", result)
     }
 
+    @Test
+    fun `recorded offsets are positions in the text without carriage returns`() {
+        val compilerText = "package p\n\npublic class A {\n    public fun c() {}\n}\n\npublic data class B(val x: Int)\n"
+        for (newline in listOf("\r\n", "\r")) {
+            val text = compilerText.replace("\n", newline)
+
+            val result = fix(text, diagnostic("DATA_CLASS_PUBLIC_API", text, "public data class B(val x: Int)"))
+
+            assertEquals(
+                "package p\n\n" +
+                        "import kotlinx.library.watchdog.ExemptionReason\n" +
+                        "import kotlinx.library.watchdog.IntentionallyDataClass\n\n" +
+                        "public class A {\n    public fun c() {}\n}\n\n" +
+                        "@IntentionallyDataClass(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n" +
+                        "public data class B(val x: Int)\n",
+                result.newText!!.asCompilerText(),
+                "newline=${newline.replace("\r", "\\r").replace("\n", "\\n")}",
+            )
+            assertEquals(11, result.applied.single().line)
+        }
+    }
+
+    @Test
+    fun `a byte order mark stays at the file start`() {
+        val text = "\uFEFFpackage p\n\npublic fun topLevel(): Int = 0\n\npublic data class B(val x: Int)\n"
+
+        val result = fix(
+            text,
+            diagnostic("TOP_LEVEL_API_WITHOUT_JVM_NAME", text, "public fun topLevel(): Int = 0"),
+            diagnostic("DATA_CLASS_PUBLIC_API", text, "public data class B(val x: Int)"),
+        )
+
+        assertEquals(
+            "\uFEFF@file:IntentionallyDefaultFacadeName(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n\n" +
+                    "package p\n\n" +
+                    "import kotlinx.library.watchdog.ExemptionReason\n" +
+                    "import kotlinx.library.watchdog.IntentionallyDataClass\n" +
+                    "import kotlinx.library.watchdog.IntentionallyDefaultFacadeName\n\n" +
+                    "public fun topLevel(): Int = 0\n\n" +
+                    "@IntentionallyDataClass(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n" +
+                    "public data class B(val x: Int)\n",
+            result.newText,
+        )
+        assertEquals(listOf(9, 12), result.applied.map { it.line })
+    }
+
+    @Test
+    fun `a new exemption of a constructor property goes after the exemption that the run removes`() {
+        val text = """
+            package test
+
+            import kotlinx.library.watchdog.ExemptionReason
+            import kotlinx.library.watchdog.IntentionallyBooleanParameter
+
+            /** A holder. */
+            public class Holder(
+                @IntentionallyBooleanParameter(reason = ExemptionReason.API_DESIGN)
+                public val items: MutableList<String>,
+            )
+        """.trimIndent()
+
+        val result = fix(
+            text,
+            diagnostic("REDUNDANT_EXEMPTION", text, "@IntentionallyBooleanParameter(reason = ExemptionReason.API_DESIGN)")
+                .copy(messageParameters = listOf("IntentionallyBooleanParameter", "declaration")),
+            diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "items"),
+        )
+
+        assertEquals(
+            """
+                package test
+
+                import kotlinx.library.watchdog.ExemptionReason
+                import kotlinx.library.watchdog.IntentionallyMutableCollection
+
+                /** A holder. */
+                public class Holder(
+                    @IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY) public val items: MutableList<String>,
+                )
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `a removed exemption keeps the constructor keyword that a new exemption needs`() {
+        val text = """
+            package test
+
+            import kotlinx.library.watchdog.ExemptionReason
+            import kotlinx.library.watchdog.IntentionallyWithoutJvmOverloads
+
+            /** A format. */
+            public class Binary @IntentionallyWithoutJvmOverloads(reason = ExemptionReason.API_DESIGN) constructor(a: Int, flag: Boolean)
+        """.trimIndent()
+
+        val result = fix(
+            text,
+            diagnostic("REDUNDANT_EXEMPTION", text, "@IntentionallyWithoutJvmOverloads(reason = ExemptionReason.API_DESIGN)")
+                .copy(messageParameters = listOf("IntentionallyWithoutJvmOverloads", "declaration")),
+            diagnostic("BOOLEAN_PARAMETER_PUBLIC_API", text, "flag"),
+        )
+
+        assertEquals(
+            """
+                package test
+
+                import kotlinx.library.watchdog.ExemptionReason
+                import kotlinx.library.watchdog.IntentionallyBooleanParameter
+
+                /** A format. */
+                public class Binary @IntentionallyBooleanParameter(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY) constructor(a: Int, flag: Boolean)
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `overlapping edits fail`() {
+        assertFailsWith<IllegalStateException> { applyEdits("abcdef", listOf(TextEdit(1, 4, ""), TextEdit(2, "x"))) }
+        assertFailsWith<IllegalStateException> { applyEdits("abcdef", listOf(TextEdit(1, 4, ""), TextEdit(1, 3, "x"))) }
+        assertEquals("axef", applyEdits("abcdef", listOf(TextEdit(1, 4, ""), TextEdit(4, "x"))))
+    }
+
+    @Test
+    fun `imports of a file without a package go above the annotation of the first declaration`() {
+        val text = "public data class Point(val x: Int)"
+
+        val result = fix(text, diagnostic("DATA_CLASS_PUBLIC_API", text, "Point"))
+
+        assertEquals(
+            """
+                import kotlinx.library.watchdog.ExemptionReason
+                import kotlinx.library.watchdog.IntentionallyDataClass
+
+                @IntentionallyDataClass(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+                public data class Point(val x: Int)
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `imports of a file without a package go between the file annotation and the placeholder KDoc`() {
+        val text = "public fun enabled(): Boolean? = null"
+
+        val result = fix(
+            text,
+            diagnostic("TOP_LEVEL_API_WITHOUT_JVM_NAME", text, "enabled"),
+            diagnostic("UNDOCUMENTED_PUBLIC_API", text, "enabled"),
+            diagnostic("NULLABLE_BOOLEAN_PUBLIC_API", text, "enabled"),
+        )
+
+        assertEquals(
+            """
+                @file:IntentionallyDefaultFacadeName(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+
+                import kotlinx.library.watchdog.ExemptionReason
+                import kotlinx.library.watchdog.IntentionallyDefaultFacadeName
+                import kotlinx.library.watchdog.IntentionallyNullableBoolean
+
+                $PLACEHOLDER_KDOC
+                @IntentionallyNullableBoolean(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+                public fun enabled(): Boolean? = null
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `imports of a file without a package go below its file annotation`() {
+        val text = "@file:JvmName(\"Facade\")\n\npublic data class Point(val x: Int)"
+
+        val result = fix(text, diagnostic("DATA_CLASS_PUBLIC_API", text, "Point"))
+
+        assertEquals(
+            """
+                @file:JvmName("Facade")
+
+                import kotlinx.library.watchdog.ExemptionReason
+                import kotlinx.library.watchdog.IntentionallyDataClass
+
+                @IntentionallyDataClass(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)
+                public data class Point(val x: Int)
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `imports of a file without a package go to the line start of an indented declaration`() {
+        for (header in listOf("", "// License\n\n", "@file:JvmName(\"Facade\")\n\n")) {
+            for (indent in listOf("    ", "\t")) {
+                val text = "$header${indent}public open class Api\n"
+
+                val result = fix(text, diagnostic("OPEN_API_WITHOUT_SUBCLASS_OPT_IN", text, "public open class Api"))
+
+                assertEquals(
+                    header +
+                            "import kotlinx.library.watchdog.ExemptionReason\n" +
+                            "import kotlinx.library.watchdog.IntentionallyOpen\n\n" +
+                            "$indent@IntentionallyOpen(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n" +
+                            "${indent}public open class Api\n",
+                    result.newText,
+                    "header=$header, indent=$indent",
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `file annotation of a file without a package goes to the line start of an indented declaration`() {
+        val text = "    public fun enabled(): Boolean? = null\n"
+
+        val result = fix(
+            text,
+            diagnostic("TOP_LEVEL_API_WITHOUT_JVM_NAME", text, "enabled"),
+            diagnostic("UNDOCUMENTED_PUBLIC_API", text, "enabled"),
+            diagnostic("NULLABLE_BOOLEAN_PUBLIC_API", text, "enabled"),
+        )
+
+        assertEquals(
+            "@file:IntentionallyDefaultFacadeName(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n\n" +
+                    "import kotlinx.library.watchdog.ExemptionReason\n" +
+                    "import kotlinx.library.watchdog.IntentionallyDefaultFacadeName\n" +
+                    "import kotlinx.library.watchdog.IntentionallyNullableBoolean\n\n" +
+                    "    $PLACEHOLDER_KDOC\n" +
+                    "    @IntentionallyNullableBoolean(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n" +
+                    "    public fun enabled(): Boolean? = null\n",
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `file annotation of a file without a package goes below the header comment`() {
+        for (header in listOf("// License", "/* License */")) {
+            val text = "$header\n\npublic fun topLevel(): Int = 0\n"
+
+            val result = fix(text, diagnostic("TOP_LEVEL_API_WITHOUT_JVM_NAME", text, "topLevel"))
+
+            assertEquals(
+                "$header\n\n" +
+                        "@file:IntentionallyDefaultFacadeName(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n\n" +
+                        "import kotlinx.library.watchdog.ExemptionReason\n" +
+                        "import kotlinx.library.watchdog.IntentionallyDefaultFacadeName\n\n" +
+                        "public fun topLevel(): Int = 0\n",
+                result.newText,
+            )
+        }
+    }
+
+    @Test
+    fun `file annotation of a file without a package goes between the header comment and the imports`() {
+        val text = "// License\n\nimport kotlin.math.abs\n\npublic fun topLevel(): Int = abs(0)\n"
+
+        val result = fix(text, diagnostic("TOP_LEVEL_API_WITHOUT_JVM_NAME", text, "topLevel"))
+
+        assertEquals(
+            "// License\n\n" +
+                    "@file:IntentionallyDefaultFacadeName(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n\n" +
+                    "import kotlin.math.abs\n" +
+                    "import kotlinx.library.watchdog.ExemptionReason\n" +
+                    "import kotlinx.library.watchdog.IntentionallyDefaultFacadeName\n\n" +
+                    "public fun topLevel(): Int = abs(0)\n",
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `annotation of a constructor property goes after its KDoc`() {
+        val text = """
+            package test
+
+            /** A holder. */
+            public class Holder(
+                /** The items. */
+                public val items: MutableList<String>,
+            )
+        """.trimIndent()
+
+        val result = fix(text, diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "items:"))
+
+        assertContains(
+            result.newText!!,
+            "    /** The items. */\n" +
+                    "    @IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY) " +
+                    "public val items: MutableList<String>,\n",
+        )
+    }
+
+    @Test
+    fun `placeholder KDoc of an inline constructor property goes before its annotation`() {
+        val text = "package test\n\npublic class A(public val x: MutableList<Int>)\n"
+
+        val result = fix(
+            text,
+            diagnostic("UNDOCUMENTED_PUBLIC_API", text, "x: MutableList"),
+            diagnostic("MUTABLE_COLLECTION_PUBLIC_API", text, "x: MutableList"),
+        )
+
+        assertContains(
+            result.newText!!,
+            "public class A($PLACEHOLDER_KDOC " +
+                    "@IntentionallyMutableCollection(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY) " +
+                    "public val x: MutableList<Int>)\n",
+        )
+    }
+
+    @Test
+    fun `a removed annotation keeps the import that a KDoc link uses`() {
+        val text = """
+            package test
+
+            import kotlinx.library.watchdog.ExemptionReason
+            import kotlinx.library.watchdog.IntentionallyOpen
+
+            /** A final class. [IntentionallyOpen] doesn't apply. */
+            @IntentionallyOpen(reason = ExemptionReason.API_DESIGN)
+            public class Settled
+        """.trimIndent()
+
+        val result = fix(
+            text,
+            diagnostic("REDUNDANT_EXEMPTION", text, "@IntentionallyOpen(reason = ExemptionReason.API_DESIGN)")
+                .copy(messageParameters = listOf("IntentionallyOpen", "declaration")),
+        )
+
+        assertEquals(
+            """
+                package test
+
+                import kotlinx.library.watchdog.IntentionallyOpen
+
+                /** A final class. [IntentionallyOpen] doesn't apply. */
+                public class Settled
+            """.trimIndent(),
+            result.newText,
+        )
+    }
+
+    @Test
+    fun `a trailing comment stays on the line of the package or of the last import`() {
+        val declaration = "public data class Point(val x: Int)\n"
+        val added = "import kotlinx.library.watchdog.ExemptionReason\n" +
+                "import kotlinx.library.watchdog.IntentionallyDataClass\n\n" +
+                "@IntentionallyDataClass(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)\n"
+        for (header in listOf(
+            "package p // The package\n\n",
+            "package p /* The package */\n\n",
+            "package p\n\nimport kotlin.math.abs // The import\n",
+        )) {
+            val separator = if ("import" in header) "\n" else ""
+            val text = header + separator + declaration
+
+            val result = fix(text, diagnostic("DATA_CLASS_PUBLIC_API", text, "Point"))
+
+            assertEquals(header + added + declaration, result.newText)
+        }
+    }
+
     private companion object {
         const val FILE_PATH = "/project/src/main/kotlin/com/example/Sample.kt"
         const val PLACEHOLDER_KDOC = "/** TODO: Document this declaration */"
+        const val MUTABLE_COLLECTION_IMPORTS = "package test\n\n" +
+                "import kotlinx.library.watchdog.ExemptionReason\n" +
+                "import kotlinx.library.watchdog.IntentionallyMutableCollection\n\n"
+
+        fun String.asCompilerText(): String = removePrefix("\uFEFF").replace("\r\n", "\n").replace('\r', '\n')
 
         fun lineOf(text: String, snippet: String): Int {
             val offset = text.indexOf(snippet)
