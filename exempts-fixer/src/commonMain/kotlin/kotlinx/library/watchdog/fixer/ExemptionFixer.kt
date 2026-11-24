@@ -357,7 +357,6 @@ private fun MutableMap<FixTarget, MutableMap<String, PlannedFix>>.mergeIntoCover
     return skippedCopies
 }
 
-/** The declaration that the fix annotates. */
 private fun FixTarget.annotatedElement(): KtDeclaration? = when (this) {
     is FixTarget.BeforeDeclaration -> declaration
     is FixTarget.InlineBefore -> element as? KtDeclaration
