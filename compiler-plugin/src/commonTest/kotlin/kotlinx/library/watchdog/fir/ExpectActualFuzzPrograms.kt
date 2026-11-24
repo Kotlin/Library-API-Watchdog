@@ -73,6 +73,9 @@ internal class ExpectActualProgram(
 
 private const val REASON = "(reason = ExemptionReason.API_DESIGN)"
 
+// This exemption has no `reason` parameter.
+private const val EXPOSED = "IntentionallyExposedInternalApiForBackwardsCompatibility"
+
 private const val PREAMBLE = """
 @RequiresOptIn
 public annotation class Unstable
@@ -85,6 +88,9 @@ public value class Id(public val raw: Int)
 
 @Hidden
 public class HiddenType
+
+@Hidden
+public interface HiddenContract
 """
 
 private const val FILTER_PREAMBLE = """
@@ -182,6 +188,9 @@ private class Cls(id: String, val kind: Kind) : Decl(id) {
 
     /** The `expect` class with an `actual typealias` to this class. */
     var aliasOf: Cls? = null
+
+    var actualContract = false
+    var contractExemption: Ann? = null
 }
 
 private class Alias(id: String, val target: String) : Decl(id)
@@ -285,6 +294,8 @@ internal class ExpectActualProgramGenerator(private val seed: Long, private val 
  * both halves. An inclusion doesn't match a JVM-only member of a pair class. Such a rule
  * includes the `actual` class without its `expect` class. The checks that report the pair on the
  * `expect` class then don't run in the multiplatform program, but they run in the JVM view.
+ * An inclusion doesn't match a member of a class with an `actual typealias` either. Such a rule
+ * includes the `actual typealias`, but not the plain type alias of the JVM view.
  */
 private class FilterRules(private val random: Random, private val packageName: String) {
     private val excluded = mutableListOf<String>()
@@ -302,14 +313,14 @@ private class FilterRules(private val random: Random, private val packageName: S
         }
     }
 
-    private fun visit(decl: Decl, prefix: String, inPairClass: Boolean) {
+    private fun visit(decl: Decl, prefix: String, inPairClass: Boolean, inAliasedClass: Boolean = false) {
         val simpleName = when (decl) {
             is Fn -> decl.name
             is Cls -> if (decl.kind == Kind.COMPANION) "Companion" else decl.id
             else -> decl.id
         }
         val name = "$prefix.$simpleName"
-        val inclusionAllowed = !(inPairClass && decl.origin == Origin.JVM_ONLY)
+        val inclusionAllowed = !(inPairClass && decl.origin == Origin.JVM_ONLY) && !inAliasedClass
         if (chance(6)) excluded += name
         if (inclusionAllowed && chance(10)) included += name
         if (inclusionAllowed && chance(10)) {
@@ -317,7 +328,9 @@ private class FilterRules(private val random: Random, private val packageName: S
             annotated = true
         }
         if (decl is Cls) {
-            for (member in decl.members) visit(member, name, inPairClass = decl.origin == Origin.PAIR)
+            for (member in decl.members) {
+                visit(member, name, inPairClass = decl.origin == Origin.PAIR, inAliasedClass = decl.actualForm is ActualForm.OwnAlias)
+            }
             for (entry in decl.entries + decl.extraEntries) if (chance(6)) excluded += "$name.${entry.name}"
         }
     }
@@ -467,6 +480,13 @@ private class ModelBuilder(private val random: Random) {
             }
         }
 
+        if (origin == Origin.PAIR && kind !in listOf(Kind.FUN_INTERFACE, Kind.COMPANION) && chance(25)) {
+            cls.actualContract = true
+            when (random.nextInt(10)) {
+                in 0..3 -> cls.exemptions += Ann(EXPOSED, side(origin))
+                in 4..6 -> cls.contractExemption = Ann(EXPOSED, Side.ACTUAL)
+            }
+        }
         if (kind in listOf(Kind.FINAL, Kind.OPEN, Kind.ABSTRACT, Kind.INTERFACE) && chance(15)) {
             cls.typeParam = TypeParam(pick(listOf("MutableCollection<Int>", "Collection<Int>", "Any")), null, reified = false)
         }
@@ -501,9 +521,10 @@ private class ModelBuilder(private val random: Random) {
         if (origin == Origin.PAIR && kind != Kind.INTERFACE && chance(20)) {
             cls.members += function(Origin.JVM_ONLY, kind, topLevel = false, forbidden = memberForbidden)
         }
-        // A typealias can't have the internal API marker of its `expect`.
-        if (origin == Origin.PAIR && depth == 0 && !cls.hidden && cls.typeParam == null && cls.primary?.properties != true && cls.extraCtor == null &&
-            kind in listOf(Kind.FINAL, Kind.OPEN, Kind.ABSTRACT, Kind.INTERFACE) && chance(15)
+        // A typealias can't have the internal API marker of its `expect`. The compiler reports an incompatible
+        // class scope for a typealias to a class with a nested enum class.
+        if (origin == Origin.PAIR && depth == 0 && !cls.hidden && !cls.actualContract && cls.typeParam == null && cls.primary?.properties != true && cls.extraCtor == null &&
+            kind in listOf(Kind.FINAL, Kind.OPEN, Kind.ABSTRACT, Kind.INTERFACE) && cls.members.none { it is Cls && it.kind == Kind.ENUM } && chance(15)
         ) {
             ownAlias(cls)
         }
@@ -612,7 +633,9 @@ private class ModelBuilder(private val random: Random) {
             owner in listOf(Kind.OPEN, Kind.ABSTRACT, Kind.SEALED) && chance(8) -> "protected"
             else -> "public"
         }
-        fn.isInline = !isAbstract && !inInterface && fn.modality != "open" && chance(20)
+        // An inline function can't take a suspend function type, and an overload copies the parameters.
+        fn.isInline = !isAbstract && !inInterface && fn.modality != "open" && chance(20) &&
+                overloadOf?.params.orEmpty().none { it.type.text.startsWith("suspend") }
         fn.isSuspend = !isAbstract && owner != Kind.FUN_INTERFACE && chance(15)
         val shared = overloadOf?.params.orEmpty().flatMap { param -> param.exemptions.map { it.name } + listOfNotNull(param.type.exemption?.name) }
         fn.exemptions += exemptions(Exemptions.function, origin, forbidden + shared)
@@ -776,7 +799,7 @@ private class Renderer(private val model: Model, private val packageName: String
         /** The class of an `actual typealias` isn't an `actual`, so its copy of an exemption is independent. */
         fun exemption(ann: Ann, siteTarget: String = "") {
             val start = out.text.length
-            out.raw("@").raw(siteTarget).raw(ann.name).raw(REASON)
+            out.raw("@").raw(siteTarget).raw(ann.name).raw(if (ann.name == EXPOSED) "" else REASON)
             if (!out.record) return
             val group = "${ann.id}@$owner".takeIf { pair && keywords && ann.side == Side.BOTH }
             out.exemptions += FuzzExemption(out.name, ann.name, start, out.text.length, group)
@@ -989,6 +1012,11 @@ private class Renderer(private val model: Model, private val packageName: String
                 }
                 cls.sealedParent?.let { parent ->
                     out.raw(" : ${parent.id}(${parent.primary?.params.orEmpty().joinToString { it.type.value }})")
+                }
+                if (cls.actualContract && actualHalf) {
+                    out.raw(" : ")
+                    cls.contractExemption?.let { exemption(it); out.raw(" ") }
+                    out.raw("HiddenContract")
                 }
                 val members = cls.members.filter { it.origin != Origin.JVM_ONLY || actualHalf || !pair }
                 val secondary = extra?.takeIf { !cls.extraIsPrimary }
