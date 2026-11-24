@@ -2,7 +2,7 @@
 // EXPLICIT_API_MODE: WARNING
 // IGNORE_DEPRECATED_API
 // EXCLUDED_NAMES: foo.bar.ExcludedProperty.items
-// DIAGNOSTICS: -STATEFUL_CLASS_WITHOUT_EQUALS -STATEFUL_CLASS_WITHOUT_HASH_CODE -STATEFUL_CLASS_WITHOUT_TO_STRING -UNDOCUMENTED_PUBLIC_API -OPEN_API_WITHOUT_SUBCLASS_OPT_IN -TOP_LEVEL_API_WITHOUT_JVM_NAME -EXEMPTION_WITHOUT_EXPLANATION -PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY
+// DIAGNOSTICS: -STATEFUL_CLASS_WITHOUT_EQUALS -STATEFUL_CLASS_WITHOUT_HASH_CODE -STATEFUL_CLASS_WITHOUT_TO_STRING -UNDOCUMENTED_PUBLIC_API -OPEN_API_WITHOUT_SUBCLASS_OPT_IN -TOP_LEVEL_API_WITHOUT_JVM_NAME -EXEMPTION_WITHOUT_EXPLANATION
 // COMPILE_DEPENDENCY_PATHS: ../messages/nonTransitiveDependency.deps/models
 // DEPENDENCY_DECLARATIONS: ../messages/nonTransitiveDependency.deps/models implementation "com.example:models:1.0"
 
@@ -67,10 +67,9 @@ public class PublicPropertyOfInternalConstructor internal constructor(
 
 internal class InternalClass(private val items: MutableList<Int>)
 
-// The fixer tests compile this file without the dependency options, so the marker of
-// PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY is off. An exemption that isn't redundant shows the report.
+// The dependency check reads a constructor parameter in the same way.
 
-public class PrivateModel(@IntentionallyNonTransitiveDependency private val model: Model)
+public class PrivateModel(private val model: <!PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY!>Model<!>)
 
 public class InternalConstructorModel internal constructor(
     <!REDUNDANT_EXEMPTION!>@IntentionallyNonTransitiveDependency<!> private val model: Model,
