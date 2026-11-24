@@ -37,12 +37,11 @@ public class Connection
   - A check that reports `actual` declarations, such as
     [Data classes in public API](../data-class-public-api.md) or
     [Mangled JVM names in public API](../java-interop/mangled-jvm-name-public-api.md), needs them.
+    For an exemption on an `expect` class, so do
     [Internal API types in public API](./public-type-with-internal-api.md) and
-    [Public types from non-transitive dependencies](./public-type-from-non-transitive-dependency.md)
-    report the supertypes that only an `actual` class declares. So for these checks, an exemption on
-    an `expect` class declaration needs the `actual` classes. A platform compilation reports the
-    exemption when its own `actual` declaration doesn't need it. The common compilation and the IDE
-    don't see `actual` declarations, so they don't report it.
+    [Public types from non-transitive dependencies](./public-type-from-non-transitive-dependency.md).
+    A platform compilation reports the exemption when its own `actual` declaration doesn't need it.
+    The common compilation and the IDE don't see `actual` declarations, so they don't report it.
 
   The copy of the exemption on an `actual` declaration isn't reported while the `expect` declaration
   has the exemption. After you remove the exemption from the `expect` declaration, the copy is an
