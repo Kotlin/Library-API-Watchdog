@@ -1,7 +1,7 @@
 name: Dev kit update
 
 # Every day the workflow compares the `devkit` entry of the version catalog on main with the newest dev kit in the Space
-# repository. When the repository has a different version, the workflow:
+# repository, the highest version of the form MAJOR.MINOR.PATCH-dev-BUILD. When that version is later, the workflow:
 #
 # 1. Commits the version to the update branch and opens a pull request, or updates the open one.
 # 2. Runs every test, the version alignment check, and the benchmark check on the commit.
@@ -52,18 +52,28 @@ jobs:
         id: versions
         run: |
           current="$(sed -nE 's/^devkit = "([^"]+)"$/\1/p' gradle/libs.versions.toml)"
-          latest="$(curl --fail --silent --show-error --retry 3 "$METADATA_URL" \
-            | sed -nE 's|.*<latest>([^<]+)</latest>.*|\1|p')"
+          metadata="$(curl --fail --silent --show-error --retry 3 "$METADATA_URL")"
+          # `<latest>` of the metadata is the last published version, not the highest.
+          latest="$(grep -Eo '<version>[0-9]+\.[0-9]+\.[0-9]+-dev-[0-9]+</version>' <<< "$metadata" \
+            | sed -E 's|</?version>||g' | sort -V | tail -n 1)"
           if [[ -z "$current" ]]; then
             echo 'gradle/libs.versions.toml has no line devkit = "<version>".' >&2
             exit 1
           fi
-          if [[ ! "$latest" =~ ^[0-9A-Za-z.+-]+$ ]]; then
-            echo "The dev kit metadata at $METADATA_URL has no valid latest version. Got '$latest'." >&2
+          if [[ ! "$current" =~ ^[0-9]+\.[0-9]+\.[0-9]+-dev-[0-9]+$ ]]; then
+            echo "The devkit entry of gradle/libs.versions.toml is '$current'. The workflow updates only a version of the form MAJOR.MINOR.PATCH-dev-BUILD." >&2
+            exit 1
+          fi
+          if [[ -z "$latest" ]]; then
+            echo "The dev kit metadata at $METADATA_URL has no version of the form MAJOR.MINOR.PATCH-dev-BUILD." >&2
             exit 1
           fi
           if [[ "$latest" == "$current" ]]; then
             echo "The version catalog has the newest dev kit, $current."
+            exit 0
+          fi
+          if [[ "$(printf '%s\n' "$current" "$latest" | sort -V | tail -n 1)" != "$latest" ]]; then
+            echo "The version catalog has the dev kit $current. The newest dev kit, $latest, isn't later."
             exit 0
           fi
           echo "The version catalog has the dev kit $current. The newest dev kit is $latest."
@@ -80,10 +90,13 @@ jobs:
           BOT: ${{ steps.bot.outputs.app-slug }}[bot]
           LATEST: ${{ steps.versions.outputs.latest }}
         run: |
-          pr="$(gh pr list --head "$UPDATE_BRANCH" --base main --state open --json number --jq 'first | .number // empty')"
+          # `gh pr list --head` matches by branch name only, so the query drops the pull requests of forks.
+          pr="$(gh pr list --head "$UPDATE_BRANCH" --base main --state open --json number,isCrossRepository \
+            --jq 'map(select(.isCrossRepository == false)) | first | .number // empty')"
           if [[ -n "$pr" ]]; then
-            others="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$UPDATE_BRANCH" \
-              --jq '.commits[] | .author.login // "an unknown user"' | grep -vxF "$BOT" || true)"
+            authors="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$UPDATE_BRANCH" \
+              --jq '.commits[] | .author.login // "an unknown user"')"
+            others="$(grep -vxF "$BOT" <<< "$authors" || true)"
             if [[ -n "$others" ]]; then
               echo "::warning::$UPDATE_BRANCH has commits of other authors, so the workflow doesn't replace it. Merge or close pull request #$pr."
               exit 0
@@ -181,4 +194,5 @@ jobs:
         run: |
           gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --match-head-commit "$SHA" \
             --subject "Update the dev kit to $VERSION (#$PR)" --body ''
-          gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$UPDATE_BRANCH" --silent
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$UPDATE_BRANCH" --silent 2> /dev/null \
+            || echo "$UPDATE_BRANCH is deleted."
