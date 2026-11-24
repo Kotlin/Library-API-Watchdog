@@ -37,8 +37,10 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
     }
 
     KotlinFileParser().use { parser ->
-        val copies = ExpectActualCopies(parser) { path -> Paths.get(path).takeIf { Files.isRegularFile(it) }?.let { SourceFile.read(it).text } }
-            .copies(diagnostics, pairs, request::fixes)
+        val expectActualCopies = ExpectActualCopies(parser) { path ->
+            Paths.get(path).takeIf { Files.isRegularFile(it) }?.let { SourceFile.read(it).text }
+        }
+        val copies = expectActualCopies.copies(diagnostics, pairs, request::fixes)
         val diagnosticsByFile = (diagnostics + copies).groupBy { it.filePath }
         val fixer = ExemptionFixer(parser)
         for ((filePath, diagnostics) in diagnosticsByFile.toSortedMap()) {
@@ -59,6 +61,8 @@ internal fun run(request: FixerRequest, response: FixerResponse) {
                 rewriteLocations = request.updateSources,
                 fixes = request::fixes,
                 skipReason = skipReason,
+                removesCoveredExemptions = request.updateSources,
+                expectOf = { expectActualCopies.expectOf(filePath, it, pairs) },
             )
 
             var fixResult = try {

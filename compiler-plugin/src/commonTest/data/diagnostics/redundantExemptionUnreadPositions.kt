@@ -1,6 +1,6 @@
 // RUN_PIPELINE_TILL: FRONTEND
 // EXPLICIT_API_MODE: WARNING
-// DIAGNOSTICS: -UNDOCUMENTED_PUBLIC_API -TOP_LEVEL_API_WITHOUT_JVM_NAME -EXEMPTION_WITHOUT_EXPLANATION -STATEFUL_CLASS_WITHOUT_EQUALS -STATEFUL_CLASS_WITHOUT_HASH_CODE -STATEFUL_CLASS_WITHOUT_TO_STRING -KOTLIN_ONLY_API_WITHOUT_JVM_SYNTHETIC -EXHAUSTIVE_PUBLIC_API -MUTABLE_COLLECTION_PUBLIC_API
+// DIAGNOSTICS: -UNDOCUMENTED_PUBLIC_API -TOP_LEVEL_API_WITHOUT_JVM_NAME -EXEMPTION_WITHOUT_EXPLANATION -STATEFUL_CLASS_WITHOUT_EQUALS -STATEFUL_CLASS_WITHOUT_HASH_CODE -STATEFUL_CLASS_WITHOUT_TO_STRING -KOTLIN_ONLY_API_WITHOUT_JVM_SYNTHETIC -EXHAUSTIVE_PUBLIC_API
 
 // Exemptions on a constructor parameter, an enum entry, and a setter parameter, where no check reads them.
 
@@ -33,7 +33,7 @@ public enum class Mode {
 
 public class Settings {
     <!REDUNDANT_EXEMPTION!>@setparam:IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN)<!>
-    public var items: MutableList<Int> = mutableListOf()
+    public var items: <!MUTABLE_COLLECTION_PUBLIC_API!>MutableList<Int><!> = mutableListOf()
 
     public var exemptItems: @IntentionallyMutableCollection(reason = ExemptionReason.API_DESIGN) MutableList<Int> = mutableListOf()
 

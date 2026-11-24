@@ -53,6 +53,21 @@ test('rejects an inline range that matches no code', () => {
   );
 });
 
+test('rejects a diagnostic annotation of another form', () => {
+  for (const annotation of [
+    '// !diag NOT_A_DIAGNOSTIC',
+    '// !diag(1:2) NOT_A_DIAGNOSTIC',
+    '//!diag[/Thing/] NOT_A_DIAGNOSTIC',
+    'public class Other // !diag[/Other/] NOT_A_DIAGNOSTIC',
+  ]) {
+    assert.throws(
+      () => transform(`${annotation}\npublic class Thing`),
+      /Malformed diagnostic annotation .* use \/\/ !diag\[\/range\/\] NAME/,
+      annotation,
+    );
+  }
+});
+
 test('rejects missing diagnostic parameters', () => {
   assert.throws(
     () => transform('// !diag[/Thing/] DATA_CLASS_PUBLIC_API\npublic data class Thing(public val value: Int)'),

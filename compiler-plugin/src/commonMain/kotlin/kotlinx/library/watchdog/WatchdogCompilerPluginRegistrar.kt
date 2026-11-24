@@ -60,6 +60,8 @@ class WatchdogComponentRegistrar : DevKitComponentRegistrar {
                         configuration[WatchdogConfigurationKeys.SOURCE_SETS_CHECKED_ELSEWHERE, emptySet()],
                     platformChecked =
                         configuration[WatchdogConfigurationKeys.SOURCE_SETS_WITH_PLATFORM_CHECKS, emptySet()],
+                    withoutDependencyCheck =
+                        configuration[WatchdogConfigurationKeys.SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK, emptySet()],
                 ),
             ),
         )

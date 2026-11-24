@@ -344,10 +344,16 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
             }
         }
 
-        // Native compile tasks read the option list at configuration time, before the task graph
-        // is ready. So the set of options is fixed and each value that depends on collection is
-        // lazy. The compiler plugin ignores a blank value.
-        val checkDependencyExposure = extension.publicTypesMustBeTransitiveDependencies.map { it && !collect.get() }
+        // In collection mode, the dependency check doesn't run in a source set that several targets compile, because
+        // the targets can declare its dependencies differently. A metadata compilation gets no dependency options,
+        // because it doesn't find the dependency of a type (https://github.com/Kotlin/Library-API-Watchdog/issues/111).
+        val metadataCompilation = kotlinCompilation.platformType == KotlinPlatformType.common
+        val checkDependencyExposure = extension.publicTypesMustBeTransitiveDependencies.map {
+            it && !(metadataCompilation && collect.get())
+        }
+        val sourceSetsOfSeveralTargets = lazy {
+            if (collect.get()) sourceSetsOfSeveralTargets(kotlinCompilation) else emptyList()
+        }
         val compilesForAndroid = compileDependencies.map { kotlinCompilation.compilesForAndroid(it) }
         // The compiler plugin doesn't have an option for exempt dependencies, so they go into the
         // transitive paths.
@@ -387,6 +393,9 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                 artifactIds(exemptNonTransitiveDependencies),
             )
         }
+        // Native compile tasks read the option list at configuration time, before the task graph
+        // is ready. So the set of options is fixed and each value that depends on collection is
+        // lazy. The compiler plugin ignores a blank value.
         return providers.provider {
             buildList {
                 extension.diagnosticSeverities.forEach { (diagnostic, severity) ->
@@ -475,6 +484,12 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
                         lazy { roles.value.platformChecks.joinToString(":") },
                     ),
                 )
+                add(
+                    SubpluginOption(
+                        "sourceSetsWithoutDependencyCheck",
+                        lazy { sourceSetsOfSeveralTargets.value.joinToString(":") },
+                    ),
+                )
             }
         }
     }
@@ -529,6 +544,16 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
             ?.name
             ?: "implementation"
         return "$declaringConfiguration\t$notation"
+    }
+
+    private fun Project.sourceSetsOfSeveralTargets(kotlinCompilation: KotlinCompilation<*>): List<String> {
+        val kotlin = extensions.findByName("kotlin") as? KotlinTargetsContainer ?: return emptyList()
+        val platformTargets = kotlin.targets.filter { it.platformType != KotlinPlatformType.common }
+        return kotlinCompilation.allKotlinSourceSets.map { it.name }.filter { sourceSet ->
+            platformTargets.count { target ->
+                target.compilations.any { compilation -> compilation.allKotlinSourceSets.any { it.name == sourceSet } }
+            } > 1
+        }
     }
 
     private fun Project.sourceSetRoles(kotlinCompilation: KotlinCompilation<*>): SourceSetRoles {

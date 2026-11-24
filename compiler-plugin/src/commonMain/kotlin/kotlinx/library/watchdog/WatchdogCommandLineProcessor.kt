@@ -71,6 +71,9 @@ object WatchdogConfigurationKeys {
 
     val SOURCE_SETS_WITH_PLATFORM_CHECKS: CompilerConfigurationKey<Set<String>> =
         CompilerConfigurationKey.create("watchdog source sets with platform checks")
+
+    val SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK: CompilerConfigurationKey<Set<String>> =
+        CompilerConfigurationKey.create("watchdog source sets without dependency check")
 }
 
 @Suppress("unused") // Instantiated reflectively by the dev-kit entry point.
@@ -94,6 +97,7 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
             DEPENDENCY_DECLARATIONS_OPTION,
             SOURCE_SETS_CHECKED_ELSEWHERE_OPTION,
             SOURCE_SETS_WITH_PLATFORM_CHECKS_OPTION,
+            SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK_OPTION,
         )
 
     companion object {
@@ -261,6 +265,13 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
                     "REDUNDANT_EXEMPTION verdicts that need the actual declarations.",
         )
 
+        val SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK_OPTION: CliOption = sourceSetsOption(
+            optionName = "sourceSetsWithoutDependencyCheck",
+            description = "The parent source sets that several targets compile. In these source sets, " +
+                    "PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY doesn't run, and REDUNDANT_EXEMPTION doesn't " +
+                    "report its exemptions.",
+        )
+
         private fun sourceSetsOption(optionName: String, description: String): CliOption = CliOption(
             optionName = optionName,
             // A comma splits the `-P` argument of the JS compiler.
@@ -345,6 +356,9 @@ internal class WatchdogCommandLineProcessor : DevKitCLP {
             }
             SOURCE_SETS_WITH_PLATFORM_CHECKS_OPTION.optionName -> {
                 configuration.put(WatchdogConfigurationKeys.SOURCE_SETS_WITH_PLATFORM_CHECKS, parseSourceSets(value))
+            }
+            SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK_OPTION.optionName -> {
+                configuration.put(WatchdogConfigurationKeys.SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK, parseSourceSets(value))
             }
             else -> error("Unexpected config option: '${option.optionName}'")
         }

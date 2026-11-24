@@ -15,6 +15,7 @@ internal enum class CheckScope {
 internal class SourceSetOwnership(
     private val checkedElsewhere: Set<String>,
     private val platformChecked: Set<String>,
+    private val withoutDependencyCheck: Set<String> = emptySet(),
 ) {
     fun scopeOf(module: FirModuleData): CheckScope {
         if (checkedElsewhere.isEmpty() || !module.isCommon) return CheckScope.ALL
@@ -25,6 +26,8 @@ internal class SourceSetOwnership(
             else -> CheckScope.NONE
         }
     }
+
+    fun runsDependencyCheck(module: FirModuleData): Boolean = !module.isCommon || module.sourceSetName !in withoutDependencyCheck
 
     private val FirModuleData.sourceSetName: String get() = name.asString().removeSurrounding("<", ">")
 

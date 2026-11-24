@@ -1,0 +1,79 @@
+Module: lib
+FILE: models.kt
+    package com.example.models
+
+    @R|kotlinx/library/watchdog/IntentionallyOpen|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.API_DESIGN|) public open class Model : R|kotlin/Any| {
+        public constructor(): R|com/example/models/Model| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+FILE: shared.kt
+    package com.example.shared
+
+    public final class Shared : R|kotlin/Any| {
+        public constructor(): R|com/example/shared/Shared| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+Module: main
+FILE: exposure.kt
+    package consumer
+
+    public final val leakedProperty: R|com/example/models/Model| = R|com/example/models/Model.Model|()
+        public get(): R|com/example/models/Model|
+    public final val R|com/example/models/Model|.leakedReceiver: R|kotlin/String|
+        public get(): R|kotlin/String| {
+            ^ String()
+        }
+    public final fun leakedReturn(): R|com/example/models/Model| {
+        ^leakedReturn R|com/example/models/Model.Model|()
+    }
+    public final fun leakedParameter(value: R|com/example/models/Model|): R|kotlin/Unit| {
+    }
+    public final fun leakedNested(): R|kotlin/collections/List<com/example/models/Model>| {
+        ^leakedNested R|kotlin/collections/emptyList|<R|com/example/models/Model|>()
+    }
+    public final fun <T : R|com/example/models/Model|> leakedFunctionBound(value: R|T|): R|kotlin/Unit| {
+    }
+    public final class LeakedConstructor : R|kotlin/Any| {
+        public constructor(value: R|com/example/models/Model|): R|consumer/LeakedConstructor| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class LeakedConstructorProperty : R|kotlin/Any| {
+        public constructor(value: R|com/example/models/Model|): R|consumer/LeakedConstructorProperty| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val value: R|com/example/models/Model| = R|<local>/value|
+            public get(): R|com/example/models/Model|
+
+    }
+    public final class LeakedSupertype : R|com/example/models/Model| {
+        public constructor(): R|consumer/LeakedSupertype| {
+            super<R|com/example/models/Model|>()
+        }
+
+        public final fun member(): R|com/example/models/Model| {
+            ^member R|com/example/models/Model.Model|()
+        }
+
+    }
+    public final class LeakedClassBound<T : R|com/example/models/Model|> : R|kotlin/Any| {
+        public constructor<T : R|com/example/models/Model|>(): R|consumer/LeakedClassBound<T>| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final typealias LeakedTypeAlias = R|com/example/models/Model|
+    public final fun transitive(shared: R|com/example/shared/Shared|): R|kotlin/Unit| {
+    }
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.FOR_BACKWARDS_COMPATIBILITY|) public final fun exempted(): R|com/example/models/Model| {
+        ^exempted R|com/example/models/Model.Model|()
+    }
+    @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|(reason = Q|kotlinx/library/watchdog/ExemptionReason|.R|kotlinx/library/watchdog/ExemptionReason.FOR_BACKWARDS_COMPATIBILITY|) public final fun redundant(): R|com/example/shared/Shared| {
+        ^redundant R|com/example/shared/Shared.Shared|()
+    }

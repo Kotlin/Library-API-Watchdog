@@ -58,6 +58,12 @@ internal class ExpectActualCopies(
         }
     }
 
+    fun expectOf(actualPath: String, actual: KtDeclaration, pairs: List<RecordedDiagnostic>): KtDeclaration? {
+        val pair = pairs.firstOrNull { it.filePath == actualPath && it.startOffset == actual.textRange.startOffset } ?: return null
+        val expectSide = pair.expectSide() ?: return null
+        return parsed(expectSide.path)?.declarationAt(expectSide.start, expectSide.end)
+    }
+
     private fun RecordedDiagnostic.expectSide(): ExpectSide? {
         val (path, start, end) = messageParameters.takeIf { it.size == 3 } ?: return null
         return ExpectSide(path, start.toIntOrNull() ?: return null, end.toIntOrNull() ?: return null)
@@ -98,7 +104,7 @@ internal class ExpectActualCopies(
         } else {
             declaration.anchor()
         }
-        return RecordedDiagnostic(diagnostic.name, actual.filePath, offset, offset, diagnostic.messageParameters)
+        return RecordedDiagnostic(diagnostic.name, actual.filePath, offset, offset, diagnostic.messageParameters, isExpectCopy = true)
     }
 
     private fun parsed(path: String): KtFile? = files.getOrPut(path) {

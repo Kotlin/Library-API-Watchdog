@@ -87,6 +87,9 @@ public fun loadModel(): ExternalModel = TODO()
 
 On a class, the annotation covers every nested declaration.
 
+The [`exemptExistingApi`](../../existing-libs.md) task adds the annotation with
+`ExemptionReason.FOR_BACKWARDS_COMPATIBILITY` to the reported declaration.
+
 ## Configuration
 
 `publicTypesMustBeTransitiveDependencies` is `true` by default. The check can't report warnings. To

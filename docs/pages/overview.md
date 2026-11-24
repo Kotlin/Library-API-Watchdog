@@ -14,7 +14,8 @@ declarations that are hard to evolve: shapes that can't change later without a b
 the library's users.
 
 Every check is on by default and reports a compilation error, except
-[Undocumented public API](./checks/undocumented-public-api.md), which reports a warning.
+[Undocumented public API](./checks/undocumented-public-api.md) and
+[Redundant exemptions](./checks/special/redundant-exemption.md), which report a warning.
 [Configuration](./configuration.md) changes the severity of a check or turns it off.
 [Exemptions and internal API](./exemptions.md) exempts a declaration.
 
@@ -150,8 +151,8 @@ The [Java interop checks](./checks/java-interop/java-interop.md) run only in JVM
 ### Meaningful exemptions
 
 - [Exemptions without explanation](./checks/special/exemption-without-explanation.md):
-  `@Intentionally*` annotations with the default `OTHER` reason and a blank description. They
-  don't explain anything.
+  `@Intentionally*` annotations with a blank description and a reason that needs one. They don't
+  explain anything.
 - [Redundant exemptions](./checks/special/redundant-exemption.md): `@Intentionally*` annotations
   on declarations their check doesn't report.
 

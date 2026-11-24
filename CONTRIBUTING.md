@@ -108,7 +108,7 @@ each Maven Central module with a list in the `artifacts` directory of its build:
 `plugin-annotations`. `./gradlew checkArtifacts` fails when a publication doesn't match its list. The
 [artifact lists](.github/workflows/artifact-lists.yml) workflow runs the task.
 
-After a change of a publication, run `./gradlew dumpArtifacts` and commit the lists. A change of `kotlinCliMin` in the
+After a change of a publication, run `./gradlew dumpArtifacts` and commit the lists. A change of `kotlin` in the
 version catalog is such a change, because the lists of the compiler plugin and the fixer have that version in an
 artifact name, for example `-k240`. `dumpArtifacts` and `checkArtifacts` fail in the same Gradle invocation, so run
 them separately.
@@ -133,7 +133,7 @@ a tag, and the code samples show that version. The Post-publish workflow starts 
 
 ## Build scans and cache
 
-The root build and its included builds use [JetBrains Develocity](https://ge.jetbrains.com/) for build scans and the remote build cache.
+The root build and its included builds use [JetBrains Develocity](https://develocity.jetbrains.com/) for build scans and the remote build cache.
 CI publishes scans for authenticated builds. Local scans are disabled by default.
 
 To enable local scans, copy `local.properties.template` to `local.properties` and set `develocity.buildScan.enabled=true`.
@@ -150,7 +150,7 @@ To authenticate locally, run:
 Gradle stores the key in `~/.gradle/develocity/keys.properties`.
 The same key authenticates scan uploads and remote cache access.
 
-For GitHub Actions, add the repository secret `DEVELOCITY_ACCESS_KEY` with the value `ge.jetbrains.com=<access-key>`.
+For GitHub Actions, add the repository secret `DEVELOCITY_ACCESS_KEY` with the value `develocity.jetbrains.com=<access-key>`.
 The key needs permission to publish scans and read and write the build cache.
 
 Local builds and pull requests only read the remote cache.

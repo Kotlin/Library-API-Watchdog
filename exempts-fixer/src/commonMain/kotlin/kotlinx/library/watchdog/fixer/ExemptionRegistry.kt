@@ -29,6 +29,7 @@ internal class ExemptionFix(
     val annotationShortName: String,
     override val targetStrategy: TargetStrategy,
     val hasReasonParameter: Boolean = true,
+    val coversNestedDeclarations: Boolean = false,
 ) : Fix {
     override val id: String get() = annotationShortName
 }
@@ -78,6 +79,7 @@ internal object ExemptionRegistry {
         WatchdogChecks.COMPANION_PROPERTY_WITHOUT_STATIC_ACCESS.name to fixable("IntentionallyNonStaticCompanionApi", TargetStrategy.REPORTED_DECLARATION),
         WatchdogChecks.TOP_LEVEL_API_WITHOUT_JVM_NAME.name to fixable("IntentionallyDefaultFacadeName", TargetStrategy.CONTAINING_FILE),
         WatchdogChecks.DEFAULT_PARAMETERS_WITHOUT_JVM_OVERLOADS.name to fixable("IntentionallyWithoutJvmOverloads", TargetStrategy.ENCLOSING_FUNCTION_OR_CONSTRUCTOR),
+        WatchdogChecks.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY.name to fixable("IntentionallyNonTransitiveDependency", TargetStrategy.REPORTED_DECLARATION, coversNestedDeclarations = true),
 
         WatchdogChecks.DSL_MARKER_NOOP_TARGET.name to fixable("IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility", TargetStrategy.ENCLOSING_ANNOTATION_CLASS, hasReasonParameter = false),
         WatchdogChecks.DSL_MARKER_WITHOUT_EXPLICIT_TARGETS.name to fixable("IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility", TargetStrategy.ENCLOSING_ANNOTATION_CLASS, hasReasonParameter = false),
@@ -88,7 +90,6 @@ internal object ExemptionRegistry {
         WatchdogChecks.EXEMPTION_WITHOUT_EXPLANATION.name to FixResolution.Unfixable("The existing exemption needs a reason or description only its author can write"),
         WatchdogChecks.REDUNDANT_EXEMPTION.name to FixResolution.Fixable(RemoveAnnotationFix),
         WatchdogChecks.DSL_MARKER_NOOP_TYPE_POSITION.name to FixResolution.Unfixable("No exemption annotation exists. Move the DSL marker to an effective position or remove it"),
-        WatchdogChecks.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY.name to FixResolution.Unfixable("Declare the dependency with `api`, or exempt it on the `apiWatchdogExemptNonTransitive` configuration"),
     )
 
     /** A declaration that collects every part of a group gets the combined annotation instead. */
@@ -116,7 +117,8 @@ internal object ExemptionRegistry {
         annotationShortName: String,
         targetStrategy: TargetStrategy,
         hasReasonParameter: Boolean = true,
+        coversNestedDeclarations: Boolean = false,
     ): FixResolution = FixResolution.Fixable(
-        ExemptionFix(annotationShortName, targetStrategy, hasReasonParameter)
+        ExemptionFix(annotationShortName, targetStrategy, hasReasonParameter, coversNestedDeclarations)
     )
 }

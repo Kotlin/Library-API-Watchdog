@@ -2,10 +2,12 @@ package kotlinx.library.watchdog.conventions
 
 import groovy.json.JsonSlurper
 import java.io.File
+import javax.inject.Inject
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -101,12 +103,16 @@ abstract class DiagnosticsJsonGeneratorTask : DefaultTask() {
     @get:Internal
     protected abstract val fileName: String
 
+    @get:Inject
+    protected abstract val fileSystemOperations: FileSystemOperations
+
     protected abstract fun StringBuilder.appendDeclarations(diagnostics: DiagnosticsJson)
 
     @TaskAction
     fun generate() {
         val diagnostics = DiagnosticsJson.read(diagnostics.get().asFile)
         val packageName = packageName.get()
+        fileSystemOperations.delete { delete(outputDirectory) }
         val outputFile = outputDirectory.get().asFile
             .resolve(packageName.replace('.', '/'))
             .resolve(fileName)

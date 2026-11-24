@@ -13,6 +13,7 @@ import {diagnostics} from './diagnostics.mjs';
 
 const DIAGNOSTIC_ANNOTATION_COMMENT =
   /^\s*\/\/ !diag\[\/(.+)\/([a-z]*)\]\s+(.+?)\s*$/;
+const DIAGNOSTIC_ANNOTATION_START = /\/\/\s*!diag(?![\w-])/;
 const LEGACY_DIAGNOSTIC_COMMENT =
   /^\s*\/\/ ([A-Z][A-Z0-9_]*(?:\s*,\s*[A-Z][A-Z0-9_]*)*)\s*$/;
 const PARAMETER_REFERENCE = /^\$([A-Za-z][A-Za-z0-9]*)(?:\(([^()]*)\))?$/;
@@ -45,6 +46,12 @@ function validateDiagnosticAnnotations(value, file) {
       validateReport(query, file);
       validateRange(pattern, flags, renderedLines, renderedLineIndex, file);
       continue;
+    }
+    if (DIAGNOSTIC_ANNOTATION_START.test(line)) {
+      throw new Error(
+        `Malformed diagnostic annotation '${line.trim()}' in ${file.path}: ` +
+          `use // !${DIAGNOSTIC_ANNOTATION}[/range/] NAME.`,
+      );
     }
 
     const legacy = line.match(LEGACY_DIAGNOSTIC_COMMENT);

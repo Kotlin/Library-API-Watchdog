@@ -148,11 +148,11 @@ FILE: main.kt
 
     }
     public final class PrivateModel : R|kotlin/Any| {
-        public constructor(@R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|() model: R|com/example/models/Model|): R|foo/bar/PrivateModel| {
+        public constructor(model: R|com/example/models/Model|): R|foo/bar/PrivateModel| {
             super<R|kotlin/Any|>()
         }
 
-        @R|kotlinx/library/watchdog/IntentionallyNonTransitiveDependency|() private final val model: R|com/example/models/Model| = R|<local>/model|
+        private final val model: R|com/example/models/Model| = R|<local>/model|
             private get(): R|com/example/models/Model|
 
     }

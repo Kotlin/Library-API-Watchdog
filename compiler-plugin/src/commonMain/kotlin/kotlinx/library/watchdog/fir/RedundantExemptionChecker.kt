@@ -337,7 +337,8 @@ internal class EnclosingExemptionRedundancyChecker(
  *
  * A copy of the exemption on an `actual` ([expectOrigins]) is never reported while its original exists.
  * [recorder] gets the copies of a redundant original as [WatchdogDiagnosticsRecorder.REDUNDANT_COPY]
- * lines, so the fixer removes them with the original.
+ * lines, so the fixer removes them with the original. [unjudged] gives the exemptions of a module that
+ * this checker doesn't judge, because their check doesn't run in the module.
  */
 internal class ExpectExemptionRedundancyChecker(
     basicCheckers: Collection<FirBasicDeclarationChecker>,
@@ -350,6 +351,7 @@ internal class ExpectExemptionRedundancyChecker(
     private val recorder: WatchdogDiagnosticsRecorder? = null,
     private val scopeOf: (FirModuleData) -> CheckScope = { CheckScope.ALL },
     private val platformOnly: (ExemptingChecker) -> Boolean = { false },
+    private val unjudged: (FirModuleData) -> Set<ClassId> = { emptySet() },
 ) : FirBasicDeclarationChecker(MppCheckerKind.Platform) {
     private val probes: List<EnclosingExemptionProbes.Probe> = buildList {
         fun <D : FirDeclaration> register(checkers: Collection<FirDeclarationChecker<D>>, accepts: (FirDeclaration) -> Boolean) {
@@ -372,8 +374,10 @@ internal class ExpectExemptionRedundancyChecker(
         val scope = scopeOf(declaration.moduleData)
         // The `actual` declarations differ for each platform, so each compilation records its own verdicts.
         if (scope == CheckScope.NONE && recorder == null) return
-        val candidates = declaration.exemptionCandidates(allExemptions)
+        val unjudgedHere = unjudged(declaration.moduleData)
+        val candidates = declaration.exemptionCandidates(allExemptions - unjudgedHere)
         val classExemptions = (declaration as? FirRegularClass)?.let { enclosing.classExemptions(it) }.orEmpty()
+            .filter { it.classId !in unjudgedHere }
         if (candidates.isEmpty() && classExemptions.isEmpty()) return
 
         val output = if (scope == CheckScope.NONE) recordingDiagnosticReporter(reporter, recorder!!, print = false) else reporter

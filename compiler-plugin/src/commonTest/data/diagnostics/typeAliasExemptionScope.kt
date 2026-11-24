@@ -1,12 +1,11 @@
 // RUN_PIPELINE_TILL: FRONTEND
 // EXPLICIT_API_MODE: WARNING
-// DIAGNOSTICS: -UNDOCUMENTED_PUBLIC_API -TOP_LEVEL_API_WITHOUT_JVM_NAME -OPEN_API_WITHOUT_SUBCLASS_OPT_IN -PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY
+// DIAGNOSTICS: -UNDOCUMENTED_PUBLIC_API -TOP_LEVEL_API_WITHOUT_JVM_NAME -OPEN_API_WITHOUT_SUBCLASS_OPT_IN
 // COMPILE_DEPENDENCY_PATHS: ../messages/nonTransitiveDependency.deps/models ../messages/nonTransitiveDependency.deps/shared
 // TRANSITIVE_DEPENDENCY_PATHS: ../messages/nonTransitiveDependency.deps/shared
 // DEPENDENCY_DECLARATIONS: ../messages/nonTransitiveDependency.deps/models implementation "com.example:models:1.0"
 
 // A type-usage exemption inside a type alias doesn't exempt a use of the type alias.
-// The fixer test can't resolve dependencies, so this file hides `PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY`.
 // The exemptions on the uses of `Models` show that each use needs its own exemption.
 
 // MODULE: lib
