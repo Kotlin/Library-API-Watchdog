@@ -1,13 +1,12 @@
 package kotlinx.library.watchdog
 
 import java.io.File
-import java.net.URI
 
 /**
  * Writes the diagnostics without an exemption as a
  * [SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) log. A location
  * is relative to the root directory of the build, so a code scanning service resolves it against
- * the repository checkout.
+ * the repository checkout. The location of a source on another drive is a `file` URI.
  */
 @InternalWatchdogApi
 public object ApiWatchdogSarifReport {
@@ -26,7 +25,7 @@ public object ApiWatchdogSarifReport {
         }
         val results = entries.map { (report, entry) ->
             val (path, line) = entry.location.splitLocation()
-            val uri = listOf(report.projectDirectory, path).filter(String::isNotEmpty).joinToString("/")
+            val uri = normalizedSourcePath(report.projectDirectory, path).toUri()
             linkedMapOf<String, Any?>(
                 "ruleId" to entry.diagnostic,
                 "ruleIndex" to ruleIds.indexOf(entry.diagnostic),
@@ -36,8 +35,8 @@ public object ApiWatchdogSarifReport {
                     mapOf(
                         "physicalLocation" to linkedMapOf(
                             "artifactLocation" to linkedMapOf(
-                                "uri" to uri.toUriPath(),
-                                "uriBaseId" to SOURCE_ROOT,
+                                "uri" to uri,
+                                "uriBaseId" to SOURCE_ROOT.takeUnless { uri.startsWith(FILE_SCHEME) },
                             ),
                             "region" to line?.let { mapOf("startLine" to it) },
                         ),
@@ -70,6 +69,8 @@ public object ApiWatchdogSarifReport {
         "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json"
     private const val TOOL_NAME = "Library API Watchdog"
     private const val SOURCE_ROOT = "%SRCROOT%"
+    private const val FILE_SCHEME = "file:"
+    private val WINDOWS_DRIVE = Regex("^[A-Za-z]:/")
 
     private fun NotAppliedExemptionReportEntry.message(): String = listOfNotNull(
         (WatchdogCheckDescriptions.checks[diagnostic]?.title ?: diagnostic) + ".",
@@ -77,12 +78,15 @@ public object ApiWatchdogSarifReport {
         reason.ifEmpty { null },
     ).joinToString(" ")
 
-    private fun String.splitLocation(): Pair<String, Int?> {
-        val line = substringAfterLast(':', "").toIntOrNull()
-        return if (line == null) this to null else substringBeforeLast(':') to line
+    private fun String.toUri(): String {
+        val path = split('/').joinToString("/") { it.percentEncoded() }
+        return when {
+            startsWith("//") -> FILE_SCHEME + path
+            startsWith('/') -> "$FILE_SCHEME//$path"
+            WINDOWS_DRIVE.containsMatchIn(this) -> "$FILE_SCHEME///" + path.replaceFirst("%3A", ":")
+            else -> path
+        }
     }
-
-    private fun String.toUriPath(): String = URI(null, null, replace(File.separatorChar, '/'), null).rawPath
 
     private fun StringBuilder.appendJson(value: Any?, indent: Int) {
         when (value) {

@@ -1,6 +1,7 @@
 package kotlinx.library.watchdog
 
 import java.io.File
+import java.net.URLEncoder
 import org.gradle.api.attributes.Attribute
 
 @InternalWatchdogApi
@@ -78,6 +79,33 @@ public data class ApiWatchdogProjectReport(
     public val notApplied: List<NotAppliedExemptionReportEntry>,
     public val sourceSnippets: Map<String, ApiWatchdogSourceSnippet> = emptyMap(),
 )
+
+internal fun String.percentEncoded(): String = URLEncoder.encode(this, Charsets.UTF_8).replace("+", "%20")
+
+internal fun String.splitLocation(): Pair<String, Int?> {
+    val line = substringAfterLast(':', "").toIntOrNull() ?: return this to null
+    return substringBeforeLast(':') to line.takeIf { it > 0 }
+}
+
+private val PATH_ROOT = Regex("^(//[^/]+/|[A-Za-z]:/|/)")
+
+internal fun normalizedSourcePath(directory: String, sourcePath: String): String {
+    val source = sourcePath.replace('\\', '/')
+    val path = if (PATH_ROOT.containsMatchIn(source)) source else {
+        listOf(directory.replace('\\', '/'), source).filter(String::isNotEmpty).joinToString("/")
+    }
+    val root = PATH_ROOT.find(path)?.value.orEmpty()
+    val segments = ArrayDeque<String>()
+    for (segment in path.removePrefix(root).split('/')) {
+        when {
+            segment.isEmpty() || segment == "." -> {}
+            segment != ".." -> segments.addLast(segment)
+            segments.isNotEmpty() && segments.last() != ".." -> segments.removeLast()
+            root.isEmpty() -> segments.addLast(segment)
+        }
+    }
+    return root + segments.joinToString("/")
+}
 
 @InternalWatchdogApi
 public object ApiWatchdogReportData {

@@ -120,6 +120,50 @@ class ApiWatchdogHtmlReportScriptTest {
     }
 
     @Test
+    fun `the page applies the view and the filter that the browser restores before the script runs`() {
+        val restored = { html: String ->
+            listOf("directory", "DATA_CLASS_PUBLIC_API").fold(html) { text, value ->
+                val option = "<option value=\"$value\">"
+                check(option in text) { "The fixture has no $option." }
+                text.replaceFirst(option, "<option value=\"$value\" selected>")
+            }
+        }
+        openReport(edit = restored) { assertRestoredControls() }
+    }
+
+    @Test
+    fun `the page applies the view and the filter that the browser restores before pageshow`() = openReport {
+        js(
+            """document.getElementById("view-mode").value = "directory";
+                document.getElementById("diagnostic-filter").value = "DATA_CLASS_PUBLIC_API";
+                window.dispatchEvent(new PageTransitionEvent("pageshow", {persisted: true}));""",
+        )
+        assertRestoredControls()
+    }
+
+    @Test
+    fun `the buttons open the IDE that the browser restores in the selector`() = openReport("ide-select") {
+        js("localStorage.clear()")
+        reload()
+        js(
+            """document.getElementById("ide-target").value = "studio";
+                window.dispatchEvent(new PageTransitionEvent("pageshow", {persisted: true}));""",
+        )
+        assertTrue(ideLinks().all { it.startsWith("jetbrains://studio/") }, ideLinks().toString())
+    }
+
+    private fun ReportPage.assertRestoredControls() {
+        assertEquals("directory", value("view-mode"))
+        assertEquals("DATA_CLASS_PUBLIC_API", value("diagnostic-filter"))
+        assertEquals(0, count(".directory-tree[hidden]"))
+        assertEquals(0, count(".diagnostic-groups:not([hidden])"))
+        assertEquals(2, visibleFindings().size)
+        assertTreeCounts()
+        assertEquals("Showing 2 of 6 findings.", property("#filter-summary", "textContent"))
+        assertEquals(false, property("#reset-filter", "disabled"))
+    }
+
+    @Test
     fun `diagnostic filters match individual checks in combined applied annotations`() = openReport {
         change("diagnostic-filter", "STATEFUL_CLASS_WITHOUT_HASH_CODE")
         val visible = visibleFindings()
@@ -513,9 +557,14 @@ class ApiWatchdogHtmlReportScriptTest {
         assertEquals(shown - pre, js("return harness.resized"))
     }
 
-    private fun openReport(name: String = "mixed", lazyHighlighting: Boolean = false, test: ReportPage.() -> Unit) {
+    private fun openReport(
+        name: String = "mixed",
+        lazyHighlighting: Boolean = false,
+        edit: (String) -> String = { it },
+        test: ReportPage.() -> Unit,
+    ) {
         val charset = "<meta charset=\"utf-8\">"
-        val html = File(fixtures, "$name.html").readText()
+        val html = edit(File(fixtures, "$name.html").readText())
         check(charset in html) { "The $name fixture has no $charset." }
         // The charset declaration must stay in the first 1024 bytes, so the harness goes after it.
         val page = File(fixtures, "$name-${if (lazyHighlighting) "lazy" else "eager"}.html")

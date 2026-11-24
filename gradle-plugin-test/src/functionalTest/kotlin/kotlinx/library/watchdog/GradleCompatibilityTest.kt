@@ -120,6 +120,7 @@ class GradleCompatibilityTest {
         result.assertTaskOutcome(":dataApi:generateApiWatchdogReport", SUCCESS)
         result.assertTaskOutcome(":tools:generateApiWatchdogReport", null)
         result.assertTaskOutcome(":internalApi:generateApiWatchdogReport", null)
+        result.assertOutputLacks("doesn't match a project of an included build")
         val html = project.file("build/reports/api-watchdog/aggregate-report.html").readText()
         assertContains(html, "Aggregate report for 2 projects")
         assertContains(html, ":openApi")
