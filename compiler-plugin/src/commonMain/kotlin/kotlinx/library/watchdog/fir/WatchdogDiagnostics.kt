@@ -168,7 +168,7 @@ object WatchdogDiagnostics : KtDiagnosticsContainer() {
      * [PUBLIC_TYPE_WITH_INTERNAL_API] as a warning, under the same name, for the collection mode of
      * `exemptExistingApi`. The compilation then passes and the fixer reads the recorded diagnostic.
      */
-    val PUBLIC_TYPE_WITH_INTERNAL_API_COLLECTED: KtDiagnosticFactory4<String, Name, String, String> = KtDiagnosticFactory4(
+    val PUBLIC_TYPE_WITH_INTERNAL_API_COLLECTED: KtDiagnosticFactory4<String, Name, String, String> = diagnosticFactory4(
         PUBLIC_TYPE_WITH_INTERNAL_API.name,
         Severity.WARNING,
         SourceElementPositioningStrategies.DEFAULT,
@@ -206,7 +206,7 @@ object WatchdogDiagnostics : KtDiagnosticsContainer() {
         positioningStrategy: AbstractSourceElementPositioningStrategy = SourceElementPositioningStrategies.DEFAULT,
         exemptionCoversEnclosingClass: Boolean = false,
     ) = configurableDiagnostic(exemptionCoversEnclosingClass) { name, severity ->
-        KtDiagnosticFactory0(name, severity, positioningStrategy, psiType, getRendererFactory())
+        diagnosticFactory0(name, severity, positioningStrategy, psiType, getRendererFactory())
     }
 
     private fun <A> configurable1(
@@ -214,7 +214,7 @@ object WatchdogDiagnostics : KtDiagnosticsContainer() {
         positioningStrategy: AbstractSourceElementPositioningStrategy = SourceElementPositioningStrategies.DEFAULT,
         exemptionCoversEnclosingClass: Boolean = false,
     ) = configurableDiagnostic(exemptionCoversEnclosingClass) { name, severity ->
-        KtDiagnosticFactory1<A>(name, severity, positioningStrategy, psiType, getRendererFactory())
+        diagnosticFactory1<A>(name, severity, positioningStrategy, psiType, getRendererFactory())
     }
 
     private fun <A, B> configurable2(
@@ -222,7 +222,7 @@ object WatchdogDiagnostics : KtDiagnosticsContainer() {
         positioningStrategy: AbstractSourceElementPositioningStrategy = SourceElementPositioningStrategies.DEFAULT,
         exemptionCoversEnclosingClass: Boolean = false,
     ) = configurableDiagnostic(exemptionCoversEnclosingClass) { name, severity ->
-        KtDiagnosticFactory2<A, B>(name, severity, positioningStrategy, psiType, getRendererFactory())
+        diagnosticFactory2<A, B>(name, severity, positioningStrategy, psiType, getRendererFactory())
     }
 
     private fun <A, B, C> configurable3(
@@ -230,7 +230,7 @@ object WatchdogDiagnostics : KtDiagnosticsContainer() {
         positioningStrategy: AbstractSourceElementPositioningStrategy = SourceElementPositioningStrategies.DEFAULT,
         exemptionCoversEnclosingClass: Boolean = false,
     ) = configurableDiagnostic(exemptionCoversEnclosingClass) { name, severity ->
-        KtDiagnosticFactory3<A, B, C>(name, severity, positioningStrategy, psiType, getRendererFactory())
+        diagnosticFactory3<A, B, C>(name, severity, positioningStrategy, psiType, getRendererFactory())
     }
 
     private fun <A, B, C, D> configurable4(
@@ -238,7 +238,7 @@ object WatchdogDiagnostics : KtDiagnosticsContainer() {
         positioningStrategy: AbstractSourceElementPositioningStrategy = SourceElementPositioningStrategies.DEFAULT,
         exemptionCoversEnclosingClass: Boolean = false,
     ) = configurableDiagnostic(exemptionCoversEnclosingClass) { name, severity ->
-        KtDiagnosticFactory4<A, B, C, D>(name, severity, positioningStrategy, psiType, getRendererFactory())
+        diagnosticFactory4<A, B, C, D>(name, severity, positioningStrategy, psiType, getRendererFactory())
     }
 }
 

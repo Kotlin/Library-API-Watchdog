@@ -1,8 +1,17 @@
 package kotlinx.library.watchdog.fir
 
 import java.nio.file.Path
+import kotlin.reflect.KClass
 import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.descriptors.SourceElement
+import org.jetbrains.kotlin.diagnostics.AbstractSourceElementPositioningStrategy
+import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactory0
+import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactory1
+import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactory2
+import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactory3
+import org.jetbrains.kotlin.diagnostics.KtDiagnosticFactory4
+import org.jetbrains.kotlin.diagnostics.Severity
+import org.jetbrains.kotlin.diagnostics.rendering.BaseDiagnosticRendererFactory
 import org.jetbrains.kotlin.fir.SessionHolder
 import org.jetbrains.kotlin.fir.declarations.FirClassLikeDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirProperty
@@ -35,3 +44,44 @@ internal expect fun KtSourceElement.childToken(token: SourceToken): KtSourceElem
 
 /** `renderReadable` shows a function type as `Function1<String, Boolean>` before Kotlin 2.3.20. */
 internal expect fun ConeKotlinType.renderReadableCompat(): String
+
+// The constructor of a diagnostic factory has the `psiType` parameter before Kotlin 2.5.20-dev-5899.
+internal expect fun diagnosticFactory0(
+    name: String,
+    severity: Severity,
+    positioningStrategy: AbstractSourceElementPositioningStrategy,
+    psiType: KClass<*>,
+    rendererFactory: BaseDiagnosticRendererFactory,
+): KtDiagnosticFactory0
+
+internal expect fun <A> diagnosticFactory1(
+    name: String,
+    severity: Severity,
+    positioningStrategy: AbstractSourceElementPositioningStrategy,
+    psiType: KClass<*>,
+    rendererFactory: BaseDiagnosticRendererFactory,
+): KtDiagnosticFactory1<A>
+
+internal expect fun <A, B> diagnosticFactory2(
+    name: String,
+    severity: Severity,
+    positioningStrategy: AbstractSourceElementPositioningStrategy,
+    psiType: KClass<*>,
+    rendererFactory: BaseDiagnosticRendererFactory,
+): KtDiagnosticFactory2<A, B>
+
+internal expect fun <A, B, C> diagnosticFactory3(
+    name: String,
+    severity: Severity,
+    positioningStrategy: AbstractSourceElementPositioningStrategy,
+    psiType: KClass<*>,
+    rendererFactory: BaseDiagnosticRendererFactory,
+): KtDiagnosticFactory3<A, B, C>
+
+internal expect fun <A, B, C, D> diagnosticFactory4(
+    name: String,
+    severity: Severity,
+    positioningStrategy: AbstractSourceElementPositioningStrategy,
+    psiType: KClass<*>,
+    rendererFactory: BaseDiagnosticRendererFactory,
+): KtDiagnosticFactory4<A, B, C, D>

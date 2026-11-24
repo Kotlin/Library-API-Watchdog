@@ -526,7 +526,7 @@ FILE: inlineFunctionShapes.kt
         ^nestedCalls R|foo/bar/impl|(R|foo/bar/impl|(R|foo/bar/impl|(Int(1))))
     }
     public final inline fun constant(): R|kotlin/Int| {
-        ^constant Q|kotlin/Int|.R|kotlin/Int.Companion.MAX_VALUE|
+        ^constant Q|kotlin/Int(.<companion>)|.R|kotlin/Int.Companion.MAX_VALUE|
     }
     public final inline fun qualifier(): R|kotlin/Any| {
         ^qualifier Q|foo/bar/Registry|
