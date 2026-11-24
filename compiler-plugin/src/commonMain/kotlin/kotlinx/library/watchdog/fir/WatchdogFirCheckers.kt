@@ -119,8 +119,8 @@ class WatchdogFirCheckers internal constructor(
                 .takeIf { allChecks && !exemptingExistingApi },
             internalApiTypeExposure
                 .takeIf { allChecks && publicTypeWithInternalApiEnabled },
-            dependencyExposure?.let { NonTransitiveDependencyChecker(session, it) }
-                ?.takeIf { allChecks && !exemptingExistingApi },
+            dependencyExposure?.let { NonTransitiveDependencyChecker(session, it, collecting = exemptingExistingApi) }
+                ?.takeIf { allChecks && sourceSetOwnership.runsDependencyCheck(session.moduleData) },
         )
 
         private val functions = partition<FirFunctionChecker>(
@@ -214,6 +214,13 @@ class WatchdogFirCheckers internal constructor(
                 recorder = recorder,
                 scopeOf = sourceSetOwnership::scopeOf,
                 platformOnly = ::isJvmOnly,
+                unjudged = { module ->
+                    if (sourceSetOwnership.runsDependencyCheck(module)) {
+                        emptySet()
+                    } else {
+                        setOf(WatchdogClassIds.IntentionallyNonTransitiveDependency)
+                    }
+                },
             ).takeIf { allChecks },
         )).wrapped(basic.disabled + internalApiTypeExposureDisabled) + setOfNotNull(
             // The compilation that checks a parent source set doesn't see the `actual` declarations of this one.

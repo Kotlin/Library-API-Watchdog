@@ -154,6 +154,7 @@ class WatchdogCommandLineProcessorTest {
         for ((option, key) in listOf(
             WatchdogCommandLineProcessor.SOURCE_SETS_CHECKED_ELSEWHERE_OPTION to WatchdogConfigurationKeys.SOURCE_SETS_CHECKED_ELSEWHERE,
             WatchdogCommandLineProcessor.SOURCE_SETS_WITH_PLATFORM_CHECKS_OPTION to WatchdogConfigurationKeys.SOURCE_SETS_WITH_PLATFORM_CHECKS,
+            WatchdogCommandLineProcessor.SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK_OPTION to WatchdogConfigurationKeys.SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK,
         )) {
             process(option, ":webMain::commonMain:webMain: :")
             assertEquals(listOf("webMain", "commonMain"), configuration[key]?.toList())
@@ -169,6 +170,7 @@ class WatchdogCommandLineProcessorTest {
         for (option in listOf(
             WatchdogCommandLineProcessor.SOURCE_SETS_CHECKED_ELSEWHERE_OPTION,
             WatchdogCommandLineProcessor.SOURCE_SETS_WITH_PLATFORM_CHECKS_OPTION,
+            WatchdogCommandLineProcessor.SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK_OPTION,
         )) {
             assertTrue(option.optionName in names, option.optionName)
             assertFalse(option.required, option.optionName)

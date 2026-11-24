@@ -97,6 +97,10 @@ object WatchdogTestDirectives : SimpleDirectivesContainer() {
     val SOURCE_SETS_WITH_PLATFORM_CHECKS by stringDirective(
         description = "Common modules with the platform checks (sourceSetsWithPlatformChecks option)",
     )
+
+    val SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK by stringDirective(
+        description = "Common modules without the dependency check (sourceSetsWithoutDependencyCheck option)",
+    )
 }
 
 class WatchdogOptionsConfigurator(testServices: TestServices) : EnvironmentConfigurator(testServices) {
@@ -181,6 +185,10 @@ class WatchdogOptionsConfigurator(testServices: TestServices) : EnvironmentConfi
         val platformChecked = module.directives[WatchdogTestDirectives.SOURCE_SETS_WITH_PLATFORM_CHECKS]
         if (platformChecked.isNotEmpty()) {
             configuration.put(WatchdogConfigurationKeys.SOURCE_SETS_WITH_PLATFORM_CHECKS, platformChecked.toSet())
+        }
+        val withoutDependencyCheck = module.directives[WatchdogTestDirectives.SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK]
+        if (withoutDependencyCheck.isNotEmpty()) {
+            configuration.put(WatchdogConfigurationKeys.SOURCE_SETS_WITHOUT_DEPENDENCY_CHECK, withoutDependencyCheck.toSet())
         }
     }
 

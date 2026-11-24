@@ -41,6 +41,10 @@ The placeholder KDoc satisfies the check until the real documentation replaces i
 public class Config
 ```
 
+If many declarations expose the types of one dependency, declare the dependency with `api` or exempt it
+on [`apiWatchdogExemptNonTransitive`](./checks/special/public-type-from-non-transitive-dependency.md#exempting-a-dependency)
+before you run the task. This is a better fix than an annotation on each declaration.
+
 ## Review the result
 
 The task writes the [API Watchdog report](./report.md). Its not-applied section lists the
@@ -51,6 +55,11 @@ aggregate reports of the root project.
 Review the diff and commit it. The checks then report only the API that you add later. For a new
 declaration, fix the shape or pick the exemption reason by hand.
 
+For a supertype or a type parameter bound of a class, the task exempts the whole class from
+[Public types from non-transitive dependencies](./checks/special/public-type-from-non-transitive-dependency.md).
+This exemption also covers the members that you add to the class later. To check new members, replace it
+with an exemption on each declaration or type usage that needs one.
+
 A second run doesn't add anything, because an exempted declaration doesn't report a diagnostic.
 
 ## Collection mode
@@ -58,20 +67,20 @@ A second run doesn't add anything, because an exempted declaration doesn't repor
 `exemptExistingApi` and `generateApiWatchdogReport` compile every compilation except tests in
 collection mode. [The report page](./report.md) lists the compilations.
 When neither task is in the task graph, the compilations run as configured. Collection mode changes
-five things:
+six things:
 
 - A module without explicit API mode compiles with `-Xexplicit-api=warning`.
 - Every enabled configurable check reports a warning, so the compilation passes. The configured
   severity still decides the fix: `exemptExistingApi` exempts a check set to `ERROR` and leaves a
   check set to `WARNING`. A check set to `NONE` in `apiWatchdog` doesn't record anything.
 - `allWarningsAsErrors` is off, so the warnings don't fail the compilation.
-- [`PUBLIC_TYPE_WITH_INTERNAL_API`](./checks/special/public-type-with-internal-api.md) reports a
-  warning, and `exemptExistingApi` exempts it. The other two always-error checks are off, because
-  `FOR_BACKWARDS_COMPATIBILITY` isn't a reason for them:
-  - [`EXEMPTION_WITHOUT_EXPLANATION`](./checks/special/exemption-without-explanation.md): only the
-    author of the exemption can write its reason.
-  - [`PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY`](./checks/special/public-type-from-non-transitive-dependency.md):
-    declare the dependency with `api` in the build script. This doesn't break any consumer.
+- [`PUBLIC_TYPE_WITH_INTERNAL_API`](./checks/special/public-type-with-internal-api.md) and
+  [`PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY`](./checks/special/public-type-from-non-transitive-dependency.md)
+  report a warning, and `exemptExistingApi` exempts them. The second check is off in a source set that
+  several targets share, such as `commonMain` with `jvm()` and `js()` or with `jvm()` and an Android
+  target. The task doesn't add or remove its exemptions there.
+- [`EXEMPTION_WITHOUT_EXPLANATION`](./checks/special/exemption-without-explanation.md) is off, because
+  only the author of the exemption can write its reason.
 - In a multiplatform project, one compilation prints the diagnostics of a shared source set, so the
   build output has each of them once. A regular build prints them in every compilation of the source
   set. With an `androidTarget()`, a diagnostic in `androidMain` still prints once for each build
@@ -82,5 +91,7 @@ five things:
 copies on the `actual` declarations with the exemption on the `expect` declaration.
 
 Any other compilation error still fails the task. Fix unresolved references and syntax errors first.
-The compilations outside collection mode still report the two checks that are off, so fix them
-after you commit the generated exemptions.
+The compilations outside collection mode still report the checks that are off. Fix them after you commit
+the generated exemptions. For a dependency type in a shared source set, declare the dependency with `api`
+or exempt it on
+[`apiWatchdogExemptNonTransitive`](./checks/special/public-type-from-non-transitive-dependency.md#exempting-a-dependency).

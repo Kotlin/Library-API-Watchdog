@@ -161,6 +161,16 @@ object WatchdogDiagnostics : KtDiagnosticsContainer() {
     /** Parameters: declaration kind, declaration name, exposed type FQ name, exemption snippet. */
     val PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY by error4<KtElement, String, Name, String, String>()
 
+    /** [PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY] as a warning for the collection mode of `exemptExistingApi`. */
+    val PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY_COLLECTED: KtDiagnosticFactory4<String, Name, String, String> =
+        diagnosticFactory4(
+            PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY.name,
+            Severity.WARNING,
+            SourceElementPositioningStrategies.DEFAULT,
+            KtElement::class,
+            getRendererFactory(),
+        )
+
     /** Parameters: declaration kind, declaration name, internal type FQ name, the cause and the fix in words. */
     val PUBLIC_TYPE_WITH_INTERNAL_API by error4<KtElement, String, Name, String, String>()
 
@@ -357,6 +367,13 @@ private object WatchdogErrorMessages : BaseDiagnosticRendererFactory() {
         )
         map.put(
             diagnostic = WatchdogDiagnostics.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY,
+            rendererA = STRING,
+            rendererB = NAME,
+            rendererC = STRING,
+            rendererD = STRING,
+        )
+        map.put(
+            diagnostic = WatchdogDiagnostics.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY_COLLECTED,
             rendererA = STRING,
             rendererB = NAME,
             rendererC = STRING,

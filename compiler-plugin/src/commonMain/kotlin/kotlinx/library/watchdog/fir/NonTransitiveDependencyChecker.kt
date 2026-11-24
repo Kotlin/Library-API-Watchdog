@@ -38,6 +38,7 @@ internal data class NonTransitiveType(val classId: ClassId, val origin: Path)
 internal class NonTransitiveDependencyChecker(
     session: FirSession,
     configuration: DependencyExposureCheckConfiguration,
+    private val collecting: Boolean = false,
 ) : PublicSignatureTypeChecker<NonTransitiveType>(exemption = WatchdogClassIds.IntentionallyNonTransitiveDependency) {
     override val enclosingClassExemptions: Set<ClassId> = setOf(WatchdogClassIds.IntentionallyNonTransitiveDependency)
 
@@ -60,7 +61,11 @@ internal class NonTransitiveDependencyChecker(
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
     override fun report(source: KtSourceElement?, kind: String, name: Name, violation: NonTransitiveType) {
-        val factory = WatchdogDiagnostics.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY
+        val factory = if (collecting) {
+            WatchdogDiagnostics.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY_COLLECTED
+        } else {
+            WatchdogDiagnostics.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY
+        }
         reporter.reportOn(
             source = source,
             factory = factory,

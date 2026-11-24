@@ -2,6 +2,7 @@
 
 package kotlinx.library.watchdog
 
+import com.autonomousapps.kit.gradle.Dependency.Companion.api
 import com.autonomousapps.kit.gradle.Dependency.Companion.implementation
 import com.autonomousapps.kit.gradle.Plugin
 import java.io.File
@@ -11,10 +12,12 @@ import kotlin.test.assertFalse
 import kotlinx.library.watchdog.Diagnostic.EXEMPTION_WITHOUT_EXPLANATION
 import kotlinx.library.watchdog.Diagnostic.OPEN_API_WITHOUT_SUBCLASS_OPT_IN
 import kotlinx.library.watchdog.Diagnostic.PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY
+import kotlinx.library.watchdog.Diagnostic.TOP_LEVEL_API_WITHOUT_JVM_NAME
 import kotlinx.library.watchdog.Diagnostic.UNDOCUMENTED_PUBLIC_API
 import kotlinx.library.watchdog.Severity.ERROR
 import kotlinx.library.watchdog.Severity.NONE
 import kotlinx.library.watchdog.Severity.WARNING
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
 import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.compiler.plugin.devkit.test.KmpTarget
@@ -45,7 +48,9 @@ class ExemptExistingApiTest {
         val project = jvmProject {
             buildScript(CONTEXT_PARAMETERS_BUILD_SCRIPT)
             apiWatchdog { severity(ERROR, UNDOCUMENTED_PUBLIC_API) }
-            source(fixableFile, "legacy")
+            source(fixableFile, "legacy", imports = listOf("test.model.ExternalModel"))
+            dependencies(implementation(":model"))
+            modelSubproject()
         }
 
         val updateResult = project.build(EXEMPT_TASK)
@@ -84,6 +89,7 @@ class ExemptExistingApiTest {
         assertContains(fixedText, "@IntentionallyNonStaticCompanionApi($reason)\n        public val DEFAULT_LABEL")
         assertContains(fixedText, "@IntentionallyKotlinOnlyApi($reason)\npublic suspend fun refreshState()")
         assertContains(fixedText, "@IntentionallyWithoutJvmOverloads($reason)\npublic fun openPort")
+        assertContains(fixedText, "@IntentionallyNonTransitiveDependency($reason)\npublic fun loadExternalModel()")
 
         // The report lists the exemptions the task has just applied.
         val report = project.report().readText()
@@ -103,7 +109,9 @@ class ExemptExistingApiTest {
         val project = jvmProject {
             buildScript(CONTEXT_PARAMETERS_BUILD_SCRIPT)
             apiWatchdog { severity(ERROR, UNDOCUMENTED_PUBLIC_API) }
-            source(fixableFile, "legacy")
+            source(fixableFile, "legacy", imports = listOf("test.model.ExternalModel"))
+            dependencies(implementation(":model"))
+            modelSubproject()
         }
 
         project.build(EXEMPT_TASK)
@@ -470,11 +478,9 @@ class ExemptExistingApiTest {
     }
 
     @Test
-    fun `unfixable always-error diagnostics are disabled only during the update`() {
+    fun `unfixable always-error diagnostic is disabled only during the update`() {
         val project = jvmProject {
             source(alwaysErrorDiagnosticsFile, "alwaysErrors", "test.consumer")
-            dependencies(implementation(":model"))
-            modelSubproject()
         }
         val sourceFile = project.file("src/main/kotlin/test/consumer/alwaysErrors.kt")
         val original = sourceFile.readText()
@@ -485,10 +491,7 @@ class ExemptExistingApiTest {
         updateResult.assertOutputHas("No watchdog errors to exempt.")
         assertEquals(original, sourceFile.readText())
 
-        project.buildAndFail("compileKotlin").assertErrors(
-            EXEMPTION_WITHOUT_EXPLANATION,
-            PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY,
-        )
+        project.buildAndFail("compileKotlin").assertErrors(EXEMPTION_WITHOUT_EXPLANATION)
     }
 
     @Test
@@ -530,6 +533,444 @@ class ExemptExistingApiTest {
         assertContains(fixedText, "@IntentionallyExposedInternalApiForBackwardsCompatibility\npublic fun needed(): InternalModel")
         assertContains(fixedText, "/** Returns a supported type. */\npublic fun supported(): String")
         project.build("build").assertNoWatchdogDiagnostics()
+    }
+
+    @Test
+    fun `non-transitive dependency exposure is exempted for backwards compatibility`() {
+        val project = jvmProject {
+            consumerSource()
+            source(redundantNonTransitiveExemptionFile, "count", "test.consumer")
+            dependencies(implementation(":model"))
+            modelSubproject()
+        }
+        val sourceFile = project.file("src/main/kotlin/test/consumer/Consumer.kt")
+        val original = sourceFile.readText()
+
+        project.build(REPORT_TASK).assertTaskOutcome(":$REPORT_TASK", SUCCESS)
+        assertEquals(original, sourceFile.readText())
+        // The report lists the diagnostics of the type alias and of the class, and the class exemption covers the members.
+        assertReportGroup(project.report().readText(), "IntentionallyNonTransitiveDependency", 2, PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY)
+
+        project.build(EXEMPT_TASK).assertTaskOutcome(":$EXEMPT_TASK", SUCCESS)
+        val fixedText = sourceFile.readText()
+        val annotation = "@IntentionallyNonTransitiveDependency(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)"
+        assertContains(fixedText, "$annotation\npublic typealias ExternalModels")
+        // The class exemption covers the members.
+        assertContains(fixedText, "$annotation\n@IntentionallyOpen(reason = ExemptionReason.API_DESIGN)\npublic open class Consumer")
+        assertEquals(2, fixedText.split(annotation).size - 1, fixedText)
+        assertFalse("@IntentionallyNonTransitiveDependency" in project.file("src/main/kotlin/test/consumer/count.kt").readText())
+
+        project.build("build").assertNoWatchdogDiagnostics()
+        project.build(EXEMPT_TASK).assertOutputHas("No watchdog errors to exempt.")
+        assertEquals(fixedText, sourceFile.readText())
+    }
+
+    @Test
+    fun `non-transitive dependency exposure is exempted in a multiplatform project`() {
+        val project = kmpProject {
+            source(multiplatformDependencyExposureFile, "loaders", "test.consumer")
+            source(
+                "public actual fun loadPlatformModel(): ExternalModel = ExternalModel()",
+                "platformLoaders",
+                "test.consumer",
+                sourceSet = "jvmMain",
+                imports = listOf("test.model.ExternalModel"),
+            )
+            dependencies(implementation(":model"))
+            modelSubproject()
+        }
+        val common = project.file("src/commonMain/kotlin/test/consumer/loaders.kt")
+        val actual = project.file("src/jvmMain/kotlin/test/consumer/platformLoaders.kt")
+
+        project.build(REPORT_TASK).assertTaskOutcome(":$REPORT_TASK", SUCCESS)
+        assertReportGroup(project.report().readText(), "IntentionallyNonTransitiveDependency", 3, PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY)
+
+        project.build(EXEMPT_TASK).assertTaskOutcome(":$EXEMPT_TASK", SUCCESS)
+        val annotation = "@IntentionallyNonTransitiveDependency(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)"
+        val fixedCommon = common.readText()
+        assertContains(fixedCommon, "$annotation\npublic fun loadModel()")
+        assertContains(fixedCommon, "$annotation\npublic expect fun loadPlatformModel()")
+        val fixedActual = actual.readText()
+        assertContains(fixedActual, "$annotation\npublic actual fun loadPlatformModel()")
+
+        val compilation = project.build("compileKotlinJvm")
+        compilation.assertNoWatchdogDiagnostics()
+        assertFalse("is missing on actual declaration" in compilation.output, compilation.output)
+
+        project.build(EXEMPT_TASK).assertOutputHas("No watchdog errors to exempt.")
+        assertEquals(fixedCommon, common.readText())
+        assertEquals(fixedActual, actual.readText())
+    }
+
+    @Test
+    fun `non-transitive dependency exemptions of a source set that several targets share stay as they are`() {
+        val project = kmpProject("jvm()\njs { nodejs() }") {
+            apiWatchdog { severity(NONE, TOP_LEVEL_API_WITHOUT_JVM_NAME) }
+            sharedDependencyExposureSources("jsMain")
+            dependencies(implementation(":model"))
+            modelSubproject()
+        }
+
+        project.assertSharedDependencyExemptionsStay("jsMain", jvmExempted = true)
+            .assertTaskOutcome(":compileCommonMainKotlinMetadata", SUCCESS)
+
+        // A regular build still reports the exposure in `commonMain` without an exemption.
+        val regular = project.buildAndFail("compileKotlinJvm", "compileKotlinJs", "--continue")
+        regular.assertReportedIn(PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY, "shared.kt", "shared.kt")
+        regular.assertOutputLacks("is missing on actual declaration")
+    }
+
+    @Test
+    fun `non-transitive dependency exemptions of a source set that JVM and Android targets share stay as they are`() {
+        val target = KmpAndroidTarget.LIBRARY_AGP9
+        val project = kmpAndroidProject(target) {
+            apiWatchdog { severity(NONE, TOP_LEVEL_API_WITHOUT_JVM_NAME) }
+            sharedDependencyExposureSources("androidMain")
+            dependencies(implementation(":model"))
+            dependencies("androidMain", api(":model"))
+            modelSubproject()
+        }
+
+        project.assertSharedDependencyExemptionsStay("androidMain", jvmExempted = true)
+
+        val regular = project.buildAndFail("compileKotlinJvm", target.mainCompileTask, "--continue")
+        regular.assertReportedIn(PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY, "shared.kt")
+        regular.assertOutputLacks("is missing on actual declaration")
+    }
+
+    @Test
+    fun `non-transitive dependency exemptions of a shared source set stay as they are without the metadata compilation`() {
+        val project = kmpProject("jvm()\njs { nodejs() }") {
+            apiWatchdog { severity(NONE, TOP_LEVEL_API_WITHOUT_JVM_NAME) }
+            sharedDependencyExposureSources("jsMain")
+            dependencies(implementation(":model"))
+            dependencies("jsMain", api(":model"))
+            modelSubproject()
+        }
+
+        project.assertSharedDependencyExemptionsStay("jsMain", jvmExempted = true, "-x", "compileCommonMainKotlinMetadata")
+
+        val regular = project.buildAndFail("compileKotlinJvm", "compileKotlinJs", "--continue")
+        regular.assertReportedIn(PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY, "shared.kt")
+        regular.assertOutputLacks("is missing on actual declaration")
+    }
+
+    @Test
+    fun `non-transitive dependency exemptions of a shared source set stay as they are when every target declares the dependency with api`() {
+        val project = kmpProject("jvm()\njs { nodejs() }") {
+            apiWatchdog { severity(NONE, TOP_LEVEL_API_WITHOUT_JVM_NAME) }
+            sharedDependencyExposureSources("jsMain")
+            dependencies(implementation(":model"))
+            dependencies("jvmMain", api(":model"))
+            dependencies("jsMain", api(":model"))
+            modelSubproject()
+        }
+
+        project.assertSharedDependencyExemptionsStay("jsMain", jvmExempted = false, "-x", "compileCommonMainKotlinMetadata")
+
+        project.build("compileKotlinJvm", "compileKotlinJs").assertOutputLacks("is missing on actual declaration")
+    }
+
+    @Test
+    fun `the copies of a shared non-transitive dependency exemption stay when the targets declare the dependency differently`() {
+        val project = kmpProject("jvm()\njs { nodejs() }") {
+            apiWatchdog { severity(NONE, TOP_LEVEL_API_WITHOUT_JVM_NAME) }
+            source(
+                "import test.model.ExternalModel\n\n/** Loads a model. */\n$HOST_MODEL_EXEMPTION\npublic expect fun loadModel(): ExternalModel",
+                "loaders",
+                "test.consumer",
+            )
+            for (sourceSet in listOf("jvmMain", "jsMain")) {
+                source(
+                    "$HOST_MODEL_EXEMPTION\npublic actual fun loadModel(): ExternalModel = ExternalModel()",
+                    "platformLoaders",
+                    "test.consumer",
+                    sourceSet = sourceSet,
+                    imports = listOf("test.model.ExternalModel"),
+                )
+            }
+            dependencies(implementation(":model"))
+            dependencies("jvmMain", api(":model"))
+            modelSubproject()
+        }
+        val files = listOf("commonMain/kotlin/test/consumer/loaders.kt", "jvmMain/kotlin/test/consumer/platformLoaders.kt", "jsMain/kotlin/test/consumer/platformLoaders.kt")
+            .map { project.file("src/$it") }
+        val originals = files.map { it.readText() }
+
+        project.build(EXEMPT_TASK).assertOutputLacks("Removed the redundant")
+
+        assertEquals(originals, files.map { it.readText() })
+        project.build("compileKotlinJvm", "compileKotlinJs").assertOutputLacks("is missing on actual declaration")
+    }
+
+    @Test
+    fun `an expect class keeps the non-transitive dependency exemption that a member of its actual class needs`() {
+        val project = kmpProject {
+            apiWatchdog { severity(NONE, TOP_LEVEL_API_WITHOUT_JVM_NAME) }
+            source(
+                """
+                    /** Holds models. */
+                    $HOST_MODEL_EXEMPTION
+                    public expect class Holder() {
+                        /** Counts the models. */
+                        public fun count(): Int
+                    }
+                """.trimIndent(),
+                "holder",
+                "test.consumer",
+            )
+            source(
+                """
+                    $HOST_MODEL_EXEMPTION
+                    public actual class Holder actual constructor() {
+                        public actual fun count(): Int = 1
+
+                        /** Loads a model. */
+                        public fun load(): ExternalModel = ExternalModel()
+                    }
+                """.trimIndent(),
+                "holderJvm",
+                "test.consumer",
+                sourceSet = "jvmMain",
+                imports = listOf("test.model.ExternalModel"),
+            )
+            dependencies(implementation(":model"))
+            modelSubproject()
+        }
+        val files = listOf("commonMain/kotlin/test/consumer/holder.kt", "jvmMain/kotlin/test/consumer/holderJvm.kt")
+            .map { project.file("src/$it") }
+        val originals = files.map { it.readText() }
+
+        project.build(EXEMPT_TASK).assertOutputLacks("Removed the redundant")
+
+        assertEquals(originals, files.map { it.readText() })
+        val compilation = project.build("compileKotlinJvm")
+        compilation.assertNoWatchdogDiagnostics()
+        compilation.assertOutputLacks("is missing on actual declaration")
+    }
+
+    @Test
+    fun `a class exemption replaces the non-transitive dependency exemptions of its members`() {
+        val project = jvmProject {
+            source(holderWithMemberExemptionsFile, "Holder", "test.consumer", imports = listOf("test.model.ExternalContract", "test.model.ExternalModel"))
+            dependencies(implementation(":model"))
+            modelSubproject()
+        }
+        val sourceFile = project.file("src/main/kotlin/test/consumer/Holder.kt")
+
+        // The member exemptions are redundant only after the class exemption is in the source.
+        project.build(REPORT_TASK)
+        assertFalse("fix-status redundant" in project.report().readText())
+
+        val result = project.build(EXEMPT_TASK)
+
+        result.assertOutputHas("Added 1 backwards-compatibility exemption(s), removed 3 redundant exemption(s), in 1 file(s).")
+        assertEquals(1, result.output.lines().count { "@IntentionallyNonTransitiveDependency exempts" in it }, result.output)
+        val fixedText = sourceFile.readText()
+        assertContains(fixedText, "$BACKWARDS_COMPATIBLE_DEPENDENCY_EXEMPTION\npublic class Holder : ExternalContract {")
+        assertFalse("ExemptionReason.INTEROP" in fixedText, fixedText)
+        project.build("build").assertNoWatchdogDiagnostics()
+
+        project.build(EXEMPT_TASK).assertOutputHas("No watchdog errors to exempt.")
+        assertEquals(fixedText, sourceFile.readText())
+    }
+
+    @Test
+    fun `an actual class exemption keeps the copies of the new non-transitive dependency exemptions of its expect class`() =
+        expectAndActualClassExemptionsCase(expectAnnotated = false, actualAnnotated = true)
+
+    @Test
+    fun `an expect class exemption replaces the non-transitive dependency exemptions inside both classes`() =
+        expectAndActualClassExemptionsCase(expectAnnotated = true, actualAnnotated = false)
+
+    @Test
+    fun `the exemptions of an expect class and its actual class replace the non-transitive dependency exemptions inside them`() =
+        expectAndActualClassExemptionsCase(expectAnnotated = true, actualAnnotated = true)
+
+    /**
+     * An `expect` class and its `actual` class with each kind of member exemption. The run annotates the `expect` class
+     * for its type parameter bound when [expectAnnotated], and the `actual` class for its own supertype when
+     * [actualAnnotated].
+     */
+    private fun expectAndActualClassExemptionsCase(expectAnnotated: Boolean, actualAnnotated: Boolean) {
+        val typeParameter = if (expectAnnotated) "<T : ExternalModel>" else ""
+        val actualSupertype = if (actualAnnotated) " : ExternalContract" else ""
+        val project = kmpProject {
+            source(
+                """
+                    import test.model.ExternalContract
+                    import test.model.ExternalModel
+
+                    /** Holds models. */
+                    public expect class Holder$typeParameter(model: ExternalModel) {
+                        /** Loads a model. */
+                        $HOST_MODEL_EXEMPTION
+                        public fun load(): ExternalModel
+
+                        /** Reads a model. */
+                        public fun read(): ExternalModel
+
+                        /** Writes a model. */
+                        public fun write(): ExternalModel
+
+                        /** Reads models in a nested class. */
+                        public class Inner : ExternalContract
+                    }
+                """.trimIndent(),
+                "holder",
+                "test.consumer",
+            )
+            source(
+                """
+                    public actual class Holder$typeParameter actual constructor(model: ExternalModel)$actualSupertype {
+                        $HOST_MODEL_EXEMPTION
+                        public actual fun load(): ExternalModel = ExternalModel()
+
+                        public actual fun read(): ExternalModel = ExternalModel()
+
+                        $HOST_MODEL_EXEMPTION
+                        public actual fun write(): ExternalModel = ExternalModel()
+
+                        /** Loads an extra model. */
+                        $HOST_MODEL_EXEMPTION
+                        public fun extra(): ExternalModel = ExternalModel()
+
+                        /** Loads another model. */
+                        public fun other(): ExternalModel = ExternalModel()
+
+                        public actual class Inner : ExternalContract
+                    }
+                """.trimIndent(),
+                "holderJvm",
+                "test.consumer",
+                sourceSet = "jvmMain",
+                imports = listOf("test.model.ExternalContract", "test.model.ExternalModel"),
+            )
+            dependencies(implementation(":model"))
+            modelSubproject()
+        }
+        val files = listOf("commonMain/kotlin/test/consumer/holder.kt", "jvmMain/kotlin/test/consumer/holderJvm.kt")
+            .map { project.file("src/$it") }
+
+        project.build(EXEMPT_TASK)
+
+        val (common, actual) = files.map { it.readText() }
+        val annotation = BACKWARDS_COMPATIBLE_DEPENDENCY_EXEMPTION
+        fun String.count(text: String) = split(text).size - 1
+        if (expectAnnotated) {
+            // The class exemptions cover every declaration inside the classes.
+            assertContains(common, "$annotation\npublic expect class Holder<T : ExternalModel>(model: ExternalModel) {")
+            assertContains(actual, "$annotation\npublic actual class Holder<T : ExternalModel> actual constructor(model: ExternalModel)$actualSupertype {")
+            assertEquals(listOf(1, 1), listOf(common.count(annotation), actual.count(annotation)), common + actual)
+            assertEquals(listOf(0, 0), listOf(common.count(HOST_MODEL_EXEMPTION), actual.count(HOST_MODEL_EXEMPTION)), common + actual)
+        } else {
+            // The `actual` declarations get the copies of the new `expect` exemptions, and only the existing copy stays.
+            assertContains(common, "public expect class Holder $annotation constructor(model: ExternalModel) {")
+            assertContains(actual, "$annotation\npublic actual class Holder $annotation actual constructor(model: ExternalModel) : ExternalContract {")
+            for (declaration in listOf("fun read()", "fun write()", "class Inner")) {
+                assertContains(common, "    $annotation\n    public $declaration")
+                assertContains(actual, "    $annotation\n    public actual $declaration")
+            }
+            assertContains(common, "    $HOST_MODEL_EXEMPTION\n    public fun load()")
+            assertContains(actual, "    $HOST_MODEL_EXEMPTION\n    public actual fun load()")
+            assertEquals(1, actual.count(HOST_MODEL_EXEMPTION), actual)
+            assertContains(actual, "/** Loads an extra model. */\n    public fun extra()")
+            assertContains(actual, "/** Loads another model. */\n    public fun other()")
+        }
+        val compilation = project.build("compileKotlinJvm")
+        compilation.assertNoWatchdogDiagnostics()
+        compilation.assertOutputLacks("is missing on actual declaration")
+
+        project.build(EXEMPT_TASK).assertOutputHas("No watchdog errors to exempt.")
+        assertEquals(listOf(common, actual), files.map { it.readText() })
+    }
+
+    @Test
+    fun `a class exemption replaces the non-transitive dependency exemptions in an actual class that aren't copies`() {
+        val project = kmpProject {
+            source(
+                """
+                    import test.model.ExternalModel
+
+                    /** Holds models. */
+                    public expect class Outer() {
+                        /** Reads models. */
+                        public class Inner() {
+                            /** Reads a model. */
+                            $HOST_MODEL_EXEMPTION
+                            public fun read(): ExternalModel
+                        }
+                    }
+                """.trimIndent(),
+                "outer",
+                "test.consumer",
+            )
+            source(
+                """
+                    public actual class Outer actual constructor() : ExternalContract {
+                        public actual class Inner actual constructor() : $HOST_MODEL_EXEMPTION ExternalContract {
+                            $HOST_MODEL_EXEMPTION
+                            public actual fun read(): ExternalModel = ExternalModel()
+
+                            /** Loads a model. */
+                            $HOST_MODEL_EXEMPTION
+                            public fun load(): ExternalModel = ExternalModel()
+                        }
+                    }
+                """.trimIndent(),
+                "outerJvm",
+                "test.consumer",
+                sourceSet = "jvmMain",
+                imports = listOf("test.model.ExternalContract", "test.model.ExternalModel"),
+            )
+            dependencies(implementation(":model"))
+            modelSubproject()
+        }
+        val files = listOf("commonMain/kotlin/test/consumer/outer.kt", "jvmMain/kotlin/test/consumer/outerJvm.kt")
+            .map { project.file("src/$it") }
+        val (common, actual) = files
+        val originalCommon = common.readText()
+
+        project.build(EXEMPT_TASK)
+            .assertOutputHas("Added 1 backwards-compatibility exemption(s), removed 2 redundant exemption(s), in 1 file(s).")
+
+        assertEquals(originalCommon, common.readText())
+        val fixedActual = actual.readText()
+        assertContains(fixedActual, "$BACKWARDS_COMPATIBLE_DEPENDENCY_EXEMPTION\npublic actual class Outer")
+        assertContains(fixedActual, "public actual class Inner actual constructor() : ExternalContract {")
+        // Only the copy of the exemption of the `expect` function stays.
+        assertContains(fixedActual, "    $HOST_MODEL_EXEMPTION\n        public actual fun read()")
+        assertEquals(1, fixedActual.split(HOST_MODEL_EXEMPTION).size - 1, fixedActual)
+        val compilation = project.build("compileKotlinJvm")
+        compilation.assertNoWatchdogDiagnostics()
+        compilation.assertOutputLacks("is missing on actual declaration")
+
+        project.build(EXEMPT_TASK).assertOutputHas("No watchdog errors to exempt.")
+        assertEquals(listOf(originalCommon, fixedActual), files.map { it.readText() })
+    }
+
+    @Test
+    fun `non-transitive dependency exemptions of a shared native source set stay as they are`() {
+        val project = kmpProject("jvm()\nlinuxX64()\nmacosArm64()") {
+            apiWatchdog { severity(NONE, TOP_LEVEL_API_WITHOUT_JVM_NAME) }
+            source(
+                "/** Loads a model that the host ships. */\n$HOST_MODEL_EXEMPTION\npublic fun loadHostModel(): ExternalModel = ExternalModel()",
+                "native",
+                "test.consumer",
+                sourceSet = "nativeMain",
+                imports = listOf("test.model.ExternalModel"),
+            )
+            dependencies(implementation(":model"))
+            modelSubproject()
+        }
+        val native = project.file("src/nativeMain/kotlin/test/consumer/native.kt")
+        val original = native.readText()
+
+        val result = project.build(EXEMPT_TASK)
+
+        result.assertTaskOutcome(":compileNativeMainKotlinMetadata", SUCCESS)
+        result.assertOutputLacks("Removed the redundant")
+        assertEquals(original, native.readText())
     }
 
     @Test
@@ -1165,6 +1606,42 @@ class ExemptExistingApiTest {
     private fun WatchdogBuild.report(): File =
         file("build/reports/api-watchdog/report.html")
 
+    /**
+     * Adds [sharedDependencyExposureFile] to `commonMain`, [jvmDependencyExposureFile] to `jvmMain`, and
+     * [platformDependencyExposureFile] to [otherSourceSet].
+     */
+    private fun ProjectSpec.sharedDependencyExposureSources(otherSourceSet: String) {
+        val imports = listOf("test.model.ExternalModel")
+        source(sharedDependencyExposureFile, "shared", "test.consumer")
+        source(jvmDependencyExposureFile, "jvmLoaders", "test.consumer", sourceSet = "jvmMain", imports = imports)
+        source(platformDependencyExposureFile, "platformLoaders", "test.consumer", sourceSet = otherSourceSet, imports = imports)
+    }
+
+    /**
+     * Runs [EXEMPT_TASK] with [arguments] twice on the sources of [sharedDependencyExposureSources]. Only `loadJvmModel`
+     * gets an exemption, and only when [jvmExempted]. Returns the result of the first run.
+     */
+    private fun WatchdogBuild.assertSharedDependencyExemptionsStay(
+        otherSourceSet: String,
+        jvmExempted: Boolean,
+        vararg arguments: String,
+    ): BuildResult {
+        val files = listOf("commonMain/kotlin/test/consumer/shared.kt", "jvmMain/kotlin/test/consumer/jvmLoaders.kt", "$otherSourceSet/kotlin/test/consumer/platformLoaders.kt")
+            .map { file("src/$it") }
+        val (common, jvm, other) = files.map { it.readText() }
+        val jvmDoc = "/** Loads a model on the JVM. */\n"
+        val expected = listOf(common, if (jvmExempted) jvm.replace(jvmDoc, "$jvmDoc$BACKWARDS_COMPATIBLE_DEPENDENCY_EXEMPTION\n") else jvm, other)
+
+        val result = build(EXEMPT_TASK, *arguments)
+
+        result.assertOutputLacks("Removed the redundant")
+        assertFalse("fix-status redundant" in report().readText())
+        assertEquals(expected, files.map { it.readText() })
+        build(EXEMPT_TASK, *arguments).assertOutputHas("No watchdog errors to exempt.")
+        assertEquals(expected, files.map { it.readText() })
+        return result
+    }
+
     private companion object {
         const val EXEMPT_TASK = "exemptExistingApi"
         const val REPORT_TASK = "generateApiWatchdogReport"
@@ -1278,6 +1755,9 @@ private val fixableFile = """
 
     /** A function whose default parameter values don't exist for Java callers. */
     public fun openPort(host: String, port: Int = 8080) {}
+
+    /** A loader that returns a type of an `implementation` dependency. */
+    public fun loadExternalModel(): ExternalModel = ExternalModel()
 """.trimIndent()
 
 /** The diagnostics without an exemption annotation. */
@@ -1292,20 +1772,15 @@ private val unfixableFile = """
     public fun processTag(tag: @ScopedDsl String) { }
 """.trimIndent()
 
-/** The always-error diagnostics without an automatic fix, which the task skips. */
+/** The always-error diagnostic without an automatic fix, which the task skips. */
 @Language("kotlin")
 private val alwaysErrorDiagnosticsFile = """
-    import test.model.ExternalModel
-
     /** Existing open API with an invalid, unfixable exemption. */
     @IntentionallyOpen
     public open class ExistingOpenApi
 
-    /** Public entry points that expose non-transitive types. */
+    /** Public entry points. */
     public object Api {
-        /** Leaks a type consumers can't obtain transitively. */
-        public fun loadExternalModel(): ExternalModel = ExternalModel()
-
         /** Carries an invalid type-use exemption handled by the dedicated type checker. */
         public fun loadMutable(): @IntentionallyMutableCollection MutableList<String> = mutableListOf()
     }
@@ -1359,6 +1834,107 @@ private val redundantInternalApiExemptionFile = """
     /** Returns a supported type. */
     @IntentionallyExposedInternalApiForBackwardsCompatibility
     public fun supported(): String = ""
+""".trimIndent()
+
+/** An exemption of the dependency exposure check on a declaration that doesn't expose a dependency type. */
+@Language("kotlin")
+private val redundantNonTransitiveExemptionFile = """
+    /** Returns a count. */
+    @IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = "The host ships the models.")
+    public fun count(): Int = 1
+""".trimIndent()
+
+/** Common declarations that expose a type of an `implementation` dependency. */
+@Language("kotlin")
+private val multiplatformDependencyExposureFile = """
+    import test.model.ExternalModel
+
+    /** Loads a model in every target. */
+    public fun loadModel(): ExternalModel = ExternalModel()
+
+    /** Loads a model in a platform-specific way. */
+    public expect fun loadPlatformModel(): ExternalModel
+""".trimIndent()
+
+private const val HOST_MODEL_EXEMPTION =
+    "@IntentionallyNonTransitiveDependency(reason = ExemptionReason.INTEROP, description = \"The host ships the model.\")"
+
+private const val BACKWARDS_COMPATIBLE_DEPENDENCY_EXEMPTION =
+    "@IntentionallyNonTransitiveDependency(reason = ExemptionReason.FOR_BACKWARDS_COMPATIBILITY)"
+
+/** `commonMain` declarations that expose a type of an `implementation` dependency, two of them with an exemption. */
+@Language("kotlin")
+private val sharedDependencyExposureFile = """
+    import test.model.ExternalModel
+
+    /** Loads a model that the host ships. */
+    $HOST_MODEL_EXEMPTION
+    public fun loadHostModel(): ExternalModel = ExternalModel()
+
+    /** Loads a model in a platform-specific way. */
+    $HOST_MODEL_EXEMPTION
+    public expect fun loadPlatformModel(): ExternalModel
+
+    /** Loads a model without an exemption. */
+    public fun loadSharedModel(): ExternalModel = ExternalModel()
+
+    /** Counts the models. */
+    $HOST_MODEL_EXEMPTION
+    public expect fun count(): Int
+
+    /** Holds the models. */
+    $HOST_MODEL_EXEMPTION
+    public expect class Holder()
+""".trimIndent()
+
+/** The `jvmMain` part of [sharedDependencyExposureFile]. */
+@Language("kotlin")
+private val jvmDependencyExposureFile = """
+    /** Loads a model on the JVM. */
+    public fun loadJvmModel(): ExternalModel = ExternalModel()
+
+    $HOST_MODEL_EXEMPTION
+    public actual fun loadPlatformModel(): ExternalModel = ExternalModel()
+
+    $HOST_MODEL_EXEMPTION
+    public actual fun count(): Int = 1
+
+    $HOST_MODEL_EXEMPTION
+    public actual class Holder actual constructor()
+""".trimIndent()
+
+/** The part of [sharedDependencyExposureFile] for the target other than JVM. */
+@Language("kotlin")
+private val platformDependencyExposureFile = """
+    $HOST_MODEL_EXEMPTION
+    public actual fun loadPlatformModel(): ExternalModel = ExternalModel()
+
+    $HOST_MODEL_EXEMPTION
+    public actual fun count(): Int = 1
+
+    $HOST_MODEL_EXEMPTION
+    public actual class Holder actual constructor()
+""".trimIndent()
+
+/** A class with a supertype of an `implementation` dependency and members with their own exemptions. */
+@Language("kotlin")
+private val holderWithMemberExemptionsFile = """
+    /** Holds models. */
+    public class Holder : ExternalContract {
+        /** Loads a model. */
+        $HOST_MODEL_EXEMPTION
+        public fun load(): ExternalModel = ExternalModel()
+
+        /** Reads a model. */
+        public fun read(): $HOST_MODEL_EXEMPTION ExternalModel = ExternalModel()
+
+        /** Reads models in a nested class. */
+        public class Reader {
+            /** Reads a model. */
+            $HOST_MODEL_EXEMPTION
+            public fun read(): ExternalModel = ExternalModel()
+        }
+    }
 """.trimIndent()
 
 @Language("kotlin")

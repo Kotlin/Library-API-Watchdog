@@ -87,6 +87,17 @@ public fun loadModel(): ExternalModel = TODO()
 
 On a class, the annotation covers every nested declaration.
 
+The [`exemptExistingApi`](../../existing-libs.md) task adds the annotation with
+`ExemptionReason.FOR_BACKWARDS_COMPATIBILITY` to the reported declaration:
+
+- For a supertype or a type parameter bound of a class, the task annotates the class and removes the annotations
+  inside the class. In an `actual` class, the copy of an annotation of an `expect` declaration stays while the
+  `expect` declaration has the annotation. The class annotation also covers the members that you add later. To
+  check new members, replace it with an annotation on each declaration or type usage that needs one.
+- In a source set that several targets share, such as `commonMain` with `jvm()` and an Android target, the
+  task doesn't add or remove the annotation. Declare the dependency with `api` or
+  [exempt the dependency](#exempting-a-dependency) there.
+
 ## Configuration
 
 `publicTypesMustBeTransitiveDependencies` is `true` by default. The check can't report warnings. To
