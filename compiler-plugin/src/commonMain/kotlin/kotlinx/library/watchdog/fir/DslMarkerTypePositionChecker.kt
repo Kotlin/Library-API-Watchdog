@@ -51,6 +51,10 @@ internal class DslMarkerTypePositionChecker(
             else -> return
         }
         val typeRef = declaration.returnTypeRef
+        // An explicit accessor and its parameter have a copy of the property type with a fake source.
+        if (typeRef.source?.kind != KtRealSourceElementKind) {
+            return
+        }
 
         val session = context.session
         var checkedFunctionTypePosition = false

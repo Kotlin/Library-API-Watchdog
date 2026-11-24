@@ -260,7 +260,8 @@ internal fun FirFunction.reportedName(): Name? = when (this) {
 /**
  * Whether the declaration is in the public or `@PublishedApi` binary API, isn't marked as
  * internal API, and passes [ConfiguredApiFilters]. A property from a constructor parameter has a
- * fake source but is hand-written API, so it counts as real.
+ * fake source but is hand-written API, so it counts as real. A constructor of a sealed class
+ * doesn't count, because no code outside the module can call it.
  */
 context(context: CheckerContext)
 internal fun FirMemberDeclaration.isWatchedPublicApi(): Boolean {
@@ -270,6 +271,10 @@ internal fun FirMemberDeclaration.isWatchedPublicApi(): Boolean {
     }
 
     if (visibility == Visibilities.Local || this is FirRegularClass && isLocalCompat) {
+        return false
+    }
+
+    if (this is FirConstructor && symbol.isSealedClassConstructor()) {
         return false
     }
 
@@ -340,10 +345,14 @@ private fun FirCallableSymbol<*>.isIncludedApiMember(filters: ConfiguredApiFilte
     if (sourceKind != KtRealSourceElementKind && sourceKind != KtFakeSourceElementKind.PropertyFromParameter) {
         return false
     }
+    if (isSealedClassConstructor()) return false
     val publicApi = effectiveVisibility.publicApi ||
             (fir as? FirMemberDeclaration)?.publishedApiEffectiveVisibility?.publicApi == true
     return publicApi && filters.includes(this) && filters.excludingPattern(this) == null && !hasUnwatchedAnnotation()
 }
+
+private fun FirCallableSymbol<*>.isSealedClassConstructor(): Boolean =
+    this is FirConstructorSymbol && getContainingClassSymbol()?.resolvedStatus?.modality == Modality.SEALED
 
 /**
  * Whether users can reference the declaration in Kotlin source. Use it in a check about how users
@@ -397,6 +406,10 @@ internal fun FirBasedSymbol<*>.apiAnnotations(): List<FirAnnotation> =
 
 /** Valid only for a declaration that passed [isWatchedPublicApi]. */
 internal fun FirMemberDeclaration.isPublishedApiOnly(): Boolean = !effectiveVisibility.publicApi
+
+/** Valid only for a property that passed [isWatchedPublicApi]. */
+internal fun FirProperty.hasApiAccessor(accessor: FirPropertyAccessor?): Boolean =
+    accessor != null && (accessor.visibility == visibility || accessor.effectiveVisibility.publicApi)
 
 /** `isInline` covers the legacy `inline class`. */
 internal fun FirClassSymbol<*>.isValueClass(): Boolean =
@@ -483,18 +496,20 @@ private fun FirTypeParameterSymbol.hasFunctionBounds(visited: MutableSet<FirType
 
 /**
  * The name of the value class that mangles a JVM signature with this type, or null. The JVM
- * boxes a value class in a type argument, so it doesn't count.
+ * boxes a value class in a type argument, so it doesn't count. `kotlin.Result` mangles a
+ * signature only as a return type ([returned]).
  */
 context(context: CheckerContext)
-internal fun ConeKotlinType.mangledValueClass(): Name? {
+internal fun ConeKotlinType.mangledValueClass(returned: Boolean = false): Name? {
     val symbol = erasedClassSymbol() ?: return null
-    return symbol.classId.shortClassName.takeIf { symbol.isValueClass() }
+    if (!symbol.isValueClass() || !returned && symbol.classId == StandardClassIds.Result) return null
+    return symbol.classId.shortClassName
 }
 
 /** A return type mangles the JVM name of a member only. */
 context(context: CheckerContext)
 internal fun FirCallableDeclaration.returnValueClassIfMember(): Name? =
-    if (dispatchReceiverType != null) returnTypeRef.coneType.mangledValueClass() else null
+    if (dispatchReceiverType != null) returnTypeRef.coneType.mangledValueClass(returned = true) else null
 
 context(context: CheckerContext)
 internal fun FirNamedFunction.mangledValueClassInSignature(): Name? =
@@ -536,7 +551,8 @@ internal fun FirCallableDeclaration.isHiddenFromJavaWithJvmSynthetic(): Boolean 
         return hasFieldAnnotation(jvmSynthetic)
     }
     return hasAccessorAnnotation(getter, AnnotationUseSiteTarget.PROPERTY_GETTER, jvmSynthetic) &&
-            (!isVar || hasAccessorAnnotation(setter, AnnotationUseSiteTarget.PROPERTY_SETTER, jvmSynthetic))
+            (!hasApiAccessor(setter) ||
+                    hasAccessorAnnotation(setter, AnnotationUseSiteTarget.PROPERTY_SETTER, jvmSynthetic))
 }
 
 /** Resolution moves the annotation to the backing field, so both carriers count. */
@@ -574,12 +590,13 @@ private fun FirProperty.hasAnnotationWithUseSiteTarget(
 /**
  * [isWatchedPublicSourceApi] for an overload sibling. The sibling can be a member of another
  * class or a function of another file, so its own enclosing classes and file give the internal
- * API marker and the filter verdict. A library symbol has no real source, so a dependency never
- * passes.
+ * API marker and the filter verdict. A declaration of a dependency never passes. A library symbol
+ * has no real source, but a declaration of another module has one in the IDE.
  */
 context(context: CheckerContext)
 internal fun FirCallableSymbol<*>.isWatchedPublicSourceApiSibling(): Boolean {
-    if (source?.kind != KtRealSourceElementKind || !effectiveVisibility.publicApi) return false
+    if (source?.kind != KtRealSourceElementKind || !isFromModuleOf(context.session)) return false
+    if (!effectiveVisibility.publicApi) return false
     val chain = listOf(this) + enclosingDeclarationsOfSymbol()
     return chain.none { it.hasUnwatchedAnnotation() } &&
             context.session.configuredApiFilters?.watches(chain) != false

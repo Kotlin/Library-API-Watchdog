@@ -1,0 +1,63 @@
+FILE: mangledJvmNameResult.kt
+    package foo.bar
+
+    public final fun handle(result: R|kotlin/Result<kotlin/String>|): R|kotlin/Unit| {
+    }
+    public final fun handleNullable(result: R|kotlin/Result<kotlin/String>?|): R|kotlin/Unit| {
+    }
+    public final fun R|kotlin/Result<kotlin/String>|.describe(): R|kotlin/String| {
+        ^describe String(result)
+    }
+    context(result: R|kotlin/Result<kotlin/String>|)
+    public final fun describeContext(): R|kotlin/String| {
+        ^describeContext String(result)
+    }
+    public final fun <T : R|kotlin/Result<kotlin/String>|> handleBounded(t: R|T|): R|kotlin/Unit| {
+    }
+    public final val R|kotlin/Result<kotlin/String>|.pretty: R|kotlin/String|
+        public get(): R|kotlin/String| {
+            ^ String(result)
+        }
+    public final var topResult: R|kotlin/Result<kotlin/String>| = Q|kotlin/Result(.<companion>)|.R|kotlin/Result.Companion.success|<R|kotlin/String|>(String(x))
+        public get(): R|kotlin/Result<kotlin/String>|
+        public set(value: R|kotlin/Result<kotlin/String>|): R|kotlin/Unit|
+    public final class Outcome : R|kotlin/Any| {
+        public constructor(result: R|kotlin/Result<kotlin/String>|): R|foo/bar/Outcome| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val result: R|kotlin/Result<kotlin/String>| = R|<local>/result|
+            public get(): R|kotlin/Result<kotlin/String>|
+
+    }
+    public final fun onResult(result: R|kotlin/Result<kotlin/String>|, action: R|(kotlin/Int) -> kotlin/Unit|): R|kotlin/Unit| {
+    }
+    public final fun topLevel(): R|kotlin/Result<kotlin/String>| {
+        ^topLevel Q|kotlin/Result(.<companion>)|.R|kotlin/Result.Companion.success|<R|kotlin/String|>(String(x))
+    }
+    public final class Loader : R|kotlin/Any| {
+        public constructor(): R|foo/bar/Loader| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final fun load(): R|kotlin/Result<kotlin/String>| {
+            ^load Q|kotlin/Result(.<companion>)|.R|kotlin/Result.Companion.success|<R|kotlin/String|>(String(x))
+        }
+
+        public final val last: R|kotlin/Result<kotlin/String>|
+            public get(): R|kotlin/Result<kotlin/String>| {
+                ^ Q|kotlin/Result(.<companion>)|.R|kotlin/Result.Companion.success|<R|kotlin/String|>(String(x))
+            }
+
+        public final var latest: R|kotlin/Result<kotlin/String>| = Q|kotlin/Result(.<companion>)|.R|kotlin/Result.Companion.success|<R|kotlin/String|>(String(x))
+            public get(): R|kotlin/Result<kotlin/String>|
+            public set(value: R|kotlin/Result<kotlin/String>|): R|kotlin/Unit|
+
+        public final var named: R|kotlin/Result<kotlin/String>| = Q|kotlin/Result(.<companion>)|.R|kotlin/Result.Companion.success|<R|kotlin/String|>(String(x))
+            @PROPERTY_GETTER:R|kotlin/jvm/JvmName|(name = String(getNamed) [evaluated = String(getNamed)]) public get(): R|kotlin/Result<kotlin/String>|
+            public set(value: R|kotlin/Result<kotlin/String>|): R|kotlin/Unit|
+
+        public final fun store(result: R|kotlin/Result<kotlin/String>|): R|kotlin/Unit| {
+        }
+
+    }

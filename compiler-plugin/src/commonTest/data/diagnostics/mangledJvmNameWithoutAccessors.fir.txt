@@ -1,0 +1,52 @@
+FILE: mangledJvmNameWithoutAccessors.kt
+    package foo.bar
+
+    public final object Limits : R|kotlin/Any| {
+        private constructor(): R|foo/bar/Limits| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final const val MAX: R|kotlin/UInt| = UInt(10)
+            public get(): R|kotlin/UInt|
+
+        public final val min: R|kotlin/UInt| = UInt(0)
+            public get(): R|kotlin/UInt|
+
+    }
+    public final class Quota : R|kotlin/Any| {
+        public constructor(): R|foo/bar/Quota| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final companion object Companion : R|kotlin/Any| {
+            private constructor(): R|foo/bar/Quota.Companion| {
+                super<R|kotlin/Any|>()
+            }
+
+            public final const val DEFAULT: R|kotlin/UInt| = UInt(10)
+                public get(): R|kotlin/UInt|
+
+        }
+
+    }
+    public final annotation class Limit : R|kotlin/Annotation| {
+        public constructor(max: R|kotlin/UInt|): R|foo/bar/Limit| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val max: R|kotlin/UInt| = R|<local>/max|
+            public get(): R|kotlin/UInt|
+
+    }
+    public final annotation class Range : R|kotlin/Annotation| {
+        public constructor(from: R|kotlin/UInt|, to: R|kotlin/UInt| = UInt(10)): R|foo/bar/Range| {
+            super<R|kotlin/Any|>()
+        }
+
+        public final val from: R|kotlin/UInt| = R|<local>/from|
+            public get(): R|kotlin/UInt|
+
+        public final val to: R|kotlin/UInt| = R|<local>/to|
+            public get(): R|kotlin/UInt|
+
+    }

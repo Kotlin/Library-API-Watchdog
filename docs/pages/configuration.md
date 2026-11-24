@@ -218,6 +218,8 @@ apiWatchdog {
 }
 ```
 
+When the annotation is on a parameter or a type parameter, the rule skips what the check reports on that parameter.
+
 `ignore` doesn't work for always-error checks. See [Exemptions and internal API](./exemptions.md)
 for more details about when to use a rule.
 

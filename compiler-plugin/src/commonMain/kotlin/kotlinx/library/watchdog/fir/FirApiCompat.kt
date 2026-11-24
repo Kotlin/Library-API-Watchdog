@@ -16,6 +16,8 @@ import org.jetbrains.kotlin.fir.SessionHolder
 import org.jetbrains.kotlin.fir.declarations.FirClassLikeDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirProperty
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
+import org.jetbrains.kotlin.fir.expressions.FirExpression
+import org.jetbrains.kotlin.fir.expressions.FirStatement
 import org.jetbrains.kotlin.fir.symbols.impl.FirTypeParameterSymbol
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.fir.types.ConeTypeParameterType
@@ -35,6 +37,8 @@ internal expect val FirProperty.isLocalCompat: Boolean
 internal expect val FirClassLikeDeclaration.isLocalCompat: Boolean
 
 internal expect val KotlinJvmBinaryClass.containingLibraryPathCompat: String?
+
+internal expect val FirStatement.functionTypeConversionArgument: FirExpression?
 
 internal enum class SourceToken { IDENTIFIER, CONSTRUCTOR_KEYWORD, KDOC }
 

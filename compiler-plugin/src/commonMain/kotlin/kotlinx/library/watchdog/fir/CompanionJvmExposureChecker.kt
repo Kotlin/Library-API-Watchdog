@@ -10,7 +10,6 @@ import org.jetbrains.kotlin.fir.declarations.FirCallableDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirNamedFunction
 import org.jetbrains.kotlin.fir.declarations.FirProperty
 import org.jetbrains.kotlin.fir.declarations.FirPropertyAccessor
-import org.jetbrains.kotlin.fir.declarations.utils.effectiveVisibility
 import org.jetbrains.kotlin.fir.declarations.utils.isCompanion
 import org.jetbrains.kotlin.fir.declarations.utils.isConst
 import org.jetbrains.kotlin.fir.declarations.utils.isLateInit
@@ -82,7 +81,7 @@ internal class CompanionJvmExposureChecker(
         }
         // The backing field of a `lateinit` property is a static field on the outer class with the
         // visibility of the setter.
-        if (declaration.isLateInit && declaration.setter?.effectiveVisibility?.publicApi == true) {
+        if (declaration.isLateInit && declaration.hasApiAccessor(declaration.setter)) {
             return
         }
 
@@ -120,7 +119,7 @@ internal class CompanionJvmExposureChecker(
     private fun FirProperty.accessorRemainsOnCompanion(
         accessor: FirPropertyAccessor?,
         useSiteTarget: AnnotationUseSiteTarget,
-    ): Boolean = accessor != null && accessor.effectiveVisibility.publicApi &&
+    ): Boolean = hasApiAccessor(accessor) &&
             !hasAccessorAnnotation(accessor, useSiteTarget, JvmStandardClassIds.Annotations.JvmStatic) &&
             !hasAccessorAnnotation(accessor, useSiteTarget, JvmStandardClassIds.JVM_SYNTHETIC_ANNOTATION_CLASS_ID)
 }

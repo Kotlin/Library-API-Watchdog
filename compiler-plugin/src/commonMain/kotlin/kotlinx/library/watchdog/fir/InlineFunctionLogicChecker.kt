@@ -99,7 +99,7 @@ internal class InlineFunctionLogicChecker(
 
         val factory = severities[WatchdogDiagnostics.INLINE_FUNCTION_WITH_LOGIC] ?: return
         declaration.getter?.let { checkAccessor(it, declaration, factory) }
-        declaration.setter?.let { checkAccessor(it, declaration, factory) }
+        declaration.setter?.takeIf { declaration.hasApiAccessor(it) }?.let { checkAccessor(it, declaration, factory) }
     }
 
     context(context: CheckerContext, reporter: DiagnosticReporter)
@@ -170,7 +170,7 @@ internal class InlineFunctionLogicChecker(
             } == true && rValue.isPlain()
         is FirTypeOperatorCall -> arguments.all { it.isPlain() }
         is FirAnonymousFunctionExpression -> anonymousFunction.body?.isThinWrapper() == true
-        else -> false
+        else -> functionTypeConversionArgument?.isPlain() == true
     }
 
     private fun FirFunctionCall.isPlainCall(): Boolean {

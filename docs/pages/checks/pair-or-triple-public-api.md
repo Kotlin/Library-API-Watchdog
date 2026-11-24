@@ -75,7 +75,7 @@ public fun dimensions(): Dimensions = Dimensions(0, 0, 0)
 The check skips:
 
 - Extension receivers on these types.
-- Overrides.
+- Overrides. The check reports an `override val` constructor parameter as a parameter of the constructor.
 - `@PublishedApi internal` declarations.
 
 ## Exemption

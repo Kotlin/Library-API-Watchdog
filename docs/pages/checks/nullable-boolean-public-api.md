@@ -77,7 +77,7 @@ public fun connectionState(): ConnectionState = ConnectionState.UNKNOWN
 The check skips:
 
 - Extension receivers on `Boolean?` type.
-- Overrides.
+- Overrides. The check reports an `override val` constructor parameter as a parameter of the constructor.
 - Java platform types.
 - `@PublishedApi internal` declarations.
 
