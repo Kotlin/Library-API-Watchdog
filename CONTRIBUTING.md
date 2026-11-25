@@ -8,7 +8,7 @@ The build and the functional-test builds get every plugin and every Maven depend
 | Proxy | Holds |
 |---|---|
 | [build-deps](https://packages.jetbrains.team/maven/p/kt-lib/build-deps) | The release versions. |
-| [build-deps-eap](https://packages.jetbrains.team/maven/p/kt-lib/build-deps-eap) | The compiler-plugin-dev-kit and the Kotlin development builds. |
+| [build-deps-eap](https://packages.jetbrains.team/maven/p/kt-lib/build-deps-eap) | The Kotlin development builds. |
 | [build-deps-ide](https://packages.jetbrains.team/maven/p/kt-lib/build-deps-ide) | The Kotlin builds of the IDEs. |
 
 A proxy takes a package from one upstream repository only. So a new upstream repository goes into the proxy where no
@@ -234,8 +234,8 @@ Docusaurus packages share one pull request.
 Renovate skips the compiler-plugin-dev-kit. [Dev kit update](.github/workflows/devkit-update.yml) updates it every
 day at 6:00 Berlin time, or when you run the workflow:
 
-1. The workflow compares the `devkit` entry of the version catalog on `main` with the newest version in the Space
-   repository, the highest of the form `MAJOR.MINOR.PATCH-dev-BUILD`. When the newest version is later, it commits
+1. The workflow compares the `devkit` entry of the version catalog on `main` with the newest version on Maven
+   Central, the highest of the form `MAJOR.MINOR.PATCH`. When the newest version is later, it commits
    that version to the `devkit-update` branch and opens a pull request as the [Watchdog bot](#watchdog-bot).
 2. The workflow runs the compiler plugin tests, the Gradle tests, the version alignment check, the artifact list check,
    and the benchmark check on that commit.

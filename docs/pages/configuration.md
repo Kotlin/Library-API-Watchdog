@@ -4,15 +4,13 @@ The Gradle plugin, the `apiWatchdog` extension, and the compiler options of `lib
 
 ## Apply the Gradle plugin
 
-The plugin and the annotations library are in the Space EAP repository. The Gradle plugin also depends on
-the runtime libraries of the compiler plugin dev kit. They are in the dev kit EAP repository. Add both
-repositories to the plugin and dependency repositories:
+The plugin and the annotations library are in the Space EAP repository. Their dependencies are on Maven
+Central. Add the Space EAP repository to the plugin and dependency repositories:
 
 ```kotlin settings.gradle.kts
 pluginManagement {
     repositories {
         maven("https://packages.jetbrains.team/maven/p/kt-lib/eap")
-        maven("https://packages.jetbrains.team/maven/p/compiler-plugin-dev-kit/eap")
         gradlePluginPortal()
     }
 }
@@ -20,14 +18,13 @@ pluginManagement {
 dependencyResolutionManagement {
     repositories {
         maven("https://packages.jetbrains.team/maven/p/kt-lib/eap")
-        maven("https://packages.jetbrains.team/maven/p/compiler-plugin-dev-kit/eap")
         mavenCentral()
     }
 }
 ```
 
-A convention plugin build (`buildSrc` or an included build) that depends on the Gradle plugin needs both
-repositories in its own settings.
+A convention plugin build (`buildSrc` or an included build) that depends on the Gradle plugin needs the Space
+EAP repository and Maven Central in its own settings.
 
 The plugin needs Gradle 8.11 or later, running on Java 17 or later.
 

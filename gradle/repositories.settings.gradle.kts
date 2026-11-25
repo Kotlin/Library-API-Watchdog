@@ -22,9 +22,6 @@ listOf(pluginManagement.repositories, dependencyResolutionManagement.repositorie
     if (!useProxies) {
         repositories.gradlePluginPortal()
         repositories.mavenCentral()
-        repositories.maven("https://packages.jetbrains.team/maven/p/compiler-plugin-dev-kit/eap") {
-            anonymousCredentials()
-        }
         return@forEach
     }
     for (proxy in listOf("build-deps", "build-deps-eap", "build-deps-ide")) {
