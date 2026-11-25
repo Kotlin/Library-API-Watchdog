@@ -16,20 +16,6 @@ annotations.
 
 ## Setup
 
-The Gradle plugin is on the Gradle Plugin Portal. The compiler plugin and the annotations library are on
-Maven Central, so the project needs Maven Central in its dependency repositories. In `settings.gradle.kts`:
-
-```kotlin
-dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-    }
-}
-```
-
-A convention plugin build (`buildSrc` or an included build) that depends on the Gradle plugin needs the Gradle
-Plugin Portal in its own repositories.
-
 Apply the plugin and turn on
 [explicit API mode](https://kotlinlang.org/docs/api-guidelines-simplicity.html#use-explicit-api-mode),
 strict or warning:

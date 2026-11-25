@@ -4,20 +4,6 @@ The Gradle plugin, the `apiWatchdog` extension, and the compiler options of `lib
 
 ## Apply the Gradle plugin
 
-The Gradle plugin is on the Gradle Plugin Portal. The compiler plugin and the annotations library are on
-Maven Central, so the project needs Maven Central in its dependency repositories:
-
-```kotlin settings.gradle.kts
-dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-    }
-}
-```
-
-A convention plugin build (`buildSrc` or an included build) that depends on the Gradle plugin needs the Gradle
-Plugin Portal in its own repositories.
-
 The plugin needs Gradle 8.11 or later, running on Java 17 or later.
 
 Apply the plugin:
