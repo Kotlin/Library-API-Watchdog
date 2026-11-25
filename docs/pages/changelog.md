@@ -11,7 +11,7 @@ mdx:
 
 # Changelog
 
-## Unreleased
+## 0.3.0 - 2026-11-25
 
 ### Added
 
@@ -37,6 +37,57 @@ mdx:
 - The setup doesn't need the dev kit EAP repository.
 - The checks report the type of a `private` or `internal` `val` or `var` parameter of a public constructor, such as
   `class Cache(private val items: MutableList<String>)`.
+
+<!-- Release notes generated using configuration in .github/release.yml at e7946bdb238d4177c6cfb5c5d53626076cca253b -->
+
+### What's Changed
+* Run every check in the Release workflow and publish from Linux by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/37
+* Document the dev kit EAP repository in the setup by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/38
+* Add the report aggregation setup to the configuration page by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/39
+* Make the explicit API mode requirement configurable by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/48
+* Fix the daily compiler plugin tests and the merge of the dev kit update by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/47
+* Update the dev kit to 0.0.4-dev-375 in https://github.com/Kotlin/Library-API-Watchdog/pull/51
+* Group the Renovate updates by ecosystem by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/55
+* Update the dev kit to 0.0.4-dev-376 in https://github.com/Kotlin/Library-API-Watchdog/pull/63
+* Apply the ABI validation filters to the watchdog checks by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/59
+* Print each Watchdog diagnostic once in exemptExistingApi and report runs by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/54
+* Update the dev kit to 0.0.4-dev-380 in https://github.com/Kotlin/Library-API-Watchdog/pull/68
+* Publish releases outside GitHub Actions, between the Pre-release and Post-publish workflows by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/70
+* Point the repository and website links to Kotlin/Library-API-Watchdog by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/71
+* Read the signing properties from the extra properties of the project by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/74
+* Support 2.2.20+ and IDEA 2025.2+ by @kyay10 in https://github.com/Kotlin/Library-API-Watchdog/pull/73
+* Rename the packages and artifact ids, order the report entries by position, and show the setup step of the IDE links by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/77
+* Add the ignoreDeprecatedApi option to skip deprecated declarations by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/79
+* Accept a type parameter with function bounds as a trailing lambda parameter by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/78
+* Keep the report of `exemptExistingApi` for an abbreviated or relative task name by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/80
+* Report every pull request check through one required check, `all_green` by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/82
+* Compile against Kotlin 2.5.20-dev-5318 by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/83
+* Get every plugin and Maven dependency from the kt-lib Space proxies by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/76
+* Fix the undocumented API check in IntelliJ IDEA 2027.1 nightly builds by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/81
+* Use the Develocity plugin 4.4.3, the newest that the server accepts by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/85
+* Run fewer tests on a pull request and fix the flaky CI jobs by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/84
+* Compile against Kotlin 2.5.20-dev-5510 by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/87
+* Rename the Pre-release workflow to Pre-publish by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/86
+* Split WatchdogProjectTest to balance the two forks of the functional tests by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/88
+* Update the dev kit to 0.0.4-dev-403 by @api-watchdog[bot] in https://github.com/Kotlin/Library-API-Watchdog/pull/75
+* Ignore fork pull requests in the workflow lookups and fix six smaller workflow defects by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/89
+* Fix six defects of the aggregate HTML and SARIF reports by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/90
+* Fix wrong edits and failure handling of the exemption fixer by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/92
+* Compile against Kotlin 2.5.20-dev-5899 by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/110
+* Fix eight build setups where the Gradle plugin failed or gave a wrong result by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/94
+* Fix the redundant exemption verdicts for inferred types and for places that no check reads by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/95
+* Fix nine checker results that don't match the public API by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/93
+* Don't read a type-usage exemption through a type alias by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/96
+* Update the dev kit to 0.0.4-dev-407 by @api-watchdog[bot] in https://github.com/Kotlin/Library-API-Watchdog/pull/98
+* Check the supertypes that only an `actual` class declares by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/97
+* Add the non-transitive dependency exemption in `exemptExistingApi`, and fix build tooling and docs defects by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/91
+* Update the dev kit to 0.1.0 from Maven Central by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/115
+* List the important changes of 0.3.0 in the changelog by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/116
+
+### New Contributors
+* @api-watchdog[bot] made their first contribution in https://github.com/Kotlin/Library-API-Watchdog/pull/75
+
+**Full Changelog**: https://github.com/Kotlin/Library-API-Watchdog/compare/v0.2.0...v0.3.0
 
 ## 0.2.0 - 2026-11-06
 
