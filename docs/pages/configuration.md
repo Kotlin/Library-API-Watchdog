@@ -4,27 +4,19 @@ The Gradle plugin, the `apiWatchdog` extension, and the compiler options of `lib
 
 ## Apply the Gradle plugin
 
-The plugin and the annotations library are in the Space EAP repository. Their dependencies are on Maven
-Central. Add the Space EAP repository to the plugin and dependency repositories:
+The Gradle plugin is on the Gradle Plugin Portal. The compiler plugin and the annotations library are on
+Maven Central, so the project needs Maven Central in its dependency repositories:
 
 ```kotlin settings.gradle.kts
-pluginManagement {
-    repositories {
-        maven("https://packages.jetbrains.team/maven/p/kt-lib/eap")
-        gradlePluginPortal()
-    }
-}
-
 dependencyResolutionManagement {
     repositories {
-        maven("https://packages.jetbrains.team/maven/p/kt-lib/eap")
         mavenCentral()
     }
 }
 ```
 
-A convention plugin build (`buildSrc` or an included build) that depends on the Gradle plugin needs the Space
-EAP repository and Maven Central in its own settings.
+A convention plugin build (`buildSrc` or an included build) that depends on the Gradle plugin needs the Gradle
+Plugin Portal in its own repositories.
 
 The plugin needs Gradle 8.11 or later, running on Java 17 or later.
 
@@ -216,8 +208,9 @@ apiWatchdog {
 ```
 
 When the annotation is on a parameter or a type parameter, the rule skips what the check reports on that parameter.
+With `recursive = true`, the rule also covers every declaration nested in the annotated one. Default is `false`.
 
-`ignore` doesn't work for always-error checks. See [Exemptions and internal API](./exemptions.md)
+`ignore` doesn't work for a check without a [severity property](#severities). See [Exemptions and internal API](./exemptions.md)
 for more details about when to use a rule.
 
 ## Internal API annotations
@@ -322,12 +315,12 @@ Each configurable check, its property, and its diagnostic name:
 | [Function type aliases in public API](./checks/function-type-alias-public-api.md)                                       | `functionTypeAliasPublicApi`                            | `FUNCTION_TYPE_ALIAS_PUBLIC_API`             |
 | [Inconsistent parameter order in overloads](./checks/inconsistent-parameter-order-in-overloads.md)                      | `inconsistentParameterOrderInOverloads`                 | `INCONSISTENT_PARAMETER_ORDER_IN_OVERLOADS`  |
 | [Inline functions with logic](./checks/inline-function-with-logic.md)                                                   | `inlineFunctionWithLogic`                               | `INLINE_FUNCTION_WITH_LOGIC`                 |
+| [Internal API types in public API](./checks/special/public-type-with-internal-api.md)                                | `publicTypeWithInternalApi`                             | `PUBLIC_TYPE_WITH_INTERNAL_API`              |
 | [Mutable collections in public API](./checks/mutable-collection-public-api.md)                                          | `mutableCollectionPublicApi`                            | `MUTABLE_COLLECTION_PUBLIC_API`              |
 | [Nullable Booleans in public API](./checks/nullable-boolean-public-api.md)                                              | `nullableBooleanPublicApi`                              | `NULLABLE_BOOLEAN_PUBLIC_API`                |
 | [Open API without subclass opt-in](./checks/open-api-without-subclass-opt-in.md)                                        | `openApiWithoutSubclassOptIn`                           | `OPEN_API_WITHOUT_SUBCLASS_OPT_IN`           |
 | [Pair and Triple in public API](./checks/pair-or-triple-public-api.md)                                                  | `pairOrTriplePublicApi`                                 | `PAIR_OR_TRIPLE_PUBLIC_API`                  |
 | [Public types from non-transitive dependencies](./checks/special/public-type-from-non-transitive-dependency.md)         | `publicTypesMustBeTransitiveDependencies`               | `PUBLIC_TYPE_FROM_NON_TRANSITIVE_DEPENDENCY` |
-| [Internal API types in public API](./checks/special/public-type-with-internal-api.md)                                | `publicTypeWithInternalApi`                             | `PUBLIC_TYPE_WITH_INTERNAL_API`              |
 | [Required parameters after optional ones](./checks/required-parameter-after-optional.md)                                | `requiredParameterAfterOptional`                        | `REQUIRED_PARAMETER_AFTER_OPTIONAL`          |
 | [Stateful classes without equals, hashCode, and toString](./checks/stateful-class-without-equals-hashcode-to-string.md) | `statefulClassWithoutEquals`                            | `STATEFUL_CLASS_WITHOUT_EQUALS`              |
 | [Stateful classes without equals, hashCode, and toString](./checks/stateful-class-without-equals-hashcode-to-string.md) | `statefulClassWithoutHashCode`                          | `STATEFUL_CLASS_WITHOUT_HASH_CODE`           |

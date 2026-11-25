@@ -27,7 +27,7 @@ abstract class GenerateCheckNames : DiagnosticsJsonGeneratorTask() {
             appendLine(" * }")
             appendLine(" * ```")
             appendLine(" *")
-            appendLine(" * The list includes the always-error checks. [WatchdogGradleExtension.ignore] rejects those.")
+            appendLine(" * The list includes the checks without a severity property. [WatchdogGradleExtension.ignore] rejects those.")
         }
         appendLine(" */")
         appendLine("$visibility enum class WatchdogChecks {")

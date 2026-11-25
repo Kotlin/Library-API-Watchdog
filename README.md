@@ -16,27 +16,19 @@ annotations.
 
 ## Setup
 
-The plugin and the annotations library are in the Space EAP repository. Their dependencies are on Maven
-Central. Add the Space EAP repository to `settings.gradle.kts`:
+The Gradle plugin is on the Gradle Plugin Portal. The compiler plugin and the annotations library are on
+Maven Central, so the project needs Maven Central in its dependency repositories. In `settings.gradle.kts`:
 
 ```kotlin
-pluginManagement {
-    repositories {
-        maven("https://packages.jetbrains.team/maven/p/kt-lib/eap")
-        gradlePluginPortal()
-    }
-}
-
 dependencyResolutionManagement {
     repositories {
-        maven("https://packages.jetbrains.team/maven/p/kt-lib/eap")
         mavenCentral()
     }
 }
 ```
 
-A convention plugin build (`buildSrc` or an included build) that depends on the Gradle plugin needs the Space
-EAP repository and Maven Central in its own settings.
+A convention plugin build (`buildSrc` or an included build) that depends on the Gradle plugin needs the Gradle
+Plugin Portal in its own repositories.
 
 Apply the plugin and turn on
 [explicit API mode](https://kotlinlang.org/docs/api-guidelines-simplicity.html#use-explicit-api-mode),

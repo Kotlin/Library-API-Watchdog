@@ -865,7 +865,7 @@ public class WatchdogSupportPlugin : DevKitSupportPlugin(PluginInfo.PLUGIN_INFO)
             |$setupSnippet
             |
             |Configuration reference: https://kotlinlang.org/docs/gradle-binary-compatibility-validation.html
-            |On an older Kotlin version, apply the Binary Compatibility Validator plugin instead:
+            |Or apply the Binary Compatibility Validator plugin instead:
             |https://github.com/Kotlin/binary-compatibility-validator
             |
             |Disable this suggestion with `apiWatchdog { suggestAbiValidation = false }`.

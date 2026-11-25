@@ -10,9 +10,9 @@ The Gradle plugin, not the compiler plugin, does this check. After Gradle evalua
 plugin logs a warning when neither of these is on:
 
 - The [ABI validation](https://kotlinlang.org/docs/gradle-binary-compatibility-validation.html) of
-  the Kotlin Gradle plugin, Kotlin 2.2 or newer.
+  the Kotlin Gradle plugin.
 - The [Binary Compatibility Validator](https://github.com/Kotlin/binary-compatibility-validator)
-  plugin, for older Kotlin versions.
+  plugin.
 
 The warning holds a setup snippet for the Kotlin version of the project:
 

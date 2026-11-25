@@ -7,7 +7,7 @@
 //         public data class Point(val x: Int, val y: Int)
 //
 //     Code Hike then removes the comment and gives the range to the `diagnostics` handler in
-//     src/components/Code.tsx. docs/authoring.md gives the annotation rules.
+//     src/components/Code.tsx.
 import {visit} from 'unist-util-visit';
 import {diagnostics} from './diagnostics.mjs';
 

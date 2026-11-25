@@ -11,7 +11,7 @@ Two tasks write it:
 ./gradlew generateApiWatchdogReport
 ```
 
-Both tasks compile the compilations [the checks run in](./configuration.md#apply-the-gradle-plugin) in
+Both tasks compile the compilations [the checks run in](./configuration.md#what-applying-does) in
 collection mode, except test compilations:
 
 - The `main` compilation of every target.

@@ -121,6 +121,7 @@ The site is a [Docusaurus](https://docusaurus.io/) project in [docs](docs), buil
 ```bash
 npm test                            # the remark plugins
 npm run check:diagnostic-exemptions # the exemption wording in the check pages matches diagnostics.json
+npm run check:changelog             # the website changelog matches CHANGELOG.md
 npm run build                       # the site build, fails on a broken link or anchor
 ```
 
