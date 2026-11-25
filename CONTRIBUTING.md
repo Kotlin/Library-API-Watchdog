@@ -258,9 +258,27 @@ npm exec --yes --package=node@24 --package=renovate@44.164.6 -- renovate-config-
 ## Changelog
 
 The Pre-publish workflow writes the section of each release in [CHANGELOG.md](CHANGELOG.md), so a pull request doesn't
-edit the changelog. The section holds the GitHub generated release notes: the pull requests since the previous release
-tag. The title of a pull request is its changelog entry. The notes skip the pull requests with the `release` label of
-[.github/release.yml](.github/release.yml).
+edit the changelog. The section holds the GitHub generated release notes under the `Other changes` heading: the pull
+requests since the previous release tag. The title of a pull request is its changelog entry.
+
+[.github/release.yml](.github/release.yml) puts each pull request into one category by its labels:
+
+| Category | Label | Pull requests |
+|---|---|---|
+| Compiler plugin and annotations | `compiler-plugin` | A change of the main sources of the compiler plugin, of the annotations, or of `diagnostics.json`. |
+| Gradle plugin and reports | `gradle-plugin` | A change of the main sources of the Gradle plugin, the report aggregation plugin, or the exemption fixer. |
+| Documentation | `documentation` | A change of `docs/` and Markdown files only. |
+| Dependency updates | `dependencies` | The pull requests of Renovate and of the Dev kit update workflow. |
+| Build, tests, and CI | None | Every other pull request. |
+
+The [Pull request labels](.github/workflows/pull-request-labels.yml) workflow adds the first three labels by the
+changed files of a pull request ([.github/labeler.yml](.github/labeler.yml)). It doesn't remove a label. To move a pull
+request into another category, add a label by hand:
+
+- A pull request with `dependencies` is a dependency update.
+- Without `dependencies`, the pull request is in the first category of the table that has one of its labels.
+
+The notes skip the pull requests with the `release` label.
 
 For text above the generated notes of the next release, add a `## Unreleased` section at the top of CHANGELOG.md. The
 release moves that text into its section and removes the `## Unreleased` section.

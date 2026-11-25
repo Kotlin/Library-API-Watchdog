@@ -1,5 +1,36 @@
-# The configuration of the GitHub generated release notes. The Pre-publish and Post-publish workflows label their pull requests `release`.
+# The configuration of the GitHub generated release notes. The Pull request labels workflow adds the labels of the first
+# three categories (.github/labeler.yml). A category excludes the labels of the earlier categories and `dependencies`,
+# so each pull request is in one category. The Pre-publish and Post-publish workflows label their pull requests
+# `release`.
 changelog:
   exclude:
     labels:
       - release
+  categories:
+    - title: Compiler plugin and annotations
+      labels:
+        - compiler-plugin
+      exclude:
+        labels:
+          - dependencies
+    - title: Gradle plugin and reports
+      labels:
+        - gradle-plugin
+      exclude:
+        labels:
+          - compiler-plugin
+          - dependencies
+    - title: Documentation
+      labels:
+        - documentation
+      exclude:
+        labels:
+          - compiler-plugin
+          - gradle-plugin
+          - dependencies
+    - title: Dependency updates
+      labels:
+        - dependencies
+    - title: Build, tests, and CI
+      labels:
+        - "*"

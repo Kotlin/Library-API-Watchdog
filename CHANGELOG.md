@@ -29,7 +29,7 @@
 
 <!-- Release notes generated using configuration in .github/release.yml at e7946bdb238d4177c6cfb5c5d53626076cca253b -->
 
-### What's Changed
+### Other changes
 * Run every check in the Release workflow and publish from Linux by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/37
 * Document the dev kit EAP repository in the setup by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/38
 * Add the report aggregation setup to the configuration page by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/39
@@ -82,7 +82,7 @@
 
 <!-- Release notes generated using configuration in .github/release.yml at 20a11d69284725b68705ed22ee65497b1f61bdd9 -->
 
-### What's Changed
+### Other changes
 * Update the dev kit to 0.0.4-dev-356 by @github-actions[bot] in https://github.com/Kotlin/Library-API-Watchdog/pull/27
 * Open the bot pull requests with a GitHub App token by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/28
 * Update Gradle plugins, AGP, and the docs tooltip, and ignore Kotlin in Renovate by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/30
@@ -107,7 +107,7 @@
 
 <!-- Release notes generated using configuration in .github/release.yml at 2a8e491056a220fcc662ac583fd94b32f526911d -->
 
-### What's Changed
+### Other changes
 * Sign the commits of the Release and Dev kit update workflows by @Mr3zee in https://github.com/Kotlin/Library-API-Watchdog/pull/25
 
 ### New Contributors
@@ -129,7 +129,7 @@
 
 <!-- Release notes generated using configuration in .github/release.yml at 661e3e033d2b89ca40a585ee471f7dac4cd15703 -->
 
-### What's Changed
+### Other changes
 * Clean up by @kyay10 in https://github.com/Kotlin/Library-API-Watchdog/pull/2
 * Versioned dumps by @kyay10 in https://github.com/Kotlin/Library-API-Watchdog/pull/3
 * Restore Kotlin group by @kyay10 in https://github.com/Kotlin/Library-API-Watchdog/pull/4
