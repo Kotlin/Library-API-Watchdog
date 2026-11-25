@@ -26,9 +26,6 @@
 - The setup doesn't need the dev kit EAP repository.
 - The checks report the type of a `private` or `internal` `val` or `var` parameter of a public constructor, such as
   `class Cache(private val items: MutableList<String>)`.
-- [Internal API types in public API](https://kotlin.github.io/Library-API-Watchdog/checks/special/public-type-with-internal-api)
-  and [Public types from non-transitive dependencies](https://kotlin.github.io/Library-API-Watchdog/checks/special/public-type-from-non-transitive-dependency)
-  report a supertype that only an `actual` class declares.
 
 ## 0.2.0 - 2026-11-06
 

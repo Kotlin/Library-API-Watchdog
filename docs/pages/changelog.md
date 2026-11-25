@@ -37,9 +37,6 @@ mdx:
 - The setup doesn't need the dev kit EAP repository.
 - The checks report the type of a `private` or `internal` `val` or `var` parameter of a public constructor, such as
   `class Cache(private val items: MutableList<String>)`.
-- [Internal API types in public API](checks/special/public-type-with-internal-api.md)
-  and [Public types from non-transitive dependencies](checks/special/public-type-from-non-transitive-dependency.md)
-  report a supertype that only an `actual` class declares.
 
 ## 0.2.0 - 2026-11-06
 
