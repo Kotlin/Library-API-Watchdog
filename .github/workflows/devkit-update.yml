@@ -129,6 +129,8 @@ jobs:
           else
             gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$PR" -f "title=$title" -f "body=$body" --silent
           fi
+          # The label puts the pull request into the dependency updates of the release notes (.github/release.yml).
+          gh api --method POST "repos/$GITHUB_REPOSITORY/issues/$PR/labels" -f 'labels[]=dependencies' --silent
           echo "pr=$PR" >> "$GITHUB_OUTPUT"
 
   compiler-plugin-tests:

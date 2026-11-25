@@ -19,6 +19,7 @@ function fixture(t) {
     'scripts/prepare-release.sh',
     'scripts/release-plan.sh',
     'scripts/release-notes.sh',
+    'scripts/release-body.sh',
     'scripts/push-signed-commit.sh',
     'scripts/lib/project-version.sh',
     'docs/scripts/sync-changelog.mjs',
@@ -273,7 +274,7 @@ test('release preparation adds the release section from the notes and the unrele
   const prepare = (args, env = {}) => spawnSync('bash', [path.join(directory, 'scripts/prepare-release.sh'), ...args], {
     cwd: os.tmpdir(), encoding: 'utf8', env: {...process.env, RELEASE_DATE: '2026-11-04', ...env},
   });
-  const notes = '### What\'s Changed\n\n* Change by @someone in https://example.com/pull/1\n\n**Full Changelog**: compare\n';
+  const notes = '### Other changes\n\n* Change by @someone in https://example.com/pull/1\n\n**Full Changelog**: compare\n';
   fs.writeFileSync(notesFile, `\n${notes}\n\n`);
 
   // The text of the unreleased section goes above the notes, and the section goes away.
@@ -289,7 +290,7 @@ test('release preparation adds the release section from the notes and the unrele
   // Without an unreleased section, the section holds the notes only.
   const notesOnly = prepare(['1.4.0', 'minor', notesFile]);
   assert.equal(notesOnly.status, 0, notesOnly.stderr);
-  assert.match(read('CHANGELOG.md'), /^# Changelog\n\n## 1\.4\.0 - 2026-11-04\n\n### What's Changed\n/);
+  assert.match(read('CHANGELOG.md'), /^# Changelog\n\n## 1\.4\.0 - 2026-11-04\n\n### Other changes\n/);
   assert.equal(runScript(directory, 'scripts/changelog-section.sh', '1.4.0').stdout, notes);
   assert.match(read('library.properties'), /^version=1\.5\.0$/m);
 
@@ -384,7 +385,7 @@ test('release notes are the GitHub changes since the highest earlier stable tag,
     '#!/usr/bin/env bash',
     `printf '%s\\n' "$@" > '${ghArguments}'`,
     '[[ -z "${GH_FAIL:-}" ]] || exit 1',
-    `printf "## What's Changed\\r\\n* Change by @someone in https://example.com/pull/1\\r\\n\\r\\n**Full Changelog**: compare\\r\\n\\r\\n"`,
+    `printf "## What's Changed\\r\\n### Documentation\\r\\n* Change by @someone in https://example.com/pull/1\\r\\n\\r\\n**Full Changelog**: compare\\r\\n\\r\\n"`,
     '',
   ].join('\n'), {mode: 0o755});
   const notes = (version, env = {}) => {
@@ -398,7 +399,7 @@ test('release notes are the GitHub changes since the highest earlier stable tag,
 
   const first = notes('1.3.0');
   assert.equal(first.status, 0, first.stderr);
-  assert.equal(first.stdout, "### What's Changed\n* Change by @someone in https://example.com/pull/1\n\n**Full Changelog**: compare\n");
+  assert.equal(first.stdout, "### Other changes\n#### Documentation\n* Change by @someone in https://example.com/pull/1\n\n**Full Changelog**: compare\n");
   assert.match(fs.readFileSync(ghArguments, 'utf8'), /^repos\/example\/watchdog\/releases\/generate-notes$/m);
   assert.deepEqual(fields(), ['tag_name=v1.3.0', `target_commitish=${head}`]);
 
@@ -422,6 +423,57 @@ test('release notes are the GitHub changes since the highest earlier stable tag,
     assert.equal(rejected.status, 1, version);
     assert.equal(fs.existsSync(ghArguments), false, version);
   }
+});
+
+test('the release body has each paragraph and each list item of the changelog section on one line', (t) => {
+  const directory = fixture(t);
+  fs.writeFileSync(path.join(directory, 'CHANGELOG.md'), [
+    '# Changelog', '', '## 1.3.0 - 2026-11-04', '',
+    '### Added', '',
+    '- [Feature](https://example.com/feature): the first line', '  and the second line.', '  - A nested item', '    on two lines.',
+    '- A hard break  ', '  stays.', '',
+    'A paragraph', 'on two lines.', '', '    indented code', '    stays', '',
+    '```kotlin', 'val code =', '    1', '```', '',
+    '| A | B |', '|---|---|', '',
+    '<!-- A comment -->', '',
+    '### Other changes', '* Change by @someone in https://example.com/pull/1', '* Change by @other in https://example.com/pull/2', '',
+    '**Full Changelog**: compare', '',
+    '## 1.2.3', '', '- Historical release.', '',
+  ].join('\n'));
+  const body = runScript(directory, 'scripts/release-body.sh', '1.3.0');
+  assert.equal(body.status, 0, body.stderr);
+  assert.equal(body.stdout, [
+    '### Added', '',
+    '- [Feature](https://example.com/feature): the first line and the second line.', '  - A nested item on two lines.',
+    '- A hard break  ', '  stays.', '',
+    'A paragraph on two lines.', '', '    indented code', '    stays', '',
+    '```kotlin', 'val code =', '    1', '```', '',
+    '| A | B |', '|---|---|', '',
+    '<!-- A comment -->', '',
+    '### Other changes', '* Change by @someone in https://example.com/pull/1', '* Change by @other in https://example.com/pull/2', '',
+    '**Full Changelog**: compare', '',
+  ].join('\n'));
+
+  const missing = runScript(directory, 'scripts/release-body.sh', '9.9.9');
+  assert.equal(missing.status, 1);
+  assert.equal(missing.stdout, '');
+  assert.match(missing.stderr, /must have one "## 9\.9\.9" section, found 0/);
+  assert.equal(runScript(directory, 'scripts/release-body.sh').status, 1);
+});
+
+test('each label of a release notes category comes from the labeler, the labels workflow, or a bot', () => {
+  const read = (file) => fs.readFileSync(path.join(repositoryDirectory, file), 'utf8');
+  const categories = read('.github/release.yml').split(/^  categories:$/m)[1];
+  const categoryLabels = new Set([...categories.matchAll(/^ {8,}- (.+)$/gm)].map((match) => match[1]));
+  assert.equal(categoryLabels.delete('"*"'), true);
+  const labelerLabels = [...read('.github/labeler.yml').matchAll(/^([a-z-]+):$/gm)].map((match) => match[1]);
+  const workflowLabels = [...read('.github/workflows/pull-request-labels.yml').matchAll(/^ {10}label ([a-z-]+) /gm)]
+    .map((match) => match[1]);
+  const renovateLabels = JSON.parse(read('.github/renovate.json')).labels;
+  assert.match(read('.github/workflows/devkit-update.yml'), /-f 'labels\[\]=dependencies'/);
+
+  assert.deepEqual([...categoryLabels].sort(), [...labelerLabels, ...renovateLabels].sort());
+  assert.deepEqual(workflowLabels.sort(), [...categoryLabels].sort());
 });
 
 test('signed commits send the changes of the tracked files to the GitHub API, on top of HEAD', (t) => {

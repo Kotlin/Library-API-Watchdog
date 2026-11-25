@@ -1,0 +1,21 @@
+# The labels that the Pull request labels workflow adds to a pull request by its changed files. .github/release.yml
+# groups the generated release notes by these labels.
+
+compiler-plugin:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'compiler-plugin/src/*Main/**'
+          - 'plugin-annotations/src/**'
+          - 'diagnostics.json'
+
+gradle-plugin:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'gradle-plugin/src/main/**'
+          - 'gradle-plugin/report-aggregation/src/main/**'
+          - 'exempts-fixer/src/commonMain/**'
+
+# Each changed file is a docs file.
+documentation:
+  - changed-files:
+      - any-glob-to-all-files: '{docs/**,**/*.md}'

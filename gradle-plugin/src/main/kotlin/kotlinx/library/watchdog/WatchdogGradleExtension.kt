@@ -193,7 +193,7 @@ public open class WatchdogGradleExtension @Inject internal constructor(
         objectFactory.property(Boolean::class.java).convention(false)
 
     /**
-     * Fully qualified names of annotation classes that mark internal API, besides those that
+     * Fully qualified names or name patterns of annotation classes that mark internal API, besides those that
      * carry `@InternalAnnotationMarker`. The watchdog skips the declarations under such an
      * annotation, and `PUBLIC_TYPE_WITH_INTERNAL_API` reports a public declaration that exposes
      * a type marked with it. Use it for the internal-API annotation of a dependency:
@@ -289,14 +289,14 @@ public open class WatchdogGradleExtension @Inject internal constructor(
      * every declaration nested in it. Default is `false`. Without it, the rule covers an enclosing
      * class only when the `@Intentionally*` annotation of the check does.
      *
-     * An always-error check doesn't have a severity property, so `ignore` rejects it.
+     * `ignore` rejects a check without a severity property.
      *
      * See [Exemptions and internal API](https://kotlin.github.io/Library-API-Watchdog/exemptions) for more details about when to use a rule.
      */
     @JvmOverloads
     public fun ignore(check: WatchdogChecks, whenAnnotatedWith: List<String>, recursive: Boolean = false) {
         require(check in diagnosticSeverities) {
-            "API Watchdog check '$check' is always an error and doesn't accept an ignore rule"
+            "API Watchdog check '$check' doesn't have a severity property and doesn't accept an ignore rule"
         }
         require(whenAnnotatedWith.isNotEmpty()) {
             "API Watchdog check '$check' needs at least one annotation name"

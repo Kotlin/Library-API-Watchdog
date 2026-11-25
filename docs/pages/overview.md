@@ -4,7 +4,7 @@ slug: /
 
 # Get started
 
-[![Latest stable version](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fpackages.jetbrains.team%2Fmaven%2Fp%2Fkt-lib%2Feap%2Forg%2Fjetbrains%2Fkotlinx%2Flibrary-api-watchdog-gradle-plugin%2Fmaven-metadata.xml&filter=%21%2A-dev-%2A&label=stable&color=blue&cacheSeconds=300)](https://github.com/Kotlin/Library-API-Watchdog/releases/latest)
+[![Latest stable version](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Forg%2Fjetbrains%2Fkotlinx%2Flibrary-api-watchdog-compiler-plugin%2Fmaven-metadata.xml&label=stable&color=blue&cacheSeconds=300)](https://central.sonatype.com/artifact/org.jetbrains.kotlinx/library-api-watchdog-compiler-plugin)
 [![Latest dev version](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fpackages.jetbrains.team%2Fmaven%2Fp%2Fkt-lib%2Feap%2Forg%2Fjetbrains%2Fkotlinx%2Flibrary-api-watchdog-gradle-plugin%2Fmaven-metadata.xml&filter=%2A-dev-%2A&label=dev&color=blue&cacheSeconds=300)](https://packages.jetbrains.team/maven/p/kt-lib/eap/org/jetbrains/kotlinx/library-api-watchdog-gradle-plugin/)
 [![Kotlin 2.2.20+](https://img.shields.io/github/actions/workflow/status/Kotlin/Library-API-Watchdog/compiler-plugin-tests.yml?branch=main&label=Kotlin%202.2.20%2B&logo=kotlin&logoColor=white)](https://github.com/Kotlin/Library-API-Watchdog/actions/workflows/compiler-plugin-tests.yml)
 [![IntelliJ IDEA 2025.2+](https://img.shields.io/github/actions/workflow/status/Kotlin/Library-API-Watchdog/compiler-plugin-tests.yml?branch=main&label=IntelliJ%20IDEA%202025.2%2B&logo=intellijidea&logoColor=white)](https://github.com/Kotlin/Library-API-Watchdog/actions/workflows/compiler-plugin-tests.yml)

@@ -23,7 +23,8 @@ The "Exemption" section of each check page names the exemption annotation
 ([example for data classes](./checks/data-class-public-api.md#exemption)).
 
 Every `@Intentionally*` annotation except
-[`@IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility`](#the-dsl-marker-exemption) has two parameters:
+[`@IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility`](#the-dsl-marker-exemption) and
+[`@IntentionallyExposedInternalApiForBackwardsCompatibility`](#the-internal-api-exemption) has two parameters:
 
 | Parameter     | Type              | Default |
 |---------------|-------------------|---------|
@@ -102,6 +103,13 @@ When the compiler reports `ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT` for an `actual t
 It doesn't have a `reason` parameter, because backwards compatibility is the only valid reason for this
 exemption. Its `description` is optional.
 
+### The internal API exemption
+
+`@IntentionallyExposedInternalApiForBackwardsCompatibility` exempts a declaration, a parameter, or a type usage
+from [Internal API types in public API](./checks/special/public-type-with-internal-api.md).
+It doesn't have a `reason` parameter, because backwards compatibility is the only valid reason for this
+exemption. Its `description` is optional.
+
 ### All exemption annotations
 
 | Annotation                                                     | Exempts                                                                                                                                                                                                             |
@@ -129,6 +137,7 @@ exemption. Its `description` is optional.
 | `@IntentionallyWithoutJvmOverloads`                            | [Default parameters without JvmOverloads](./checks/java-interop/default-parameters-without-jvm-overloads.md)                                                                                                        |
 | `@IntentionallyNonTransitiveDependency`                        | [Public types from non-transitive dependencies](./checks/special/public-type-from-non-transitive-dependency.md)                                                                                                     |
 | `@IntentionallyWrongDslMarkerTargetsForBackwardsCompatibility` | [DSL markers with no-op targets](./checks/special/dsl-marker-noop-target.md) and [DSL markers without explicit targets](./checks/special/dsl-marker-without-explicit-targets.md)                                    |
+| `@IntentionallyExposedInternalApiForBackwardsCompatibility`    | [Internal API types in public API](./checks/special/public-type-with-internal-api.md)                                                                                                                               |
 
 ## Dependency exemptions
 
@@ -218,6 +227,8 @@ On Kotlin 2.2 and 2.3, the ABI validation of the Kotlin Gradle plugin is off unt
 `abiValidation { enabled.set(true) }` turns it on. While it is off, the watchdog doesn't copy its
 filters.
 
+`apiWatchdog { useAbiValidationFilters = false }` turns the filters off. Default is `true`.
+
 The tools define the filter rules and the name format:
 
 - [Filters of the ABI validation](https://kotlinlang.org/docs/gradle-binary-compatibility-validation.html#configure-filters)
@@ -275,7 +286,7 @@ apiWatchdog {
 }
 ```
 
-A rule works for configurable checks only, not for always-error checks. With `recursive = true`,
+A rule works only for a check with a severity property. With `recursive = true`,
 the rule also covers every declaration nested in the annotated one. When the annotation is on a parameter or a
 type parameter, the rule skips what the check reports on that parameter.
 

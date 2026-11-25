@@ -3,8 +3,9 @@
 # Prints the GitHub generated release notes of a release: the pull requests up to HEAD since the previous release. The
 # previous release is the highest local `vMAJOR.MINOR.PATCH` tag earlier than the release, so the notes of a backport
 # start at the previous release of its line. Each heading is one level lower than in the GitHub notes, so the notes fit
-# under the `## VERSION` heading of CHANGELOG.md. Needs `gh` with `GH_TOKEN`, `GITHUB_REPOSITORY`, and the tags of the
-# repository.
+# under the `## VERSION` heading of CHANGELOG.md. The `What's Changed` heading becomes `Other changes`, because the
+# notes go after the text of the `## Unreleased` section. Needs `gh` with `GH_TOKEN`, `GITHUB_REPOSITORY`, and the tags
+# of the repository.
 
 set -euo pipefail
 
@@ -39,6 +40,7 @@ if [[ -n "$previous" ]]; then
 fi
 gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" "${fields[@]}" --jq .body | awk '
   { sub(/\r$/, "") }
+  /^## What.s Changed$/ { $0 = "## Other changes" }
   /^#+ / { $0 = "#" $0 }
   { lines[++size] = $0 }
   END {

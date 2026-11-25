@@ -153,7 +153,7 @@ jobs:
             echo "The GitHub release v$LIBRARY_VERSION exists."
             exit 0
           fi
-          ./scripts/changelog-section.sh "$LIBRARY_VERSION" > "$RUNNER_TEMP/release-notes.md"
+          ./scripts/release-body.sh "$LIBRARY_VERSION" > "$RUNNER_TEMP/release-notes.md"
           {
             echo "# Release notes of $LIBRARY_VERSION"
             echo

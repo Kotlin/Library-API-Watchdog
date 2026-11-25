@@ -1,0 +1,48 @@
+name: Pull request labels
+
+# Labels a pull request by its changed files (.github/labeler.yml). .github/release.yml groups the generated release
+# notes by the labels.
+on:
+  # The run uses the files of the base branch and doesn't check out the pull request, so it can have a write permission
+  # for a pull request from a fork.
+  pull_request_target:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/pull-request-labels.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  labels:
+    name: Create the labels
+    if: github.event_name != 'pull_request_target'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create or update the labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          label() {
+            gh label create "$1" --repo "$GITHUB_REPOSITORY" --color "$2" --description "$3" --force
+          }
+          label compiler-plugin 7f52ff 'A change of the compiler plugin or the annotations.'
+          label gradle-plugin 02303a 'A change of the Gradle plugin, the reports, or the exemption fixer.'
+          label documentation 0075ca 'Improvements or additions to documentation'
+          label dependencies 0366d6 'A dependency update.'
+
+  label:
+    name: Label the pull request
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Add the labels
+        uses: actions/labeler@v7

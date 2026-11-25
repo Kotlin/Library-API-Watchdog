@@ -21,9 +21,13 @@ on:
       - 'scripts/prepare-release.sh'
       - 'scripts/release-plan.sh'
       - 'scripts/release-notes.sh'
+      - 'scripts/release-body.sh'
       - 'scripts/push-signed-commit.sh'
       - 'scripts/lib/project-version.sh'
       - 'scripts/release-tooling.test.mjs'
+      - '.github/release.yml'
+      - '.github/labeler.yml'
+      - '.github/workflows/pull-request-labels.yml'
       - '.github/workflows/version-alignment.yml'
   workflow_call:
     inputs:

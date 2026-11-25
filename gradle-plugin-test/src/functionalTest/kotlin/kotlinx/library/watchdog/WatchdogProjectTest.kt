@@ -278,7 +278,7 @@ class WatchdogProjectTest {
         }
 
         project.buildAndFail("build").assertOutputHas(
-            "API Watchdog check 'EXEMPTION_WITHOUT_EXPLANATION' is always an error and doesn't accept an ignore rule"
+            "API Watchdog check 'EXEMPTION_WITHOUT_EXPLANATION' doesn't have a severity property and doesn't accept an ignore rule"
         )
     }
 
