@@ -6,7 +6,11 @@
 
 - Support for Kotlin 2.2.20 and later, and for IntelliJ IDEA 2025.2 and later.
 - [API filters](https://kotlin.github.io/Library-API-Watchdog/exemptions#api-filters): the watchdog applies the
-  filters of the binary compatibility validation of the project.
+  filters of the ABI validation of the Kotlin Gradle plugin or of the Binary Compatibility Validator to its checks.
+  In a project with filters, the update can add errors of
+  [Internal API types in public API](https://kotlin.github.io/Library-API-Watchdog/checks/special/public-type-with-internal-api)
+  and warnings of [Redundant exemptions](https://kotlin.github.io/Library-API-Watchdog/checks/special/redundant-exemption).
+  `apiWatchdog { useAbiValidationFilters = false }` turns the filters off.
 - [`ignoreDeprecatedApi`](https://kotlin.github.io/Library-API-Watchdog/configuration#deprecated-api): the checks skip
   every `@Deprecated` declaration.
 - [`explicitApiRequirement`](https://kotlin.github.io/Library-API-Watchdog/configuration#explicit-api-mode): the checks
@@ -20,10 +24,6 @@
   `org.jetbrains.kotlinx.library.api.watchdog`.
 - The artifact ids don't have the `kotlin-` prefix, for example `library-api-watchdog-plugin-annotations`.
 - The setup doesn't need the dev kit EAP repository.
-- The filters of an existing validation setup can add errors of
-  [Internal API types in public API](https://kotlin.github.io/Library-API-Watchdog/checks/special/public-type-with-internal-api)
-  and warnings of [Redundant exemptions](https://kotlin.github.io/Library-API-Watchdog/checks/special/redundant-exemption).
-  `apiWatchdog { useAbiValidationFilters = false }` turns the filters off.
 - The checks report the type of a `private` or `internal` `val` or `var` parameter of a public constructor, such as
   `class Cache(private val items: MutableList<String>)`.
 - [Internal API types in public API](https://kotlin.github.io/Library-API-Watchdog/checks/special/public-type-with-internal-api)
